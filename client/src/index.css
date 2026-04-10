@@ -1,0 +1,2370 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* ─── Design Tokens (Default / Shared) ─────────────────────────────────── */
+:root {
+  /* Brand — never changes across themes */
+  --primary: #f97316;
+  --primary-dark: #ea580c;
+  --success: #4CAF50;
+  --warning: #f59e0b;
+  --danger: #F44336;
+  --info: #3b82f6;
+
+  /* Layout — never changes */
+  --sidebar-w: 288px;
+  --topbar-h: 64px;
+  --bottomnav-h: 64px;
+
+  /* ── Theme-aware tokens (override per theme below) ─────────────── */
+  --theme-bg-deep: #0a0f1e;
+  --theme-bg-dark: #0f172a;
+  --theme-bg-card: #1e293b;
+  --theme-bg-card2: #243048;
+  --theme-bg-muted: #1a2744;
+  --theme-bg-hover: rgba(255, 255, 255, 0.05);
+  --theme-text-main: #f8fafc;
+  --theme-text-muted: #94a3b8;
+  --theme-text-subtle: #64748b;
+  --theme-text-inverse: #0f172a;
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-border-solid: #1e293b;
+  --theme-input-bg: #1e293b;
+  --theme-sidebar-bg: #0d1526;
+  --theme-topbar-bg: rgba(15, 23, 42, 0.9);
+  --theme-shadow: rgba(0, 0, 0, 0.4);
+  --theme-overlay: rgba(0, 0, 0, 0.6);
+  --theme-skeleton-a: #1e293b;
+  --theme-skeleton-b: #2d3f55;
+  --theme-scrollbar: #334155;
+  --theme-scrollbar-h: #475569;
+
+  /* Legacy aliases — kept for backward compat */
+  --bg-deep: var(--theme-bg-deep);
+  --bg-dark: var(--theme-bg-dark);
+  --bg-card: var(--theme-bg-card);
+  --bg-card2: var(--theme-bg-card2);
+  --text-main: var(--theme-text-main);
+  --text-muted: var(--theme-text-muted);
+
+  /* ── Order Status Color Tokens (used in Kitchen, Waiter, StatusBadge) ── */
+  /* Default values (blue-dark theme). Overridden per theme or via Settings. */
+  --status-pending:           #3b82f6;
+  --status-pending-bg:        rgba(59, 130, 246, 0.08);
+  --status-pending-border:    rgba(59, 130, 246, 0.25);
+
+  --status-accepted:          #8b5cf6;
+  --status-accepted-bg:       rgba(139, 92, 246, 0.08);
+  --status-accepted-border:   rgba(139, 92, 246, 0.25);
+
+  --status-preparing:         #f59e0b;
+  --status-preparing-bg:      rgba(245, 158, 11, 0.08);
+  --status-preparing-border:  rgba(245, 158, 11, 0.25);
+
+  --status-ready:             #10b981;
+  --status-ready-bg:          rgba(16, 185, 129, 0.08);
+  --status-ready-border:      rgba(16, 185, 129, 0.25);
+
+  --status-readyToServe:      #3b82f6;
+  --status-readyToServe-bg:   rgba(59, 130, 246, 0.08);
+  --status-readyToServe-border: rgba(59, 130, 246, 0.25);
+
+  --status-payment:           #ef4444;
+  --status-payment-bg:        rgba(239, 68, 68, 0.08);
+  --status-payment-border:    rgba(239, 68, 68, 0.25);
+
+  --status-completed:         #6b7280;
+  --status-cancelled:         #ef4444;
+}
+
+/* ─── Theme: Default (Blue-Black — existing design) ─────────────────────── */
+[data-theme="default"] {
+  --theme-bg-deep: #0a0f1e;
+  --theme-bg-dark: #0f172a;
+  --theme-bg-card: #1e293b;
+  --theme-bg-card2: #243048;
+  --theme-bg-muted: #1a2744;
+  --theme-bg-hover: rgba(255, 255, 255, 0.05);
+  --theme-text-main: #f8fafc;
+  --theme-text-muted: #94a3b8;
+  --theme-text-subtle: #64748b;
+  --theme-text-inverse: #0f172a;
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-border-solid: #1e293b;
+  --theme-input-bg: #1e293b;
+  --theme-sidebar-bg: #0d1526;
+  --theme-topbar-bg: rgba(15, 23, 42, 0.90);
+  --theme-shadow: rgba(0, 0, 0, 0.4);
+  --theme-overlay: rgba(0, 0, 0, 0.6);
+  --theme-skeleton-a: #1e293b;
+  --theme-skeleton-b: #2d3f55;
+  --theme-scrollbar: #334155;
+  --theme-scrollbar-h: #475569;
+}
+
+/* ─── Theme: Pure Dark (True Black) ─────────────────────────────────────── */
+[data-theme="dark"] {
+  --theme-bg-deep: #000000;
+  --theme-bg-dark: #050505;
+  --theme-bg-card: #0f0f0f;
+  --theme-bg-card2: #141414;
+  --theme-bg-muted: #111111;
+  --theme-bg-hover: rgba(250, 115, 22, 0.04);
+  --theme-text-main: #ffffff;
+  --theme-text-muted: #94a3b8;
+  --theme-text-subtle: #475569;
+  --theme-text-inverse: #000000;
+  --theme-border: rgba(255, 255, 255, 0.05);
+  --theme-border-solid: #1a1a1a;
+  --theme-input-bg: #0f0f0f;
+  --theme-sidebar-bg: #000000;
+  --theme-topbar-bg: rgba(0, 0, 0, 0.85);
+  --theme-shadow: rgba(0, 0, 0, 0.8);
+  --theme-overlay: rgba(0, 0, 0, 0.8);
+  --theme-skeleton-a: #0f0f0f;
+  --theme-skeleton-b: #1a1a1a;
+  --theme-scrollbar: #1a1a1a;
+  --theme-scrollbar-h: #252525;
+}
+
+/* ─── Theme: Light (Clean White) ────────────────────────────────────────── */
+[data-theme="light"] {
+  --theme-bg-deep: #e5e5e5;
+  --theme-bg-dark: #f2f2f2;
+  --theme-bg-card: #ffffff;
+  --theme-bg-card2: #ffffff;
+  --theme-bg-muted: #f8f8f8;
+  --theme-bg-hover: rgba(0, 0, 0, 0.03);
+  --theme-text-main: #111111;
+  --theme-text-muted: #666666;
+  --theme-text-subtle: #999999;
+  --theme-text-inverse: #ffffff;
+  --theme-border: rgba(0, 0, 0, 0.08);
+  --theme-border-solid: #e5e5e5;
+  --theme-input-bg: #ffffff;
+  --theme-sidebar-bg: #ffffff;
+  --theme-topbar-bg: rgba(242, 242, 242, 0.85);
+  --theme-shadow: rgba(0, 0, 0, 0.04);
+  --theme-overlay: rgba(0, 0, 0, 0.3);
+  --theme-skeleton-a: #eeeeee;
+  --theme-skeleton-b: #e5e5e5;
+  --theme-scrollbar: #cccccc;
+  --theme-scrollbar-h: #999999;
+}
+
+
+
+
+/* ─── Responsive & Fluid Foundation (Modern Adaptive Design) ─────────── */
+:root {
+  /* Breakpoint Definitions */
+  --bp-mobile: 480px;
+  --bp-tablet: 1024px;
+  --bp-desktop: 1025px;
+  --bp-pos: 1366px;
+
+  /* ── Typography System ─────────────────────────────────────────────────
+   *  Font stack: Inter (modern, clean) → Roboto → system-ui fallback
+   *  Scales fluidly via clamp(min, preferred-vw, max) across breakpoints:
+   *    Mobile  ≤ 480px:   titles 18-20px | items 16-18px | btn 14-16px | small 12-13px
+   *    Tablet  481-1024px: titles 20-22px | items 18-20px | btn 16-18px | small 13-14px
+   *    Desktop ≥ 1025px:  titles 22-24px | items 18-20px | btn 16-18px | small 14px
+   * ─────────────────────────────────────────────────────────────────── */
+  --font-family-base: 'Inter', 'Roboto', ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid Title / Heading — 18px → 24px */
+  --fs-title:   clamp(1.125rem, 1.5vw + 0.5rem, 1.5rem);   /* 18px → 24px */
+
+  /* Fluid Table Numbers — same range as title */
+  --fs-table-num: clamp(1.125rem, 1.5vw + 0.5rem, 1.375rem); /* 18px → 22px */
+
+  /* Fluid Body / Item Text — 16px → 20px */
+  --fs-item:    clamp(1rem, 1.2vw + 0.3rem, 1.25rem);       /* 16px → 20px */
+
+  /* Fluid Button Labels — 14px → 18px */
+  --fs-btn:     clamp(0.875rem, 1vw + 0.25rem, 1.125rem);   /* 14px → 18px */
+
+  /* Fluid Small / Caption Text — 11px → 13px (Production quality) */
+  --fs-small:   clamp(0.6875rem, 0.5vw + 0.15rem, 0.8125rem);   /* 11px → 13px */
+
+  /* Legacy fluid aliases — kept for backward compat */
+  --fluid-h1: clamp(1.75rem, 5vw, 3rem);
+  --fluid-h2: clamp(1.5rem, 4vw, 2.25rem);
+  --fluid-h3: clamp(1.25rem, 3vw, 1.75rem);
+  --fluid-body: clamp(0.875rem, 1.2vw, 1.125rem);
+  --fluid-small: clamp(0.75rem, 1vw, 0.875rem);
+}
+
+/* ── Global Body Typography ── */
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--fs-item);        /* fluid 16px → 20px base */
+  line-height: 1.5;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter stylistic sets */
+  font-optical-sizing: auto;
+}
+
+/* ── Fluid Heading Scale ── */
+h1 { font-size: clamp(1.375rem, 2.5vw + 0.5rem, 2.25rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.25rem, 2vw + 0.4rem, 1.875rem);  font-weight: 700; line-height: 1.2; }
+h3 { font-size: clamp(1.125rem, 1.5vw + 0.3rem, 1.5rem); font-weight: 700; line-height: 1.3; }
+p, li { line-height: calc(1em + 0.5rem); margin-bottom: 0.5rem; }
+
+/* ── Responsive Typography Utility Classes ── */
+/* Apply these to POS-specific elements for semantic sizing */
+.text-pos-title     { font-size: var(--fs-title);     font-weight: 700; }
+.text-pos-table-num { font-size: var(--fs-table-num); font-weight: 800; }
+.text-pos-item      { font-size: var(--fs-item);      font-weight: 400; }
+.text-pos-btn       { font-size: var(--fs-btn);       font-weight: 600; }
+.text-pos-small     { font-size: var(--fs-small);     font-weight: 400; }
+
+/* ── Mobile Override: tighter scale ──────────────────────────── */
+@media (max-width: 480px) {
+  :root {
+    --fs-title:     clamp(1.125rem, 4vw, 1.25rem);   /* 18px → 20px */
+    --fs-table-num: clamp(1.125rem, 4vw, 1.25rem);   /* 18px → 20px */
+    --fs-item:      clamp(1rem, 3.5vw, 1.125rem);     /* 16px → 18px */
+    --fs-btn:       clamp(0.875rem, 3vw, 1rem);       /* 14px → 16px */
+    --fs-small:     clamp(0.75rem, 2.5vw, 0.8125rem); /* 12px → 13px */
+  }
+}
+
+/* ── Tablet Override: medium scale ───────────────────────────── */
+@media (min-width: 481px) and (max-width: 1024px) {
+  :root {
+    --fs-title:     clamp(1.25rem, 2.5vw, 1.375rem);  /* 20px → 22px */
+    --fs-table-num: clamp(1.25rem, 2.5vw, 1.375rem);  /* 20px → 22px */
+    --fs-item:      clamp(1.125rem, 2vw, 1.25rem);     /* 18px → 20px */
+    --fs-btn:       clamp(1rem, 1.8vw, 1.125rem);      /* 16px → 18px */
+    --fs-small:     clamp(0.8125rem, 1.5vw, 0.875rem); /* 13px → 14px */
+  }
+}
+
+/* ── Desktop Override: full scale ────────────────────────────── */
+@media (min-width: 1025px) {
+  :root {
+    --fs-title:     clamp(1.375rem, 1.5vw, 1.5rem);   /* 22px → 24px */
+    --fs-table-num: 1.375rem;                          /* 22px fixed */
+    --fs-item:      clamp(1.125rem, 1.2vw, 1.25rem);   /* 18px → 20px */
+    --fs-btn:       clamp(1rem, 1.1vw, 1.125rem);      /* 16px → 18px */
+    --fs-small:     0.875rem;                          /* 14px fixed */
+  }
+}
+
+/* ── Responsive Media Safeguards ── */
+img, video, canvas, iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Global Layout Adaptability ── */
+.container-adaptive {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 5vw, 3rem);
+  max-width: var(--bp-pos);
+}
+
+/* ── Universal Mobile Fit & Alignment (Safe Areas & Precision Padding) ── */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-px { 
+    padding-left: env(safe-area-inset-left); 
+    padding-right: env(safe-area-inset-right); 
+  }
+}
+
+/* Optimize tapping targets for all touch devices */
+@media (max-width: 1024px) {
+  button, 
+  [role="button"],
+  .action-btn {
+    min-height: 44px;
+    transition: transform 0.1s ease-out;
+  }
+  
+  button:active {
+    transform: scale(0.97);
+  }
+
+  /* Force modals to occupy more width on phones */
+  .modal-overlay-p {
+    padding: 0.75rem !important; /* 12px instead of 16px */
+  }
+
+  .modal-rounded-mobile {
+    border-radius: 1.75rem !important;
+  }
+}
+
+/* ── Prevent Root Scroll & Layout Shifting ── */
+html, body, #root {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  max-width: 100vw;
+  overscroll-behavior: none;
+}
+
+/* ── Zoom & Scaling Strategy ── */
+html {
+  /* Apply zoom only on larger screens to avoid mobile alignment quirks */
+  scroll-behavior: smooth;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (min-width: 1025px) {
+  html {
+    zoom: 1.05; /* Slightly less aggressive than 1.1 for better precision */
+  }
+}
+
+/* ── Tablet & Small Desktop Grid Adjustments ── */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .grid-adaptive {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* ── POS / Large Screen Optimization ── */
+@media (min-width: 1366px) {
+  html {
+    font-size: 17px;
+  }
+  
+  .sidebar-layout > aside {
+    width: 300px !important;
+  }
+}
+
+
+/* ─── Premium Utilities & Interactive Layer ──────────────────────────────── */
+:root {
+  /* Standard easing for a natural feel */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Stat Card Hover Effects */
+.stat-card-hover {
+  transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s var(--ease-out-expo), border-color 0.4s var(--ease-out-expo);
+}
+.stat-card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.tap-scale {
+  transition: transform 0.15s var(--ease-standard);
+  will-change: transform;
+}
+
+.tap-scale:active {
+  transform: scale(0.96);
+}
+
+/* ── Entrance Animations Suite ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes blurIn {
+  from { opacity: 0; filter: blur(12px); transform: scale(1.02); }
+  to { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+@keyframes crossFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.6s var(--ease-out-expo) forwards; }
+.animate-fade-in-down { animation: fadeInDown 0.6s var(--ease-out-expo) forwards; }
+.animate-fade-in-scale { animation: fadeInScale 0.5s var(--ease-out-expo) forwards; }
+.animate-blur-in { animation: blurIn 0.8s var(--ease-out-expo) forwards; }
+.animate-cross-fade { animation: crossFade 0.3s var(--ease-standard) forwards; }
+
+@keyframes slowZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.15); }
+}
+.animate-slow-zoom {
+  animation: slowZoom 20s linear infinite alternate;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-progress-glow {
+  animation: progressGlow 2s ease-in-out infinite;
+}
+
+@keyframes innerShimmer {
+  0% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.8; transform: scale(1); }
+}
+.animate-inner-shimmer {
+  animation: innerShimmer 4s ease-in-out infinite;
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(-15px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-fade-in-right {
+  animation: fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+
+/* ── System Status Pulse ── */
+@keyframes status-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.status-pulse-dot {
+  position: relative;
+}
+.status-pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.4;
+  animation: status-pulse 2s infinite ease-in-out;
+}
+
+/* ── Form Floating Labels (Optional Utility) ── */
+.field-group { position: relative; }
+.field-label {
+  position: absolute;
+  left: 3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.25s var(--ease-standard);
+  pointer-events: none;
+  font-weight: 600;
+  color: var(--theme-text-subtle);
+}
+.field-input:focus + .field-label,
+.field-input:not(:placeholder-shown) + .field-label {
+  top: 0;
+  left: 2.75rem;
+  transform: translateY(-50%) scale(0.85);
+  background: var(--theme-bg-dark);
+  padding: 0 0.5rem;
+  color: var(--primary);
+  border-radius: 4px;
+}
+
+.liquid-crystal-bg {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 1));
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Touch target class — apply to nav items, primary CTAs, form buttons */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Legacy btn-xs — preserved for compat */
+button.btn-xs {
+  min-height: unset;
+}
+
+/* ─── Scrolling Utilities ──────────────────────────────────────────────── */
+
+/* Hide scrollbar entirely (no-scrollbar is the Tailwind-style alias) */
+.hide-scrollbar,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scrollbar-gutter: stable;
+}
+
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Premium Smooth Scroll Container ── */
+/* Apply to any scrollable area for GPU-accelerated, momentum-based scrolling */
+.smooth-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* iOS momentum/rubber-band effect */
+  -webkit-overflow-scrolling: touch;
+
+  /* Contain scroll — no chain to parent/body */
+  overscroll-behavior-y: contain;
+
+  /* GPU compositing hints — prevents repaint during scroll */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+
+  /* Smooth-scroll within this container too */
+  scroll-behavior: smooth;
+}
+
+/* Horizontal variant (used in KOT tab bars) */
+.smooth-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  will-change: transform;
+  transform: translateZ(0);
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.smooth-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* Canonical scrollable dashboard content wrapper */
+.scroll-container {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* ── KOT Grid Scroll — Premium Persistent Scrollbar ── */
+.kot-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.kot-scroll-premium {
+  overflow-y: auto;          /* Show only when needed, but with stable gutter */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  will-change: transform;
+  transform: translateZ(0);
+  scrollbar-gutter: stable;
+}
+
+.kot-scroll-premium::-webkit-scrollbar {
+  width: 8px; /* Slightly wider for better touch target */
+}
+
+.kot-scroll-premium::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 999px;
+  margin-block: 8px;
+}
+
+.kot-scroll-premium::-webkit-scrollbar-thumb {
+  background: var(--primary, #f97316);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+}
+
+.kot-scroll-premium::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark, #ea580c);
+}
+
+/* Scroll Fade Hint Utility */
+.scroll-fade-bottom {
+  mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+}
+
+.kot-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.kot-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kot-scroll::-webkit-scrollbar-thumb {
+  background: var(--theme-scrollbar, #334155);
+  border-radius: 999px;
+}
+
+.kot-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-scrollbar-h, #475569);
+}
+
+/* Light theme variant */
+.theme-light .kot-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.theme-light .kot-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.theme-light .kot-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ── Login & Hero Page Scrollability ── */
+.login-scroll {
+  height: 100vh;
+  height: 100svh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+.login-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.login-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.login-scroll::-webkit-scrollbar-thumb {
+  background: var(--primary, #f97316);
+  border-radius: 10px;
+}
+
+
+
+/* ─── Input / Form ──────────────────────────────────────────────────────── */
+input,
+select,
+textarea {
+  background-color: var(--theme-input-bg);
+  border: 1px solid var(--theme-border-solid);
+  color: var(--theme-text-main);
+  padding: 0.75rem;
+  border-radius: 10px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  font-size: 16px;
+  /* Prevents iOS zoom on focus */
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.25s, color 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+/* ─── Autofill Fix ─── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--theme-text-main);
+  -webkit-box-shadow: 0 0 0px 1000px var(--theme-bg-dark) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+svg {
+  filter: none !important;
+  /* Do NOT set max-width/height on svg globally — it breaks Lucide icons
+     inside fixed-size containers. Only img/video/canvas get that treatment. */
+}
+
+/* ─── Premium Scrollbar ─────────────────────────────────────────────────── */
+/* Global: ultra-thin, brand-colored, persistent but subtle */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.2);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Thin 3px variant for compact panels */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--theme-scrollbar);
+  border-radius: 999px;
+}
+
+/* Light theme: lighter scrollbar */
+.theme-light ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes drawerSlideUp {
+  0% {
+    transform: translateY(100%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes chevron-flow {
+  0%, 100% { opacity: 0.15; transform: translateX(0); }
+  50%       { opacity: 1;    transform: translateX(-3px); }
+}
+
+@keyframes chevron-flow-right {
+  0%, 100% { opacity: 0.15; transform: translateX(0); }
+  50%       { opacity: 1;    transform: translateX(3px); }
+}
+
+.animate-chevron-1 { animation: chevron-flow 1.4s ease-in-out infinite; }
+.animate-chevron-2 { animation: chevron-flow 1.4s ease-in-out 0.2s infinite; }
+.animate-chevron-3 { animation: chevron-flow 1.4s ease-in-out 0.4s infinite; }
+
+.animate-chevron-r1 { animation: chevron-flow-right 1.4s ease-in-out infinite; }
+.animate-chevron-r2 { animation: chevron-flow-right 1.4s ease-in-out 0.2s infinite; }
+.animate-chevron-r3 { animation: chevron-flow-right 1.4s ease-in-out 0.4s infinite; }
+
+/* 3D cart arrow animation */
+.animate-cart-arrow-1 { animation: cart-arrow-3d 1.2s ease-in-out infinite; }
+.animate-cart-arrow-2 { animation: cart-arrow-3d 1.2s ease-in-out 0.25s infinite; }
+
+/* 3D bounce for portion rail chevrons */
+@keyframes chevron-bounce-3d {
+  0%, 100% { opacity: 0.4; transform: perspective(100px) translateZ(0) scale(1); }
+  50%       { opacity: 1;   transform: perspective(100px) translateZ(20px) scale(1.2); }
+}
+.animate-chevron-bounce-3d { 
+  animation: chevron-bounce-3d 1.5s ease-in-out infinite; 
+}
+
+@keyframes toast-slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes toast-slide-out {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+.animate-toast-in {
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toast-out {
+  animation: toast-slide-out 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-drawer-up {
+  animation: drawerSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Entrance Animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes blurIn {
+  from { opacity: 0; filter: blur(10px); transform: scale(1.05); }
+  to { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+.animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in-down { animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in-scale { animation: fadeInScale 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-blur-in { animation: blurIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+
+/* ── Entrance Animations ── */
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.85) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-pop-in { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+  70% { opacity: 1; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+.token-tap {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.token-tap:active {
+  transform: scale(0.96);
+}
+
+@keyframes pulse-red {
+  0%, 100% { background-color: rgb(239 68 68 / 0.1); box-shadow: 0 0 0 0 rgb(239 68 68 / 0.4); }
+  50%       { background-color: rgb(239 68 68 / 0.18); box-shadow: 0 0 0 6px rgb(239 68 68 / 0); }
+}
+
+.animate-pulse-red {
+  animation: pulse-red 1.8s ease-in-out infinite;
+}
+
+.bg-rose-500\/8 { background-color: rgb(244 63 94 / 0.08); }
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+@keyframes chevron-flow-red {
+  0% { transform: scale(1); color: #f43f5e; opacity: 1; }
+  50% { transform: scale(1.1); color: #be123c; opacity: 0.7; }
+  100% { transform: scale(1); color: #f43f5e; opacity: 1; }
+}
+
+.animate-chevron-flow-red {
+  animation: chevron-flow-red 1.5s ease-in-out infinite;
+}
+
+.liquid-crystal-bg {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 1));
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* ─── Skeleton Loader ────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+      var(--theme-skeleton-a) 25%,
+      var(--theme-skeleton-b) 50%,
+      var(--theme-skeleton-a) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+.skeleton-text {
+  height: 1em;
+  border-radius: 4px;
+}
+
+.skeleton-circle {
+  border-radius: 999px;
+}
+
+/* ─── Status Badges ──────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.badge-pending {
+  background: var(--status-pending-bg);
+  color: var(--status-pending);
+  border: 1px solid var(--status-pending-border);
+}
+
+.badge-accepted {
+  background: var(--status-accepted-bg);
+  color: var(--status-accepted);
+  border: 1px solid var(--status-accepted-border);
+}
+
+.badge-preparing {
+  background: var(--status-preparing-bg);
+  color: var(--status-preparing);
+  border: 1px solid var(--status-preparing-border);
+}
+
+.badge-ready {
+  background: var(--status-ready-bg);
+  color: var(--status-ready);
+  border: 1px solid var(--status-ready-border);
+}
+
+.badge-readyToServe {
+  background: var(--status-readyToServe-bg);
+  color: var(--status-readyToServe);
+  border: 1px solid var(--status-readyToServe-border);
+}
+
+.badge-payment {
+  background: var(--status-payment-bg);
+  color: var(--status-payment);
+  border: 1px solid var(--status-payment-border);
+}
+
+.badge-completed {
+  background: rgba(100, 116, 139, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.badge-cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 24px -6px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Responsive Table Wrapper ───────────────────────────────────────────── */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Status dot ─────────────────────────────────────────────────────────── */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ─── Bottom Nav Safe Area ───────────────────────────────────────────────── */
+/* 16px fallback covers Android gesture nav bar when env() returns 0         */
+.bottom-nav-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  min-height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 16px));
+}
+
+/* ─── Overlay backdrop ───────────────────────────────────────────────────── */
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+}
+
+/* ─── No-scroll body when drawer open ───────────────────────────────────── */
+body.drawer-open {
+  overflow: hidden;
+}
+
+/* ─── Table status colors ────────────────────────────────────────────────── */
+.status-available {
+  --sc: #10b981;
+}
+
+.status-reserved {
+  --sc: #f59e0b;
+}
+
+.status-occupied {
+  --sc: #ef4444;
+}
+
+.status-billing {
+  --sc: #f97316;
+}
+
+.status-cleaning {
+  --sc: #6b7280;
+}
+
+/* ─── Print Styles ───────────────────────────────────────────────────────── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-receipt,
+  #printable-receipt * {
+    visibility: visible;
+  }
+
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+  }
+
+  @page {
+    size: auto;
+    margin: 0mm;
+  }
+}
+
+/* ─── Utility: no horizontal scroll ─────────────────────────────────────── */
+.page-container {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* ─── Custom Shadow / Glow utilities ────────────────────────────────────── */
+/* Referenced via Tailwind's arbitrary class or direct CSS class            */
+.shadow-glow-orange {
+  box-shadow: 0 0 20px -5px rgba(249, 115, 22, 0.4);
+}
+
+.shadow-glow-green {
+  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.4);
+}
+
+.shadow-glow-yellow {
+  box-shadow: 0 0 20px -5px rgba(234, 179, 8, 0.4);
+}
+
+.shadow-glow-blue {
+  box-shadow: 0 0 20px -5px rgba(59, 130, 246, 0.4);
+}
+
+.shadow-glow-red {
+  box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.4);
+}
+
+.shadow-glow-gray {
+  box-shadow: 0 0 20px -5px rgba(148, 163, 184, 0.4);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.shadow-sidebar {
+  box-shadow: 4px 0 24px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── iOS safe-area helpers ─────────────────────────────────────────────── */
+.pt-safe {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+.pb-safe {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+.pl-safe {
+  padding-left: max(0px, env(safe-area-inset-left));
+}
+
+.pr-safe {
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+/* ─── Modal mobile safety ───────────────────────────────────────────────── */
+/* Clamp modal height so it never overflows on short viewports (e.g. 568px) */
+.modal-body {
+  max-height: min(82vh, calc(100dvh - 100px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Prevent double tap zoom on buttons (Android Chrome) ──────────────── */
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* ─── Tab highlight removal (Samsung/Android) ───────────────────────────── */
+* {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* ─── Theme Transition Helper ────────────────────────────────────────────── */
+/* Apply to any element that should animate smoothly on theme change          */
+.transition-theme {
+  transition:
+    background-color 0.25s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* ─── Light Theme: global overrides for elements with hardcoded dark styles  */
+/* These selectors only activate when .theme-light is on <html>               */
+.theme-light .shadow-sidebar {
+  box-shadow: 4px 0 24px -4px rgba(0, 0, 0, 0.04);
+}
+
+.theme-light .shadow-2xl {
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.06);
+}
+
+/* Hardcoded Background Overrides */
+.theme-light .bg-\[\#0f172a\],
+.theme-light .bg-\[\#0a0f1e\],
+.theme-light .bg-gray-900 {
+  background-color: var(--theme-bg-deep) !important;
+}
+
+.theme-light .bg-\[\#1e293b\],
+.theme-light .bg-gray-800 {
+  background-color: var(--theme-bg-card) !important;
+}
+
+.theme-light .bg-\[\#1a2744\],
+.theme-light .bg-gray-800\/60,
+.theme-light .bg-gray-800\/80 {
+  background-color: var(--theme-bg-muted) !important;
+}
+
+.theme-light .bg-gray-900\/20,
+.theme-light .bg-gray-900\/40,
+.theme-light .bg-gray-900\/50,
+.theme-light .hover\:bg-gray-700\/30:hover,
+.theme-light .hover\:bg-gray-700\/40:hover {
+  background-color: rgba(0, 0, 0, 0.025) !important;
+}
+
+/* Border Overrides */
+.theme-light .border-gray-700,
+.theme-light .border-gray-700\/50,
+.theme-light .border-gray-800\/50,
+.theme-light .border-gray-800\/60 {
+  border-color: var(--theme-border) !important;
+}
+
+/* Table / Divider Overrides */
+.theme-light .divide-gray-700\/40>*+*,
+.theme-light .divide-gray-800\/50>*+* {
+  border-color: var(--theme-border) !important;
+}
+
+/* Text Overrides - Flip hardcoded white/light text to dark */
+.theme-light .text-white,
+.theme-light .text-gray-100,
+.theme-light .text-gray-200 {
+  color: var(--theme-text-main) !important;
+}
+
+/* Restore white text on colored/dark button & badge backgrounds */
+.theme-light .bg-orange-500,
+.theme-light .bg-orange-600,
+.theme-light .bg-blue-500,
+.theme-light .bg-blue-600,
+.theme-light .bg-emerald-500,
+.theme-light .bg-emerald-600,
+.theme-light .bg-red-500,
+.theme-light .bg-red-600,
+.theme-light .bg-rose-500,
+.theme-light .bg-rose-600,
+.theme-light .bg-violet-500,
+.theme-light .bg-violet-600,
+.theme-light .bg-indigo-500,
+.theme-light .bg-indigo-600,
+.theme-light .bg-green-500,
+.theme-light .bg-green-600,
+.theme-light .bg-amber-500,
+.theme-light .bg-amber-600,
+.theme-light .bg-gray-700,
+.theme-light .bg-gray-800,
+.theme-light .bg-gray-900,
+.theme-light .bg-black {
+  color: #ffffff !important;
+}
+
+.theme-light .text-gray-300,
+.theme-light .text-gray-400 {
+  color: var(--theme-text-muted) !important;
+}
+
+.theme-light .text-gray-500 {
+  color: var(--theme-text-subtle) !important;
+}
+
+/* Ensure icons in dark buttons adapt */
+.theme-light button.bg-gray-800,
+.theme-light button.bg-gray-900 {
+  color: var(--theme-text-main) !important;
+}
+
+/* Specific component fixes */
+.theme-light .bg-orange-500\/10,
+.theme-light .bg-orange-900\/20 {
+  background-color: rgba(249, 115, 22, 0.1) !important;
+}
+
+.theme-light .bg-emerald-900\/20 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+.theme-light .bg-yellow-900\/20 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+.theme-light .bg-red-900\/20 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.theme-light .bg-blue-500\/10 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.theme-light .bg-green-500\/10 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+
+.theme-light .bg-rose-500\/10 {
+  background-color: rgba(244, 63, 94, 0.1) !important;
+}
+
+/* Ensure text in status badges is readable (darker colors for light theme) */
+.theme-light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+.theme-light .text-yellow-400 {
+  color: #d97706 !important;
+}
+
+.theme-light .text-red-400 {
+  color: #dc2626 !important;
+}
+
+.theme-light .text-orange-400 {
+  color: #ea580c !important;
+}
+
+.theme-light .text-blue-400 {
+  color: #2563eb !important;
+}
+
+.theme-light .text-pink-400 {
+  color: #db2777 !important;
+}
+
+.theme-light .text-indigo-400 {
+  color: #4f46e5 !important;
+}
+
+.theme-light .text-teal-400 {
+  color: #0d9488 !important;
+}
+
+.theme-light .text-amber-400 {
+  color: #d97706 !important;
+}
+
+/* ─── Pure Dark Theme: premium pitch-black adjustments ──────────────────── */
+.theme-dark .shadow-sidebar {
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.9);
+}
+
+.theme-dark .bg-orange-500\/10 {
+  background-color: rgba(249, 115, 22, 0.04) !important;
+}
+
+/* Ensure borders are extra subtle in dark mode */
+.theme-dark .border-gray-700,
+.theme-dark .border-gray-700\/50,
+.theme-dark .border-gray-800\/50,
+.theme-dark .border-gray-800\/60 {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ─── Global Performance & Polish ───────────────────────────────────────── */
+[data-theme] {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s ease;
+}
+
+/* Prevent text selection on decorative items for better "app" feel */
+.badge,
+.status-dot,
+button {
+  user-select: none;
+}
+
+/* ─── Responsive Utilities ───────────────────────────────────────────────── */
+
+/* Ensure images and media never overflow their containers */
+img,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+  /* NOTE: SVG intentionally excluded — Lucide icons are inline SVGs that must
+     not be constrained by responsive media rules. */
+}
+
+/* Cards stack and go full-width on mobile */
+@media (max-width: 640px) {
+
+  /* Modals take full width on tiny screens with side margin */
+  .modal-shell {
+    width: calc(100vw - 2rem);
+    max-width: 100%;
+  }
+
+  /* Reduce large title sizes on phones */
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  /* Table wrapper always scrollable */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ─── Extra-small screen tweaks (320px – 374px) ─────────────────────────── */
+@media (max-width: 374px) {
+
+  /* Shrink top-bar title text slightly so it never truncates badly */
+  header h1 {
+    font-size: 0.95rem;
+  }
+
+  /* Stack bottom-nav labels under icons only when there are 5+ items */
+  nav.lg\:hidden span.text-\[10px\] {
+    font-size: 9px;
+  }
+
+  /* Ensure stat counters don't overflow on 320px screens */
+  .grid-cols-3>* {
+    min-width: 0;
+  }
+}
+
+/* ─── Tablet improvements (481px – 768px) ───────────────────────────────── */
+@media (min-width: 481px) and (max-width: 768px) {
+
+  /* Give page content breathing room on medium-small screens */
+  .space-y-5>* {
+    max-width: 100%;
+  }
+}
+
+/* ─── Touch target enforcement for anchor tags ──────────────────────────── */
+/* Only apply min-height to standalone links, not inline text links */
+a:not([class]) {
+  display: inline-block;
+}
+
+/* ─── Prevent chart containers from causing horizontal scroll ────────────── */
+.recharts-wrapper,
+.recharts-responsive-container {
+  max-width: 100% !important;
+}
+
+/* ─── Safe area for devices with notch (iOS/Android) ────────────────────── */
+@supports (padding: max(0px)) {
+  .bottom-nav-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    min-height: calc(var(--bottomnav-h) + max(1rem, env(safe-area-inset-bottom)));
+  }
+
+  main {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+
+  /* Scrollable content clears the fixed bottom nav + gesture bar on Android (mobile only) */
+  @media (max-width: 767px) {
+    .content-scroll-pad {
+      padding-bottom: calc(var(--bottomnav-h) + max(1rem, env(safe-area-inset-bottom)) + 0.75rem);
+    }
+  }
+}
+
+/* ─── Tap scale feedback for touch interactions ──────────────────────────── */
+/* Gives buttons and interactive cards a subtle press feel on mobile          */
+.tap-scale {
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tap-scale:active {
+  transform: scale(0.97);
+}
+
+/* Larger interactive regions get a gentler scale */
+.tap-scale-sm:active {
+  transform: scale(0.985);
+}
+
+/* ─── Smooth scroll for all overflow containers ──────────────────────────── */
+.overflow-y-auto,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* ─── Input/textarea: prevent iOS font zoom (font-size must be ≥16px) ────── */
+@media (max-width: 768px) {
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* ─── Main content scroll pad: clears fixed bottom nav + safe area ──────── */
+/* Bottom nav is mobile-only (<768px). Tablet/Desktop get a flat pad.        */
+.content-scroll-pad {
+  padding-bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 1rem) + 0.75rem);
+}
+
+/* Tablet (768px+) and Desktop: no bottom nav, use a simple top/bottom pad */
+@media (min-width: 768px) {
+  .content-scroll-pad {
+    padding-bottom: 1.5rem;
+  }
+}
+
+/* ─── Bottom nav safe offset (for modals above bottom nav) ──────────────── */
+/* Used by OrderDetailsModal to clear bottom nav + iOS home bar              */
+.bottom-nav-offset {
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 12px));
+}
+
+/* Tablet/Desktop: bottom nav hidden, so no offset needed */
+@media (min-width: 768px) {
+  .bottom-nav-offset {
+    bottom: 0;
+  }
+}
+
+/* ─── Premium Mobile Glassmorphism ────────────────────────────────────────── */
+.mobile-nav-glass {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .mobile-nav-glass {
+  background: rgba(255, 255, 255, 0.8);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Viewport Height Fix for Mobile Browsers ────────────────────────────── */
+/* svh = small viewport height (conservative, visible when address bar shown) */
+/* dvh = dynamic viewport height (adapts as address bar shows/hides)          */
+.h-dynamic-screen {
+  height: 100vh;    /* static fallback */
+  height: 100svh;   /* Android: safe when browser chrome is visible */
+  height: 100dvh;   /* modern browsers: adapts dynamically */
+}
+
+.min-h-dynamic-screen {
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+
+/* ─── Android dynamic viewport: prevent content shift on scroll ─────────── */
+@media (max-width: 1024px) {
+  .h-dynamic-screen {
+    min-height: 100svh;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE-FIRST RESPONSIVE SYSTEM
+   Auto-adapts to ALL screen sizes — no device-specific hacks
+   8px grid · fluid typography · flex/grid based layout
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Fluid spacing tokens (8px grid, scales with viewport) ─────────────── */
+:root {
+  --sp-1:  clamp(4px,  1vw,  8px);
+  --sp-2:  clamp(8px,  2vw, 16px);
+  --sp-3:  clamp(12px, 3vw, 24px);
+  --sp-4:  clamp(16px, 4vw, 32px);
+  --sp-6:  clamp(20px, 5vw, 48px);
+  --sp-8:  clamp(24px, 6vw, 64px);
+  /* Content padding — used by main layout wrapper */
+  --content-px: clamp(12px, 4vw, 24px);
+}
+
+/* ─── Fluid container — replaces fixed max-width with fluid padding ──────── */
+.fluid-container {
+  width: 100%;
+  max-width: min(100%, 1600px);
+  padding-inline: var(--content-px);
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+/* ─── Fluid card — flexible, never overflows ─────────────────────────────── */
+.fluid-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: clamp(12px, 3vw, 20px);
+  border-radius: clamp(12px, 2vw, 20px);
+}
+
+/* ─── Responsive auto-grid — fills available space without media queries ─── */
+.auto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: clamp(8px, 2vw, 16px);
+}
+
+.auto-grid-sm {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+  gap: clamp(6px, 1.5vw, 12px);
+}
+
+/* ─── Flex row that wraps cleanly on all screens ─────────────────────────── */
+.flex-wrap-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(6px, 2vw, 12px);
+}
+
+/* ─── Fluid typography helpers ────────────────────────────────────────────── */
+.text-fluid-xs   { font-size: clamp(10px, 1.8vw, 12px); }
+.text-fluid-sm   { font-size: clamp(11px, 2vw,  13px); }
+.text-fluid-base { font-size: clamp(13px, 2.5vw, 15px); }
+.text-fluid-lg   { font-size: clamp(15px, 3vw,  18px); }
+.text-fluid-xl   { font-size: clamp(18px, 4vw,  24px); }
+.text-fluid-2xl  { font-size: clamp(22px, 5vw,  32px); }
+
+/* ─── Overflow safety net ──────────────────────────────────────────────────── */
+.overflow-safe {
+  overflow-x: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ─── Flex children: never break layout ─────────────────────────────────── */
+.flex-min-0 {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ─── High-DPI / Retina media query support ──────────────────────────────── */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders on high-DPI — use 0.5px equivalent via box-shadow */
+  .border-hdpi {
+    border-width: 0;
+    box-shadow: inset 0 0 0 0.5px var(--theme-border);
+  }
+
+  /* Ensure text renders crisply on OLED / high-density panels */
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+}
+
+/* ─── Very small screens (320px – 374px) — enhanced override ────────────── */
+@media (max-width: 374px) {
+  :root {
+    --content-px: 10px;
+    --sp-2: 6px;
+    --sp-3: 10px;
+    --sp-4: 12px;
+  }
+
+  /* Prevent block-level containers from exceeding viewport */
+  div, section, article, main, header, footer, nav, aside {
+    max-width: 100vw;
+  }
+
+  /* Tighten grid gaps */
+  .grid { gap: 6px !important; }
+
+  /* Force wrapping in all flex rows */
+  .flex-wrap-force { flex-wrap: wrap !important; }
+
+  /* Reduce card padding on tiny screens */
+  .p-4 { padding: 10px !important; }
+  .p-5 { padding: 12px !important; }
+  .px-5 { padding-inline: 10px !important; }
+  .px-4 { padding-inline: 8px !important; }
+}
+
+/* ─── Small screens (375px – 639px) ─────────────────────────────────────── */
+@media (min-width: 375px) and (max-width: 639px) {
+  :root {
+    --content-px: 12px;
+  }
+
+  /* 2-column grids get comfortable gap */
+  .grid-cols-2 { gap: 8px; }
+  .grid-cols-4 { gap: 6px; }
+}
+
+/* ─── Medium screens (640px – 767px) ────────────────────────────────────── */
+@media (min-width: 640px) and (max-width: 767px) {
+  :root {
+    --content-px: 16px;
+  }
+}
+
+/* ─── Prevent long words/URLs from breaking flex layouts ─────────────────── */
+p, span, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ─── Prevent images from exceeding card bounds on any screen ───────────── */
+/* Note: object-fit is NOT applied globally — only content images use cover.
+   Apply .img-cover individually where needed, not on all img elements. */
+img {
+  max-width: 100%;
+  /* height: auto is already set in the media block above. */
+}
+
+/* ─── Stat counter cards — never overflow on narrow screens ─────────────── */
+.stat-card {
+  min-width: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+/* ─── Bottom action bars — safe on all phones ────────────────────────────── */
+.bottom-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: clamp(8px, 2vw, 16px) clamp(12px, 4vw, 24px);
+  padding-bottom: max(clamp(8px, 2vw, 16px), env(safe-area-inset-bottom));
+  z-index: 50;
+  box-sizing: border-box;
+}
+
+/* ─── Modal: full-screen on very small devices, sheet on medium ──────────── */
+@media (max-width: 479px) {
+  .modal-shell {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+  }
+}
+
+/* ─── Tablet (768px – 1024px): Desktop-like horizontal layout ───────────── */
+/* Tablet behaves like desktop: sidebar visible (collapsed), no bottom nav.  */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --content-px: 20px;
+  }
+
+  /* Ensure modals are sheet-style, not full-screen on tablet */
+  .modal-shell {
+    width: auto;
+    max-width: 600px;
+    border-radius: 16px !important;
+    margin: auto !important;
+    position: relative !important;
+    bottom: auto !important;
+  }
+
+  /* Charts keep responsive container but with comfortable height */
+  .recharts-responsive-container {
+    min-height: 200px;
+  }
+}
+
+/* ─── Landscape phone adjustments ─────────────────────────────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hide-landscape { display: none !important; }
+  .h-dynamic-screen { height: 100dvh; }
+  .content-scroll-pad { padding-bottom: 0.5rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPREHENSIVE RESPONSIVE FIX SYSTEM v2
+   Addresses all device-specific layout issues
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Image content helper (apply to food/content images, NOT icons) ──────── */
+.img-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ─── Global text overflow protection ────────────────────────────────────── */
+/* Prevents any text from forcing horizontal scroll */
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* ─── Flex children safe defaults ────────────────────────────────────────── */
+/* Any direct flex child that might overflow: add min-w-0 in JSX or here */
+.flex-safe > * {
+  min-width: 0;
+}
+
+/* ─── Full-width form inputs (override any conflicting styles) ────────────── */
+.w-full {
+  max-width: 100%;
+}
+
+/* ─── Kitchen & Waiter grid: tablet should stay dense like desktop ─────────── */
+/* Tablet (768px – 1024px) — keep 2+ column grids, NOT single column */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Kitchen stats: enforce 4 col on tablet */
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Admin stat cards: 2 col minimum on tablet */
+  .xs\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Waiter status filter: always 4 col on tablet */
+  .sm\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Table wrapper: allow horizontal scroll for overflow tables */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ─── Mobile grid layout (≤ 767px) ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Kitchen stats: 2-col on mobile */
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Prevent any fixed-width layout from causing scroll */
+  [style*="width: 1200"],
+  [style*="width:1200"],
+  [style*="min-width: 1200"],
+  [style*="min-width:1200"] {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Stack all header action rows on mobile */
+  .flex-col-mobile {
+    flex-direction: column !important;
+  }
+}
+
+/* ─── OnePlus / Android shift fix ────────────────────────────────────────── */
+/* Prevents layout shift caused by system bars on Android devices */
+@media (max-width: 767px) {
+  html, body, #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Prevent any absolutely-positioned element from causing page-width issues */
+  .fixed, [style*="position: fixed"], [style*="position:fixed"] {
+    max-width: 100vw;
+  }
+}
+
+/* ─── Layout wrapper — ensures content never overflows sidebar ───────────── */
+/* The main content flex child already has min-w-0 in Layout.jsx.
+   These rules add defensive overflow handling for deep-nested content. */
+main > div {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* ─── Table mobile cards helper ──────────────────────────────────────────── */
+/* For table rows that should become cards on mobile, use .table-to-cards */
+@media (max-width: 640px) {
+  .table-to-cards table,
+  .table-to-cards thead,
+  .table-to-cards tbody,
+  .table-to-cards th,
+  .table-to-cards td,
+  .table-to-cards tr {
+    display: block;
+  }
+  .table-to-cards thead tr {
+    display: none;
+  }
+  .table-to-cards td {
+    text-align: right;
+    padding-left: 40%;
+    position: relative;
+  }
+  .table-to-cards td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 12px;
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--theme-text-muted);
+  }
+}
+
+/* ─── Touch & interaction improvements for all mobile devices ────────────── */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable hover-dependent-only states that don't work on touch */
+  .hover\:scale-105:hover,
+  .hover\:scale-\[1\.02\]:hover {
+    transform: none;
+  }
+
+  /* Increase tap targets for better touch accuracy */
+  .touch-target,
+  button:not(.btn-xs),
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ─── Recharts responsiveness enforcement ───────────────────────────────── */
+.recharts-wrapper,
+.recharts-responsive-container {
+  max-width: 100% !important;
+  overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .recharts-responsive-container {
+    min-height: 180px;
+  }
+}
+
+/* ─── Modal backdrop: prevent overflow behind modal ──────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Sidebar layout: CSS-level fix to prevent content shifting ──────────── */
+/* On tablet: sidebar is fixed-width (80px collapsed). Main content gets the rest. */
+@media (min-width: 768px) {
+  .sidebar-layout {
+    display: flex;
+    width: 100%;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .sidebar-layout > aside {
+    flex-shrink: 0;
+  }
+
+  .sidebar-layout > .main-area {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+}
+
+/* ─── Topbar: fix title truncation on very small devices ─────────────────── */
+@media (max-width: 360px) {
+  header h1 {
+    font-size: 0.875rem !important;
+    max-width: calc(100vw - 120px);
+  }
+}
+
+/* ─── Bottom nav: always above system bars ───────────────────────────────── */
+@media (max-width: 767px) {
+  nav.fixed.bottom-0 {
+    z-index: 40;
+    /* Ensure bottom nav doesn't clip behind Android nav bar */
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+}
+
+/* ─── Card grids: consistent gap management ──────────────────────────────── */
+@media (max-width: 374px) {
+  /* Tightest screens: reduce grid gap to reclaim space */
+  .gap-3 { gap: 8px !important; }
+  .gap-4 { gap: 10px !important; }
+}
+
+/* ─── Admin Analytics: prevent chart overflow ─────────────────────────────── */
+.analytics-chart-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ─── Flex row: prevent single items from forcing full width ─────────────── */
+.flex-row-safe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+/* ─── Utility: clamp text to prevent overflow ────────────────────────────── */
+.text-safe {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ─── Focus ring: accessible and consistent across all devices ───────────── */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Suppress focus ring for mouse/touch (only show for keyboard) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ─── Global Responsive Overrides (Pure Layout Phase) ───────────────────── */
+
+/* ── Mobile Layout (< 1024px) ── */
+@media (max-width: 1024px) {
+  /* Collapse Sidebar to prevent layout push */
+  .sidebar-layout > aside {
+    position: fixed;
+    left: -100%; /* Hide offscreen */
+    top: 0;
+    bottom: 0;
+    z-index: 50;
+    width: var(--sidebar-w);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* When sidebar 'open' state is implemented via class */
+  .sidebar-layout > aside.is-open {
+    left: 0;
+    box-shadow: var(--theme-shadow);
+  }
+
+  .sidebar-layout > .main-area {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-inline: clamp(0.5rem, 3vw, 1.25rem) !important;
+  }
+
+  /* Adjust TopBar for mobile density */
+  .top-bar-sticky {
+    z-index: 45;
+    padding-inline: 1rem !important;
+  }
+
+  /* Ensure long titles don't break flex layouts */
+  .truncate-mobile {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* ── Fluid Modal Adaptation ── */
+@media (max-width: 480px) {
+  .responsive-modal {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 24px 24px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    animation: drawerSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  
+  .responsive-modal-overlay {
+    backdrop-filter: blur(2px) !important;
+  }
+}
+
+/* ── Token Grid Optimization ── */
+.token-grid-adaptive {
+  display: grid;
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 20vw, 240px), 1fr));
+}
+
+/* ── Accessibility: Enforce Contrast in Transitions ── */
+.transition-theme * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+}
+
+/* ── Print: Finalize ── */
+@media print {
+  nav, aside, header, .bottom-nav-safe, .no-print {
+    display: none !important;
+  }
+}
+
+/* ─── Custom Animations ──────────────────────────────────────────────────── */
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes slideLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Layout Utilities ── */
+.content-scroll-pad {
+  padding-bottom: 2rem; /* Desktop fallback */
+}
+
+@media (max-width: 1024px) {
+  .content-scroll-pad {
+    padding-bottom: 8rem; /* Enough room for BottomNav + gap on mobile/tablet */
+  }
+}
+
+
+/* Hero Section Animations */
+@keyframes heroFadeSlideUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes heroBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(8px); }
+}
+.hero-anim { animation: heroFadeSlideUp 0.7s ease forwards; opacity: 0; }
+.hero-delay-1 { animation-delay: 0.2s; }
+.hero-delay-2 { animation-delay: 0.4s; }
+.hero-delay-3 { animation-delay: 0.6s; }
+.hero-delay-4 { animation-delay: 0.8s; }
+.hero-float { animation: heroFloat 3s ease-in-out infinite; }
+.hero-float-delay-0 { animation-delay: 0s; }
+.hero-float-delay-1 { animation-delay: 0.25s; }
+.hero-float-delay-2 { animation-delay: 0.5s; }
+
+/* ─── PERFORMANCE OPTIMIZATIONS ────────────────────────────────────────── */
+
+/* Hardware acceleration for common animated elements */
+.animate-shimmer,
+.animate-pulse,
+.animate-spin,
+.hover\:scale-105 {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Skeleton animation with subtle pulse and shimmer */
+.skeleton {
+  background-color: var(--theme-bg-dark);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Layout stability: enforce fixed aspect ratios for images */
+.aspect-food {
+  aspect-ratio: 4 / 3;
+}
+
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
+@supports (aspect-ratio: 1/1) {
+  .aspect-food, .aspect-square {
+    height: auto;
+  }
+}
+
+/* Virtualized list hint: skip rendering outside viewport for long lists */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px; /* Adjust based on average component height */
+}
+
+/* Smooth scrolling but with optimized paint performance */
+.custom-scrollbar {
+  scrollbar-gutter: stable;
+}
+
+/* Performance: Reduce paint on hover by using opacity or transform ONLY */
+.performance-hover:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Prevent layout shift during font loading */
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── END PERFORMANCE OPTIMIZATIONS ────────────────────────────────────── */
