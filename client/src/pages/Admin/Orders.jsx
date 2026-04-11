@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../api';
+import { getCachedOrders, getPendingOrders } from '../../db/db';
 import { Search, Eye, ShoppingBag, Calendar, X, ChevronLeft, ChevronRight, XCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
@@ -257,15 +258,20 @@ const AdminOrders = () => {
     }, [location.search, orders]);
 
     const fetchOrders = useCallback(async () => {
+        if (!navigator.onLine) {
+            const [cached, pending] = await Promise.all([getCachedOrders(), getPendingOrders()]);
+            setOrders([...(pending || []), ...(cached || [])]);
+            return;
+        }
         try {
             const res = await api.get('/orders', {
-                params: {
-                    limit: 100
-                }
+                params: { limit: 100 }
             });
             setOrders(res.data.orders || []);
         } catch (error) {
             console.error("Error fetching orders", error);
+            const cached = await getCachedOrders();
+            setOrders(cached || []);
         }
     }, [user]);
 

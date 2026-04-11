@@ -2,6 +2,7 @@ import { useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
+import { queueOrder } from '../../utils/syncEngine';
 import {
     Search, ShoppingCart, ArrowLeft, ArrowRight,
     Utensils, ChevronLeft, SearchX, Trash2, Plus, Minus,
@@ -171,8 +172,19 @@ const TakeAway = () => {
                 headers: { Authorization: `Bearer ${user.token}` },
             });
             navigate('/waiter', { replace: true });
-        } catch (err) {
-            alert('Order failed: ' + (err.response?.data?.message || 'Server Error'));
+        } catch (apiErr) {
+            console.log('[TakeAway] Order failed, queuing offline:', apiErr.message);
+            const { localId, tokenNumber } = await queueOrder({
+                tableId: null,
+                type: orderType,
+                items: orderData.items,
+                totalAmount: orderData.totalAmount,
+                sgst: orderData.sgst,
+                cgst: orderData.cgst,
+                finalAmount: orderData.finalAmount,
+            });
+            alert(`Order saved offline with token TK${tokenNumber}. Will sync when online.`);
+            navigate('/waiter', { replace: true });
         }
     };
 

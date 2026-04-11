@@ -135,7 +135,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
                     {!collapsed && (
                         <div className="flex flex-col justify-center text-left">
                             <h1 className="text-sm font-black tracking-tight text-[var(--theme-text-main)] truncate leading-none uppercase flex items-center gap-2">
-                                KAGZSO
+                                {settings?.restaurantName || 'admin'}
                                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-[var(--theme-border)]">
                                     <div className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 animate-pulse'} `} />
                                     <span className={`text-[8px] font-black tracking-widest ${socketConnected ? 'text-emerald-500' : 'text-red-500'}`}>
@@ -143,9 +143,6 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
                                     </span>
                                 </div>
                             </h1>
-                            <p className="text-[9px] text-[var(--theme-text-muted)] font-black uppercase tracking-[0.2em] mt-1 opacity-70">
-                                {settings?.restaurantName || 'Premium POS'}
-                            </p>
                         </div>
                     )}
                 </div>

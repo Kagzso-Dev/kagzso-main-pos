@@ -1,6 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
 import api from '../../api';
 import { AuthContext } from '../../context/AuthContext';
+import { queueAction } from '../../utils/syncEngine';
+import { saveSetting } from '../../db/db';
 import {
     Save, Lock, CheckCircle2, AlertCircle,
     QrCode, Upload, Camera, Loader2, Eye, EyeOff,
@@ -249,8 +251,16 @@ const Settings = () => {
         if (e) e.preventDefault();
         setLoading(true);
         try {
+            if (!navigator.onLine) {
+                const action = { type: 'settings', method: 'PUT', endpoint: '/api/settings', data: generalConfig };
+                await queueAction(action);
+                await saveSetting('generalConfig', generalConfig);
+                setMsg(key, 'success', 'Saved offline - will sync when online');
+                setLoading(false);
+                return;
+            }
             await api.put('/api/settings', generalConfig, { headers: { Authorization: `Bearer ${user.token}` } });
-            // Update context state immediately from response
+            await saveSetting('generalConfig', generalConfig);
             if (fetchSettings) await fetchSettings();
             setMsg(key, 'success', 'Saved successfully');
         } catch (err) {

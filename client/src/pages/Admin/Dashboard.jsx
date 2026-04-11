@@ -107,6 +107,7 @@ const AdminDashboard = () => {
     const [dbSummary, setDbSummary] = useState(null);
     const [statsLoading, setStatsLoading] = useState(true);
     const [filterType, setFilterType] = useState('all'); // 'all', 'dine-in', 'takeaway'
+    const [offlinePayments, setOfflinePayments] = useState([]);
 
 
     const PER_PAGE = 10;
@@ -224,6 +225,23 @@ const AdminDashboard = () => {
         };
     }, [user, socket, fetchOrders, fetchStats, fetchGrowth, handleRefresh]);
 
+    /* ── Check for offline payments ──────────────────────────────────────── */
+    useEffect(() => {
+        const checkOffline = () => {
+            const pending = JSON.parse(localStorage.getItem('pendingPayments') || '[]');
+            const pendingOffline = pending.filter(p => p.status === 'pending');
+            setOfflinePayments(pendingOffline);
+        };
+        checkOffline();
+        const interval = setInterval(checkOffline, 10000);
+        const handleOnline = () => checkOffline();
+        window.addEventListener('online', handleOnline);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('online', handleOnline);
+        };
+    }, []);
+
     /* ── DB-backed stat values (from MySQL via API) ───────────────────── */
     // dbStats.today.active/completed/cancelled/revenue from /api/dashboard/stats
     // dbSummary.totalRevenue/orderCount/avgOrderValue from /api/analytics/summary
@@ -316,6 +334,34 @@ const AdminDashboard = () => {
                     </button>
                 </div>
             </div>
+
+            {/* ── Offline Payments Alert ───────────────────────────────────── */}
+            {offlinePayments.length > 0 && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between animate-fade-in">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                            <Clock size={20} className="text-amber-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-amber-400">
+                                {offlinePayments.length} Offline Payment{offlinePayments.length > 1 ? 's' : ''} Pending Sync
+                            </p>
+                            <p className="text-[10px] text-amber-400/70">
+                                These payments were completed offline and will sync when connection is restored
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => {
+                            const pending = JSON.parse(localStorage.getItem('pendingPayments') || '[]');
+                            alert(`Pending: ${pending.length} payment(s)\nStatus: pending`);
+                        }}
+                        className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-xs font-bold"
+                    >
+                        View Details
+                    </button>
+                </div>
+            )}
 
             {/* ── Stats Grid — values sourced from MySQL via API ─────── */}
             {/* Mobile: 1-col → xs: 2-col → md: 2-col (iPad Mini) → xl: 4-col */}

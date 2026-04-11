@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api';
+import { queueAction } from '../../utils/syncEngine';
 import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Grid2X2 } from 'lucide-react';
 import TableGrid from '../../components/TableGrid';
 import CancelOrderModal from '../../components/CancelOrderModal';
@@ -399,7 +400,13 @@ const WaiterDashboard = () => {
                 { headers: { Authorization: `Bearer ${user.token}` } }
             );
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to add items');
+            console.log('[Dashboard] Add items failed, queuing:', err.message);
+            await queueAction({
+                type: 'add-items',
+                orderId,
+                items,
+            });
+            alert('Saved offline. Will sync when online.');
         }
     };
 

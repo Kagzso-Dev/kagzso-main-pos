@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api';
+import { getCachedOrders, getPendingOrders } from '../../db/db';
 import logoImg from '../../assets/logo.png';
 import PaymentModal from '../../components/PaymentModal';
 import CancelOrderModal from '../../components/CancelOrderModal';
@@ -151,7 +152,7 @@ const Receipt = ({ order, formatPrice, settings }) => (
 
         {/* Header */}
         <div className="text-center border-b-2 border-dashed border-gray-300 pb-4 mb-4 relative z-10">
-            <h1 className="text-2xl font-extrabold tracking-tight">{settings?.restaurantName || 'KAGZSO'}</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">{settings?.restaurantName || 'admin'}</h1>
             <p className="text-xs font-black text-black uppercase tracking-widest mt-0.5">Tax Invoice</p>
             <p className="text-[10px] text-gray-400 mt-1">{settings?.address || 'Restaurant Address'}</p>
             {settings?.gstNumber && <p className="text-[10px] text-gray-400">GSTIN: {settings.gstNumber}</p>}
@@ -281,20 +282,36 @@ const CashierDashboard = () => {
     /* ── Fetch Orders ────────────────────────────────────────────────── */
     const fetchOrders = useCallback(async () => {
         setLoading(true);
+        if (!navigator.onLine) {
+            const [cached, pending] = await Promise.all([getCachedOrders(), getPendingOrders()]);
+            const allOrders = [...(pending || []), ...(cached || [])];
+            if (isHistoryMode) {
+                setOrders(allOrders.filter(o => o.orderStatus === 'completed' || o.orderStatus === 'cancelled'));
+            } else {
+                setOrders(allOrders.filter(o => o.orderStatus === 'payment'));
+            }
+            setLoading(false);
+            return;
+        }
         try {
             const res = await api.get('/api/orders', {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
             const allOrders = res.data.orders || [];
             if (isHistoryMode) {
-                // Show completed/cancelled for History
                 setOrders(allOrders.filter(o => o.orderStatus === 'completed' || o.orderStatus === 'cancelled'));
             } else {
-                // Show orders in Payment stage (per requirements)
                 setOrders(allOrders.filter(o => o.orderStatus === 'payment'));
             }
         } catch (err) {
             console.error('Error fetching orders', err);
+            const cached = await getCachedOrders();
+            const allOrders = cached || [];
+            if (isHistoryMode) {
+                setOrders(allOrders.filter(o => o.orderStatus === 'completed' || o.orderStatus === 'cancelled'));
+            } else {
+                setOrders(allOrders.filter(o => o.orderStatus === 'payment'));
+            }
         } finally {
             setLoading(false);
         }

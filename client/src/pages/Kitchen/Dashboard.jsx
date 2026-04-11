@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../api';
+import { getCachedOrders, getPendingOrders } from '../../db/db';
 import { ChefHat, Clock, CheckCheck, Utensils, XCircle, Grid, List, Loader2, ChevronRight, ChevronLeft, RefreshCw, X } from 'lucide-react';
 import CancelOrderModal from '../../components/CancelOrderModal';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
@@ -380,6 +381,17 @@ const KitchenDashboard = () => {
 
     const fetchOrders = useCallback(async () => {
         setLoading(true);
+        if (!navigator.onLine) {
+            const [cached, pending] = await Promise.all([
+                getCachedOrders(),
+                getPendingOrders()
+            ]);
+            const allOrders = [...(pending || []), ...(cached || [])];
+            setOrders(allOrders);
+            setLastRefresh(new Date());
+            setLoading(false);
+            return;
+        }
         try {
             const res = await api.get('/api/orders', {
                 headers: { Authorization: `Bearer ${user.token}` }
@@ -388,6 +400,8 @@ const KitchenDashboard = () => {
             setLastRefresh(new Date());
         } catch (err) {
             console.error('Kitchen fetch error', err);
+            const cached = await getCachedOrders();
+            setOrders(cached || []);
         } finally {
             setLoading(false);
         }

@@ -19,12 +19,18 @@ export const AuthContext = createContext({
 
 // ── Auth Provider Component ──────────────────────────────────────────────────
 export const AuthProvider = ({ children }) => {
-    // ── Synchronous session restore ───────────────────────────────────────────
-    // Uses sessionStorage so each browser tab is fully independent —
-    // Tab 1 can be waiter, Tab 2 kitchen, Tab 3 admin simultaneously.
+    // ── Session restore ───────────────────────────────────────────────
+    // First try sessionStorage, then localStorage (for offline)
     const [user, setUser] = useState(() => {
         try {
-            const raw = sessionStorage.getItem('user');
+            // Try sessionStorage first (online session)
+            let raw = sessionStorage.getItem('user');
+            if (raw) {
+                const u = JSON.parse(raw);
+                if (u?.token) return u;
+            }
+            // Fallback to localStorage (offline/cached)
+            raw = localStorage.getItem('offlineUser');
             return raw ? JSON.parse(raw) : null;
         } catch {
             return null;
@@ -37,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     const [socketConnected, setSocketConnected] = useState(false);
     const [serverStatus, setServerStatus] = useState('online');
     const [settings, setSettings] = useState({
-        restaurantName: 'KAGZSO',
+        restaurantName: 'admin',
         address: '',
         currency: 'INR',
         currencySymbol: '₹',
@@ -196,6 +202,7 @@ export const AuthProvider = ({ children }) => {
 
             setUser(userData);
             sessionStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('offlineUser', JSON.stringify(userData));
 
             initSocket(userData.role, userData.token);
             fetchSettings();
@@ -213,6 +220,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         sessionStorage.removeItem('user');
+        localStorage.removeItem('offlineUser');
         if (socketRef.current) {
             socketRef.current.disconnect();
             socketRef.current = null;
@@ -220,7 +228,7 @@ export const AuthProvider = ({ children }) => {
         setSocket(null);
         setSocketConnected(false);
         setSettings({
-            restaurantName: 'KAGZSO',
+            restaurantName: 'admin',
             currency: 'INR',
             currencySymbol: '₹',
             sgst: 0,

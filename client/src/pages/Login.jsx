@@ -368,7 +368,7 @@ const Login = () => {
                             </div>
                         </div>
                         <div className="flex flex-col animate-fade-in-right animation-delay-300">
-                            <h1 className="text-xl sm:text-2xl font-[1000] text-[#FFFFFF] tracking-[0.2em] uppercase leading-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">{settings?.restaurantName || 'KAGZSO'}</h1>
+                            <h1 className="text-xl sm:text-2xl font-[1000] text-[#FFFFFF] tracking-[0.2em] uppercase leading-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">{settings?.restaurantName || 'admin'}</h1>
                             <div className="h-px w-full bg-gradient-to-r from-orange-500/60 via-blue-500/60 to-transparent mt-2 rounded-full overflow-hidden">
                                 <div className="h-full w-full bg-white/40 animate-progress-glow"></div>
                             </div>
