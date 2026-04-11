@@ -228,16 +228,32 @@ const Order = {
 
         await Promise.all(itemInserts);
 
-        // Recalculate totals (2.5% SGST, 2.5% CGST) based on items
+        // Recalculate totals - use settings from database for tax rates
         const [allRows] = await mysql.query('SELECT * FROM order_items WHERE order_id = ? AND status != "CANCELLED"', [orderId]);
         const subtotalSum = allRows.reduce((sum, i) => sum + (parseFloat(i.price) * parseInt(i.quantity)), 0);
-        const newSgst = parseFloat((subtotalSum * 0.025).toFixed(2));
-        const newCgst = parseFloat((subtotalSum * 0.025).toFixed(2));
-        const newFinal = parseFloat((subtotalSum + newSgst + newCgst - (parseFloat(orderInfo.discount) || 0)).toFixed(2));
+        const existingSubtotal = parseFloat(orderInfo.total_amount) || 0;
+        const existingDiscount = parseFloat(orderInfo.discount) || 0;
+        
+        // Get tax rates from settings
+        const [settingsRows] = await mysql.query('SELECT sgst, cgst FROM settings LIMIT 1');
+        const settingsSgstRate = parseFloat(settingsRows[0]?.sgst || 0) / 100;
+        const settingsCgstRate = parseFloat(settingsRows[0]?.cgst || 0) / 100;
+        
+        // Use existing order's rate if valid (>0), otherwise use settings rate from admin
+        const existingSgst = parseFloat(orderInfo.sgst) || 0;
+        const existingCgst = parseFloat(orderInfo.cgst) || 0;
+        const existingSgstRate = existingSubtotal > 0 && existingSgst > 0 ? existingSgst / existingSubtotal : 0;
+        const existingCgstRate = existingSubtotal > 0 && existingCgst > 0 ? existingCgst / existingSubtotal : 0;
+        const sgstRate = existingSgstRate > 0 ? existingSgstRate : settingsSgstRate;
+        const cgstRate = existingCgstRate > 0 ? existingCgstRate : settingsCgstRate;
+        
+        const newTotalSgst = parseFloat((subtotalSum * sgstRate).toFixed(2));
+        const newTotalCgst = parseFloat((subtotalSum * cgstRate).toFixed(2));
+        const newFinal = parseFloat((subtotalSum + newTotalSgst + newTotalCgst - existingDiscount).toFixed(2));
 
         await mysql.query(
             'UPDATE orders SET total_amount = ?, sgst = ?, cgst = ?, final_amount = ?, kot_status = "Open", order_status = "pending" WHERE id = ?',
-            [subtotalSum, newSgst, newCgst, newFinal, orderId]
+            [subtotalSum, newTotalSgst, newTotalCgst, newFinal, orderId]
         );
 
         return this.findById(orderId);

@@ -125,7 +125,6 @@ function App() {
               <Route element={<CashierRoute />}>
                 <Route path="/cashier" element={<LiveGuard><CashierDashboard /></LiveGuard>} />
                 <Route path="/cashier/working-process" element={<LiveGuard><WorkingProcess /></LiveGuard>} />
-                <Route path="/cashier/kitchen-view" element={<LiveGuard><KitchenDashboard /></LiveGuard>} />
                 <Route path="/cashier/history" element={<LiveGuard><CashierDashboard /></LiveGuard>} />
               </Route>
 
@@ -135,7 +134,6 @@ function App() {
                 <Route path="/dine-in" element={<LiveGuard><DineIn /></LiveGuard>} />
                 <Route path="/take-away" element={<LiveGuard><TakeAway /></LiveGuard>} />
                 <Route path="/waiter/working-process" element={<LiveGuard><WorkingProcess /></LiveGuard>} />
-                <Route path="/waiter/kitchen-view" element={<LiveGuard><KitchenDashboard /></LiveGuard>} />
                 <Route path="/waiter/history" element={<LiveGuard><WaiterDashboard /></LiveGuard>} />
               </Route>
 

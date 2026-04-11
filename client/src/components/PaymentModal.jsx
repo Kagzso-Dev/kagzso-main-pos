@@ -77,9 +77,6 @@ const PaymentModal = ({ order, formatPrice, onClose, onSuccess, api, settings })
     const [selectedFile, setSelectedFile] = useState(null);
     const [localMsg, setLocalMsg] = useState(null);
 
-    // Offer state
-    const [offerApplied, setOfferApplied] = useState(false);
-
     const modalRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -96,11 +93,7 @@ const PaymentModal = ({ order, formatPrice, onClose, onSuccess, api, settings })
         }
     }, [isOrderReady, step]);
 
-    const offerEnabled = settings?.cashierOfferEnabled && settings?.cashierOfferDiscount > 0;
-    const offerPct = settings?.cashierOfferDiscount || 0;
-    const offerLabel = settings?.cashierOfferLabel || 'Special Offer';
-    const discountAmt = offerApplied ? Math.round(baseTotal * (offerPct / 100) * 100) / 100 : 0;
-    const total = Math.max(0, Math.round((baseTotal - discountAmt) * 100) / 100);
+    const total = baseTotal;
 
     /* ── Initiate payment on mount ────────────────────────────────── */
     useEffect(() => {

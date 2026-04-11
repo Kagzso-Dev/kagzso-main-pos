@@ -224,6 +224,9 @@ if (hasFrontend) {
     app.get('/', (req, res) => res.json({ status: 'ok', message: 'API running. MySQL only.' }));
 }
 
+// ─── Serve Uploads (QR images, etc.) ──────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ─── Error Handler ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
     logger.error('Unhandled route error', { error: err.message, stack: err.stack });

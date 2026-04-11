@@ -12,7 +12,7 @@ import { printBill } from '../../components/BillPrint';
 import {
     Printer, Banknote, CheckCircle,
     ShoppingBag, RefreshCw, ArrowLeft,
-    Clock, AlertTriangle, Grid, List, LogOut, XCircle
+    Clock, AlertTriangle, Grid, List, LogOut
 } from 'lucide-react';
 
 /* ── Order List Item ──────────────────────────────────────────────────────── */
@@ -199,17 +199,17 @@ const Receipt = ({ order, formatPrice, settings }) => (
                 <span className="font-bold">{formatPrice(order.totalAmount)}</span>
             </div>
             
-            {(order.sgst > 0) && (
+            {(order.sgst > 0 || settings?.sgst > 0) && (
                 <div className="flex justify-between text-[11px]">
-                    <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">SGST (2.5%):</span>
-                    <span className="font-bold">{formatPrice(order.sgst)}</span>
+                    <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">SGST ({settings?.sgst || 0}%):</span>
+                    <span className="font-bold">{formatPrice(order.sgst || (order.totalAmount * (settings?.sgst || 0) / 100))}</span>
                 </div>
             )}
             
-            {(order.cgst > 0) && (
+            {(order.cgst > 0 || settings?.cgst > 0) && (
                 <div className="flex justify-between text-[11px]">
-                    <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">CGST (2.5%):</span>
-                    <span className="font-bold">{formatPrice(order.cgst)}</span>
+                    <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">CGST ({settings?.cgst || 0}%):</span>
+                    <span className="font-bold">{formatPrice(order.cgst || (order.totalAmount * (settings?.cgst || 0) / 100))}</span>
                 </div>
             )}
 
@@ -617,15 +617,7 @@ const CashierDashboard = () => {
                                             </p>
                                         </div>
                                         <div className="flex gap-2 flex-wrap">
-                                            {selectedOrder.orderStatus !== 'cancelled' && selectedOrder.paymentStatus !== 'paid' && (
-                                                <button
-                                                    onClick={() => setCancelModal({ isOpen: true, order: selectedOrder })}
-                                                    className="flex items-center justify-center w-11 h-11 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-500/20 active:scale-95"
-                                                    title="Cancel Order"
-                                                >
-                                                    <XCircle size={20} strokeWidth={2.5} />
-                                                </button>
-                                            )}
+
                                             <button
                                                 onClick={() => setShowPrintConfirm(true)}
                                                 className="flex items-center gap-2 px-4 md:px-5 py-3 bg-[var(--theme-bg-hover)] hover:bg-[var(--theme-border)] text-[var(--theme-text-main)] rounded-xl font-semibold text-sm transition-colors min-h-[44px] border border-[var(--theme-border)]"

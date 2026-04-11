@@ -13,6 +13,7 @@ import FoodItem from '../../components/FoodItem';
 import useMenuData from '../../hooks/useMenuData';
 import useDebounce from '../../hooks/useDebounce';
 import OptimizedImage from '../../components/OptimizedImage';
+import { calculateTax } from '../../utils/tax';
 
 /**
  * Take Away Order Page
@@ -24,7 +25,10 @@ const TakeAway = () => {
 
     // Redirect away if takeaway is disabled in settings
     useEffect(() => {
-        if (settings && settings.takeawayEnabled === false) {
+        console.log('[TakeAway] settings:', settings);
+        console.log('[TakeAway] takeawayEnabled:', settings?.takeawayEnabled);
+        if (settings?.takeawayEnabled === false || settings?.takeawayEnabled === 0) {
+            console.log('[TakeAway] Redirecting - takeaway disabled!');
             navigate('/waiter', { replace: true });
         }
     }, [settings, navigate]);
@@ -140,11 +144,10 @@ const TakeAway = () => {
     }, [cart]);
 
     const totalAmount = useMemo(() => cart.reduce((s, i) => s + i.price * i.quantity, 0), [cart]);
-    const sgst = settings?.sgst || 0;
-    const cgst = settings?.cgst || 0;
-    const sValue = totalAmount * (sgst / 100);
-    const cValue = totalAmount * (cgst / 100);
-    const finalAmount = totalAmount + sValue + cValue;
+    
+    // Use centralized utility
+    const taxResults = calculateTax(totalAmount, settings, { discount: 0 });
+    const { sgst: sValue, cgst: cValue, finalAmount, sgstRate, cgstRate } = taxResults;
 
     const handleSubmitOrder = async () => {
         if (!socketConnected) {
@@ -413,8 +416,8 @@ const TakeAway = () => {
                         <div className="flex-shrink-0 p-4 bg-[var(--theme-bg-dark)] border-t border-[var(--theme-border)] space-y-3">
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>Subtotal</span><span>{formatPrice(totalAmount)}</span></div>
-                                {sgst > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>SGST ({sgst}%)</span><span>{formatPrice(totalAmount * sgst / 100)}</span></div>}
-                                {cgst > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>CGST ({cgst}%)</span><span>{formatPrice(totalAmount * cgst / 100)}</span></div>}
+                                {sgstRate > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>SGST ({sgstRate}%)</span><span>{formatPrice(totalAmount * sgstRate / 100)}</span></div>}
+                                {cgstRate > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>CGST ({cgstRate}%)</span><span>{formatPrice(totalAmount * cgstRate / 100)}</span></div>}
                                 <div className="flex justify-between items-center pt-1.5 border-t border-[var(--theme-border)]">
                                     <span className="text-xs font-bold text-[var(--theme-text-main)] uppercase tracking-wider">Total</span>
                                     <span className="text-xl font-black text-blue-400">{formatPrice(finalAmount)}</span>

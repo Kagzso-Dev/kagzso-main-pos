@@ -93,6 +93,17 @@ const createOrder = async (req, res) => {
     }
 
     try {
+        // Check settings from DB to allow/disable order types
+        const Setting = require('../models/Setting');
+        const settings = await Setting.get();
+        
+        if (orderType === 'dine-in' && settings.dineInEnabled === 0) {
+            return res.status(403).json({ message: 'Dine-in orders are disabled in settings' });
+        }
+        if (orderType === 'takeaway' && settings.takeawayEnabled === 0) {
+            return res.status(403).json({ message: 'Takeaway orders are disabled in settings' });
+        }
+
         // Validate table availability before creating order
         if (orderType === 'dine-in' && tableId) {
             const table = await Table.findById(tableId);

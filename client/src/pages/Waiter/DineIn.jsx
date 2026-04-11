@@ -13,6 +13,7 @@ import FoodItem from '../../components/FoodItem';
 import useMenuData from '../../hooks/useMenuData';
 import useDebounce from '../../hooks/useDebounce';
 import OptimizedImage from '../../components/OptimizedImage';
+import { calculateTax } from '../../utils/tax';
 
 /**
  * Dine-In Order Page
@@ -22,6 +23,13 @@ const DineIn = () => {
     const { user, formatPrice, settings = {}, socket, socketConnected } = useContext(AuthContext);
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Redirect away if dine-in is disabled in settings
+    useEffect(() => {
+        if (settings?.dineInEnabled === false || settings?.dineInEnabled === 0) {
+            navigate('/waiter', { replace: true });
+        }
+    }, [settings, navigate]);
 
     const queryParams = new URLSearchParams(location.search);
     const orderIdFromUrl = queryParams.get('orderId');
@@ -167,11 +175,13 @@ const DineIn = () => {
     }, [cart]);
 
     const totalAmount = useMemo(() => cart.reduce((s, i) => s + i.price * i.quantity, 0), [cart]);
-    const sgst = settings?.sgst || 0;
-    const cgst = settings?.cgst || 0;
-    const sValue = totalAmount * (sgst / 100);
-    const cValue = totalAmount * (cgst / 100);
-    const finalAmount = totalAmount + sValue + cValue;
+    
+    const prevSubtotal = originalTotal || 0;
+    const combinedSubtotal = prevSubtotal + totalAmount;
+    
+    // Use centralized utility for estimation matching Backend
+    const taxResults = calculateTax(combinedSubtotal, settings, { discount: 0 });
+    const { sgst: sValue, cgst: cValue, finalAmount: finalAmount, sgstRate, cgstRate } = taxResults;
 
     const handleSubmitOrder = async () => {
         if (!socketConnected) {
@@ -511,40 +521,48 @@ const DineIn = () => {
                                 <div className="flex-shrink-0 p-4 bg-[var(--theme-bg-dark)] border-t border-[var(--theme-border)] space-y-3">
                                     <div className="space-y-1.5">
                                         {isAddingItems ? (
-                                            <>
-                                                <div className="flex justify-between text-[10px] font-bold text-[var(--theme-text-muted)] uppercase tracking-wider italic">
-                                                    <span>Previous Balance</span>
-                                                    <span>{formatPrice(originalTotal)}</span>
-                                                </div>
-                                                <div className="flex justify-between text-[11px] font-bold text-[var(--theme-text-main)] uppercase tracking-wide">
-                                                    <span>New Items Subtotal</span>
-                                                    <span>{formatPrice(totalAmount)}</span>
-                                                </div>
-                                                {sgst > 0 && <div className="flex justify-between text-[10px] font-bold text-[var(--theme-text-muted)]">
-                                                    <span>SGST ({sgst}%)</span>
-                                                    <span>{formatPrice(totalAmount * sgst / 100)}</span>
-                                                </div>}
-                                                {cgst > 0 && (
-                                                    <div className="flex justify-between text-[10px] font-bold text-[var(--theme-text-muted)]">
-                                                        <span>CGST ({cgst}%)</span>
-                                                        <span>{formatPrice(totalAmount * cgst / 100)}</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex justify-between items-center pt-2 border-t-2 border-dashed border-[var(--theme-border)]">
-                                                    <div>
-                                                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] block leading-none">NEW COMBINED TOTAL</span>
-                                                        <span className="text-[10px] font-bold text-[var(--theme-text-muted)] italic">Adding {formatPrice(totalAmount + sValue + cValue)}</span>
-                                                    </div>
-                                                    <span className="text-2xl font-black text-orange-500 tabular-nums">
-                                                        {formatPrice(originalTotal + totalAmount + sValue + cValue)}
-                                                    </span>
-                                                </div>
-                                            </>
+                                            (() => {
+                                                const existingSubtotal = existingItems.filter(i => i.status !== 'CANCELLED').reduce((s, i) => s + (i.price * i.quantity), 0);
+                                                const combinedSubtotal = existingSubtotal + totalAmount;
+                                                
+                                                const taxResults = calculateTax(combinedSubtotal, settings, { discount: 0 });
+                                                const { sgst: combinedSgst, cgst: combinedCgst, finalAmount: combinedFinal, sgstRate, cgstRate } = taxResults;
+
+                                                return (
+                                                    <>
+                                                        <div className="flex justify-between text-[11px] font-bold text-[var(--theme-text-main)] uppercase tracking-wide">
+                                                            <span>New Subtotal (All Items)</span>
+                                                            <span>{formatPrice(combinedSubtotal)}</span>
+                                                        </div>
+                                                        {sgstRate > 0 && (
+                                                            <div className="flex justify-between text-[10px] font-bold text-[var(--theme-text-muted)]">
+                                                                <span>Combined SGST ({sgstRate}%)</span>
+                                                                <span>{formatPrice(combinedSgst)}</span>
+                                                            </div>
+                                                        )}
+                                                        {cgstRate > 0 && (
+                                                            <div className="flex justify-between text-[10px] font-bold text-[var(--theme-text-muted)]">
+                                                                <span>Combined CGST ({cgstRate}%)</span>
+                                                                <span>{formatPrice(combinedCgst)}</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex justify-between items-center pt-2 border-t-2 border-dashed border-[var(--theme-border)]">
+                                                            <div>
+                                                                <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] block leading-none">NEW TOTAL ESTIMATE</span>
+                                                                <span className="text-[10px] font-bold text-[var(--theme-text-muted)] italic">Includes {existingItems.length} old + {cart.length} new</span>
+                                                            </div>
+                                                            <span className="text-2xl font-black text-orange-500 tabular-nums">
+                                                                {formatPrice(combinedFinal)}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()
                                         ) : cart.length > 0 ? (
                                             <>
                                                 <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>Subtotal</span><span>{formatPrice(totalAmount)}</span></div>
-                                                {sgst > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>SGST ({sgst}%)</span><span>{formatPrice(totalAmount * sgst / 100)}</span></div>}
-                                                {cgst > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>CGST ({cgst}%)</span><span>{formatPrice(totalAmount * cgst / 100)}</span></div>}
+                                                {sgstRate > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>SGST ({sgstRate}%)</span><span>{formatPrice(totalAmount * sgstRate / 100)}</span></div>}
+                                                {cgstRate > 0 && <div className="flex justify-between text-xs text-[var(--theme-text-muted)]"><span>CGST ({cgstRate}%)</span><span>{formatPrice(totalAmount * cgstRate / 100)}</span></div>}
                                                 <div className="flex justify-between items-center pt-1.5 border-t border-[var(--theme-border)]">
                                                     <span className="text-xs font-bold text-[var(--theme-text-main)] uppercase tracking-wider">Total</span>
                                                     <span className="text-xl font-black text-orange-500">{formatPrice(finalAmount)}</span>

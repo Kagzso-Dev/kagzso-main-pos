@@ -2,7 +2,20 @@ import { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import api, { baseURL as API_BASE } from '../api';
 import { io } from 'socket.io-client';
 
-export const AuthContext = createContext();
+export const AuthContext = createContext({
+    user: null,
+    socket: null,
+    settings: {},
+    loading: true,
+    login: () => {},
+    logout: () => {},
+    fetchSettings: () => {},
+    formatPrice: (amount) => '',
+    role: null,
+    isAdmin: false,
+    socketConnected: false,
+    serverStatus: 'online',
+});
 
 // ── Auth Provider Component ──────────────────────────────────────────────────
 export const AuthProvider = ({ children }) => {
@@ -156,8 +169,9 @@ export const AuthProvider = ({ children }) => {
 
         return () => {
             if (socketRef.current) {
-                socketRef.current.disconnect();
+                const s = socketRef.current;
                 socketRef.current = null;
+                if (s.connected) s.disconnect();
             }
         };
     }, [user, initSocket, fetchSettings]);

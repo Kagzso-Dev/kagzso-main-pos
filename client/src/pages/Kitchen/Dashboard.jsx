@@ -132,8 +132,8 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                     <h3 className="text-[14px] font-black text-[var(--theme-text-main)] tracking-tight italic">
                         {String(order.orderNumber).startsWith('ORD-') ? String(order.orderNumber).replace('ORD-', '#') : `#${order.orderNumber}`}
                     </h3>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        {hasNewItems && <span className="text-[8px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded uppercase tracking-wide animate-pulse">+New</span>}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                        {hasNewItems && <span className="text-[8px] font-black bg-orange-50 text-orange-600 border border-orange-200/50 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">+New</span>}
                         <StatusBadge status={order.orderStatus} items={order.items || []} size="xs" />
                     </div>
                 </div>
@@ -164,6 +164,15 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                                 {item.variant?.name && <span className="ml-1 text-[8px] opacity-60">({item.variant.name})</span>}
                             </p>
                         </div>
+                        {userRole === 'kitchen' || userRole === 'admin' ? (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onCancelItem(order, item); }}
+                                className="w-5 h-5 shrink-0 flex items-center justify-center rounded hover:bg-red-500/15 text-red-400/50 hover:text-red-500 transition-all"
+                                title="Cancel item"
+                            >
+                                <XCircle size={12} />
+                            </button>
+                        ) : null}
                     </div>
                 ))}
 
@@ -176,6 +185,9 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                                 <div key={item._id} className="flex items-center gap-2 text-[10px] font-medium text-[var(--theme-text-muted)]">
                                     <span className="w-3.5 h-3.5 flex items-center justify-center bg-emerald-500/10 text-emerald-600 text-[8px] font-black rounded ring-1 ring-emerald-500/20">{item.quantity}</span>
                                     <span className="line-through">{item.name}</span>
+                                    <span className="w-4 h-4 shrink-0 flex items-center justify-center text-gray-300" title="Cannot cancel - already ready">
+                                        <XCircle size={10} />
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -190,10 +202,6 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                 </span>
                 
                 <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-[11px] sm:text-[12px] font-black text-[var(--theme-text-main)] tabular-nums truncate">
-                        ₹{(order.finalAmount || 0).toLocaleString('en-IN')}
-                    </span>
-
                     {(userRole === 'kitchen' || userRole === 'admin') && 
                      ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) ? (
                         <button
@@ -262,7 +270,7 @@ const KitchenTokenCard = ({ order, onClick }) => {
                         {order.orderType === 'dine-in' ? 'Dine' : 'Take'}
                     </span>
                     {order.isPartiallyReady && (
-                        <span className="text-[6px] font-black uppercase bg-emerald-500 text-white px-1.5 py-0.5 rounded-full shadow-sm animate-bounce-subtle">
+                        <span className="text-[7px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200/50 px-2 py-0.5 rounded-full shadow-sm animate-bounce-subtle">
                             Partial
                         </span>
                     )}
