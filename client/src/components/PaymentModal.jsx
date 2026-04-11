@@ -60,6 +60,13 @@ const PaymentModal = ({ order, formatPrice, onClose, onSuccess, api, settings })
     const [step, setStep] = useState('select'); // select | form | processing | success | error
     const [error, setError] = useState('');
 
+    // Offer state
+    const [offerApplied, setOfferApplied] = useState(false);
+    const offerLabel = 'Cashier Offer';
+    const discountAmt = offerApplied && settings?.cashierOfferDiscount
+        ? Math.round((baseTotal * settings.cashierOfferDiscount) / 100 * 100) / 100
+        : 0;
+
     // Cash state
     const [amountReceived, setAmountReceived] = useState('');
     const [change, setChange] = useState(0);
@@ -93,7 +100,7 @@ const PaymentModal = ({ order, formatPrice, onClose, onSuccess, api, settings })
         }
     }, [isOrderReady, step]);
 
-    const total = baseTotal;
+    const total = offerApplied ? Math.max(0, baseTotal - discountAmt) : baseTotal;
 
     /* ── Initiate payment on mount ────────────────────────────────── */
     useEffect(() => {
