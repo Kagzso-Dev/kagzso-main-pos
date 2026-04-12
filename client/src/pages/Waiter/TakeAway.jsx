@@ -35,22 +35,13 @@ const TakeAway = () => {
     }, [settings, navigate]);
 
     const orderType = 'takeaway';
-    const [cart, setCart] = useState(() => {
-        try {
-            const saved = localStorage.getItem('kagzso_active_takeaway_cart');
-            return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
-    });
+    const [cart, setCart] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 250);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [userInteracted, setUserInteracted] = useState(false);
-    useEffect(() => {
-        localStorage.setItem('kagzso_active_takeaway_cart', JSON.stringify(cart));
-    }, [cart]);
-
     const prevCartLength = useRef(0);
     const [viewMode, setViewMode] = useState(() => {
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -116,7 +107,8 @@ const TakeAway = () => {
         console.log('Cart empty – session reset');
         setCart([]);
         setIsCartOpen(false);
-        localStorage.removeItem('kagzso_active_takeaway_cart');
+        setSearchQuery('');
+        setSelectedCategory(null);
         console.log('New order started');
     }, []);
 
@@ -210,7 +202,6 @@ const TakeAway = () => {
             await api.post('/api/orders', orderData, {
                 headers: { Authorization: `Bearer ${user.token}` },
             });
-            localStorage.removeItem('kagzso_active_takeaway_cart');
             navigate('/waiter', { replace: true });
         } catch (apiErr) {
             console.log('[TakeAway] Order failed, queuing offline:', apiErr.message);
@@ -276,26 +267,26 @@ const TakeAway = () => {
                                 )}
                             </div>
                             {!settings?.enforceMenuView && <ViewToggle viewMode={viewMode} setViewMode={handleViewToggle} />}
-                            {cart.length > 0 && (
-                                <button
-                                    onClick={() => setIsCartOpen(!isCartOpen)}
-                                    className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm border shadow-sm shrink-0 active:scale-95
-                                        ${isCartOpen
-                                            ? 'bg-orange-500 text-white border-orange-600 shadow-md'
-                                            : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}
-                                    `}
-                                >
-                                    <ShoppingCart size={18} className="shrink-0" />
-                                    {/* 3D animated double arrow */}
-                                    <span className={`flex items-center transition-transform duration-300 ${isCartOpen ? 'rotate-180' : ''}`} style={{ perspective: '120px' }}>
-                                        <ChevronLeft size={14} className="animate-cart-arrow-1" strokeWidth={3} />
-                                        <ChevronLeft size={14} className="animate-cart-arrow-2 -ml-2" strokeWidth={3} />
-                                    </span>
+                            <button
+                                onClick={() => setIsCartOpen(!isCartOpen)}
+                                className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm border shadow-sm shrink-0 active:scale-95
+                                    ${isCartOpen
+                                        ? 'bg-orange-500 text-white border-orange-600 shadow-md'
+                                        : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}
+                                `}
+                            >
+                                <ShoppingCart size={18} className="shrink-0" />
+                                {/* 3D animated double arrow */}
+                                <span className={`flex items-center transition-transform duration-300 ${isCartOpen ? 'rotate-180' : ''}`} style={{ perspective: '120px' }}>
+                                    <ChevronLeft size={14} className="animate-cart-arrow-1" strokeWidth={3} />
+                                    <ChevronLeft size={14} className="animate-cart-arrow-2 -ml-2" strokeWidth={3} />
+                                </span>
+                                {cart.length > 0 && (
                                     <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${isCartOpen ? 'bg-white text-orange-600 border-orange-500' : 'bg-orange-600 text-white border-[var(--theme-bg-card)]'}`}>
                                         {cart.length}
                                     </span>
-                                </button>
-                            )}
+                                )}
+                            </button>
                         </div>
                     </div>
 
@@ -335,6 +326,16 @@ const TakeAway = () => {
                                     <span className="text-[10px] font-black uppercase tracking-tighter text-center leading-tight whitespace-nowrap">{cat.name}</span>
                                 </button>
                             ))}
+                            {/* View All Button */}
+                            <button
+                                onClick={() => setIsCategoryModalOpen(true)}
+                                className="flex flex-shrink-0 flex-col items-center justify-center py-2.5 px-6 gap-1.5 transition-all border-b-4 border-transparent text-orange-500 hover:bg-orange-500/5"
+                            >
+                                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-orange-500 text-white shadow-sm">
+                                    <Grid size={10} strokeWidth={3} />
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest leading-none">View All</span>
+                            </button>
                         </div>
 
                         {/* Items Grid — Premium Independent Scroll UI */}
@@ -378,20 +379,14 @@ const TakeAway = () => {
                 </div>
 
                 {/* Cart Panel */}
-                <aside 
-                    className={`
-                        fixed z-[100] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] transform flex flex-col
-                        md:relative md:z-0 md:translate-x-0 border-[var(--theme-border)]
-                        ${(isCartOpen && cart.length > 0) 
-                            ? 'translate-x-0 opacity-100 shadow-2xl ring-1 ring-black/5 ' +
-                              'inset-y-0 right-0 w-[90vw] ' +
-                              'sm:inset-y-4 sm:right-4 sm:w-[400px] sm:rounded-[3rem] ' +
-                              'md:inset-y-0 md:right-0 md:w-[320px] lg:w-[380px] xl:w-[420px] md:rounded-3xl md:border-l'
-                            : 'translate-x-full opacity-0 w-0 md:w-0 overflow-hidden'
-                        }
-                        bg-[var(--theme-bg-card)]
-                    `}
-                >
+                <aside className={`
+                    fixed inset-0 z-[100] md:relative md:inset-auto md:z-0 flex-shrink-0 md:self-start
+                    transition-all duration-300 ease-in-out overflow-hidden
+                    ${(isCartOpen && cart.length > 0)
+                        ? 'translate-x-0 w-full md:w-[320px] lg:w-[380px] xl:w-[420px]'
+                        : 'translate-x-full md:translate-x-0 w-full md:w-0'
+                    }
+                `}>
                     {(isCartOpen && cart.length > 0) && <div onClick={() => setIsCartOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm md:hidden" />}
 
 
