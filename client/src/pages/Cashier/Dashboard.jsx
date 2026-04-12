@@ -695,37 +695,7 @@ const CashierDashboard = () => {
                     </div>
                 </div>
 
-                {/* ── TOP POPUP: Print Confirmation (iOS Style) ── */}
-                {showPrintConfirm && selectedOrder && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-scale-in">
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px]" onClick={() => setShowPrintConfirm(false)} />
-                        <div className="relative bg-white rounded-[1.3rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col w-full max-w-[260px]">
-                            {/* Content Block */}
-                            <div className="p-5 flex flex-col items-center text-center gap-1.5 text-black">
-                                <h4 className="text-[17px] font-semibold tracking-tight leading-tight">Print Bill?</h4>
-                                <p className="text-[13px] text-gray-600 leading-tight">
-                                    Generate invoice for {selectedOrder.orderNumber}?
-                                </p>
-                            </div>
-                            
-                            {/* Buttons Block (iOS Style) */}
-                            <div className="grid grid-cols-2 border-t border-gray-200">
-                                <button 
-                                    onClick={() => setShowPrintConfirm(false)}
-                                    className="h-11 flex items-center justify-center text-[17px] text-[#007AFF] font-normal hover:bg-gray-50 active:bg-gray-100 transition-colors border-r border-gray-200"
-                                >
-                                    Cancel
-                                </button>
-                                <button 
-                                    onClick={() => { printBill(selectedOrder, formatPrice, settings); setShowPrintConfirm(false); }}
-                                    className="h-11 flex items-center justify-center text-[17px] text-[#FF3B30] font-semibold hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                                >
-                                    Print
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+
             </div>
 
             {/* ── Payment Modal ────────────────────────────────── */}

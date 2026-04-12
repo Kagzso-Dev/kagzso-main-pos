@@ -392,7 +392,7 @@ const OrderDetailsModal = ({
                         {userRole !== 'waiter' && (
                             <button 
                                 disabled={isCancelled} 
-                                onClick={() => setShowPrintConfirm(true)} 
+                                onClick={() => printBill(order, formatPrice, settings)} 
                                 className={`w-full h-14 flex items-center justify-center gap-3 rounded-[1.25rem] text-[13px] font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-[0.98] ${
                                     isCancelled 
                                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
@@ -417,24 +417,7 @@ const OrderDetailsModal = ({
                         )}
                     </div>
                 )}
-                {showPrintConfirm && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPrintConfirm(false)} />
-                        <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col w-full max-w-[280px]">
-                            <div className="p-8 flex flex-col items-center text-center text-black">
-                                <Printer size={32} className="text-orange-500 mb-2" />
-                                <h4 className="text-lg font-black uppercase tracking-tight">Print Ticket?</h4>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase">
-                                    {order.orderType === 'dine-in' ? 'DI' : 'TK'}-{String(order.orderNumber || '').startsWith('ORD-') ? String(order.orderNumber).replace('ORD-', '') : order.orderNumber}
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-2 border-t border-gray-100">
-                                <button onClick={() => setShowPrintConfirm(false)} className="h-14 text-[12px] text-gray-400 font-black uppercase border-r border-gray-100">No</button>
-                                <button onClick={() => { printBill(order, formatPrice, settings); setShowPrintConfirm(false); }} className="h-14 text-[12px] text-orange-600 font-black uppercase">Print</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+
             </div>
         );
     }
@@ -457,7 +440,7 @@ const OrderDetailsModal = ({
                     `}>
                         <button onClick={onClose} className="h-16 flex items-center justify-center text-[12px] xs:text-[13px] text-[var(--theme-text-muted)] font-black uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-white/10 active:bg-gray-200 transition-colors border-r border-[var(--theme-border)]">Close</button>
                         {(userRole !== 'waiter' || onProcessPayment) && (
-                            <button disabled={isCancelled || isPaid || !isReady} onClick={() => onProcessPayment ? onProcessPayment(order) : setShowPrintConfirm(true)} className={`h-16 flex items-center justify-center text-[12px] xs:text-[13px] font-black uppercase tracking-widest transition-all ${isCancelled || (onProcessPayment && (isPaid || !isReady)) ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed opacity-50' : (onProcessPayment ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10' : 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10')}`}>
+                            <button disabled={isCancelled || isPaid || !isReady} onClick={() => onProcessPayment ? onProcessPayment(order) : printBill(order, formatPrice, settings)} className={`h-16 flex items-center justify-center text-[12px] xs:text-[13px] font-black uppercase tracking-widest transition-all ${isCancelled || (onProcessPayment && (isPaid || !isReady)) ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed opacity-50' : (onProcessPayment ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10' : 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10')}`}>
                                 {onProcessPayment ? (
                                     <div className="flex flex-col items-center">
                                         <Banknote size={18} strokeWidth={3} className="mb-0.5" />
@@ -473,23 +456,7 @@ const OrderDetailsModal = ({
                         )}
                     </div>
                 </div>
-                {showPrintConfirm && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-scale-in">
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px]" onClick={() => setShowPrintConfirm(false)} />
-                        <div className="relative bg-white rounded-[1.5rem] shadow-2xl overflow-hidden flex flex-col w-full max-w-[260px]">
-                            <div className="p-6 flex flex-col items-center text-center gap-1.5 text-black">
-                                <h4 className="text-[17px] font-black uppercase tracking-tight">Print Ticket?</h4>
-                                <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest">
-                                    {order.orderType === 'dine-in' ? 'DI' : 'TK'}-{String(order.orderNumber || '').startsWith('ORD-') ? String(order.orderNumber).replace('ORD-', '') : order.orderNumber}
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-2 border-t border-gray-100">
-                                <button onClick={() => setShowPrintConfirm(false)} className="h-14 text-[12px] text-gray-400 font-black uppercase border-r border-gray-100">No</button>
-                                <button onClick={() => { printBill(order, formatPrice, settings); setShowPrintConfirm(false); }} className="h-14 text-[12px] text-orange-600 font-black uppercase">Print</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+
             </div>
         </div>
     );

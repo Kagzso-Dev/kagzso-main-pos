@@ -143,8 +143,6 @@ const DineIn = () => {
         setIsAddingItems(false);
         setStep(2); // Go back to table selection
         setIsCartOpen(false);
-        setSearchQuery('');
-        setSelectedCategory(null);
         console.log('New order started');
     }, []);
 

@@ -107,8 +107,6 @@ const TakeAway = () => {
         console.log('Cart empty – session reset');
         setCart([]);
         setIsCartOpen(false);
-        setSearchQuery('');
-        setSelectedCategory(null);
         console.log('New order started');
     }, []);
 
