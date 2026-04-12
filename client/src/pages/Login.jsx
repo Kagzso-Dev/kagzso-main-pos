@@ -270,7 +270,7 @@ const Login = () => {
                             color:'rgba(255,255,255,0.55)', letterSpacing:'.18em',
                             textTransform:'uppercase',
                             animation:'kz-sub-in .6s .5s ease both',
-                        }}>Smart Kitchen System</p>
+                        }}>{settings?.restaurantName || 'Smart Kitchen System'}</p>
 
                         {/* Bouncing dots */}
                         <div style={{ display:'flex', gap:'7px', justifyContent:'center', marginTop:'18px' }}>
@@ -328,7 +328,7 @@ const Login = () => {
 
     /* ── Show hero only ── */
     if (heroVisible) {
-        return <HeroSection onSignIn={handleSignIn} />;
+        return <HeroSection onSignIn={handleSignIn} settings={settings} />;
     }
 
     return (
@@ -368,13 +368,13 @@ const Login = () => {
                             </div>
                         </div>
                         <div className="flex flex-col animate-fade-in-right animation-delay-300">
-                            <h1 className="text-xl sm:text-2xl font-[1000] text-[#FFFFFF] tracking-[0.2em] uppercase leading-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">{settings?.restaurantName || 'admin'}</h1>
+                            <h1 className="text-xl sm:text-2xl font-[1000] text-orange-500 tracking-[0.2em] uppercase leading-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">KAGZSO</h1>
                             <div className="h-px w-full bg-gradient-to-r from-orange-500/60 via-blue-500/60 to-transparent mt-2 rounded-full overflow-hidden">
                                 <div className="h-full w-full bg-white/40 animate-progress-glow"></div>
                             </div>
-                            <p className="text-[8px] text-white/50 font-black tracking-[0.3em] uppercase mt-2 leading-none flex items-center gap-2">
+                            <p className="text-[10px] text-white font-black tracking-[0.1em] uppercase mt-2 leading-none flex items-center gap-2">
                                 <span className="w-1 h-1 rounded-full bg-orange-500 animate-ping"></span>
-                                Smart Kitchen System
+                                {settings?.restaurantName || 'Smart Kitchen System'}
                             </p>
                         </div>
                     </div>

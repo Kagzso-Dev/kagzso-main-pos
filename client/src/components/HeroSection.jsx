@@ -3,6 +3,7 @@ import {
   X, ChevronLeft, ChevronRight, Zap,
   UtensilsCrossed, Receipt, LayoutDashboard, ClipboardList,
 } from 'lucide-react';
+const logoImg = '/logo.png';
 
 /* ── Demo slide data ─────────────────────────────────────────────────────── */
 const DEMO_SLIDES = [
@@ -229,7 +230,7 @@ const STATS = [
 ];
 
 /* ── Hero Section ────────────────────────────────────────────────────────── */
-const HeroSection = ({ onSignIn }) => {
+const HeroSection = ({ onSignIn, settings }) => {
   const [showDemo, setShowDemo] = useState(false);
 
   return (
@@ -390,6 +391,28 @@ const HeroSection = ({ onSignIn }) => {
             </svg>
             <span>kagzso.in@gmail.com</span>
           </a>
+        </div>
+
+        {/* Top left branding logo section */}
+        <div className="fixed top-6 left-6 z-[100] flex items-center gap-3 sm:gap-4 animate-blur-in hover:scale-105 transition-transform duration-500">
+            <div className="flex items-center gap-3 sm:gap-4 group cursor-default">
+                <div className="relative animate-float shadow-2xl">
+                    <div className="absolute -inset-1.5 bg-gradient-to-r from-orange-500/30 to-blue-500/30 rounded-2xl blur-lg opacity-40 group-hover:opacity-100 animate-pulse transition duration-500"></div>
+                    <div className="relative w-10 sm:w-11 h-10 sm:h-11 flex items-center justify-center rounded-xl bg-slate-900/60 backdrop-blur-xl p-1.5 border border-white/20 overflow-hidden shadow-orange-500/20">
+                        <img src={logoImg} alt="KAGZSO" className="w-[85%] h-[85%] object-contain animate-inner-shimmer" />
+                    </div>
+                </div>
+                <div className="flex flex-col animate-fade-in-right animation-delay-300">
+                    <h1 className="text-xl sm:text-2xl font-[1000] text-orange-500 tracking-[0.2em] uppercase leading-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">KAGZSO</h1>
+                    <div className="h-px w-full bg-gradient-to-r from-orange-500/60 via-blue-500/60 to-transparent mt-2 rounded-full overflow-hidden">
+                        <div className="h-full w-full bg-white/40 animate-progress-glow"></div>
+                    </div>
+                    <p className="text-[10px] text-white font-black tracking-[0.1em] uppercase mt-2 leading-none flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-orange-500 animate-ping"></span>
+                        {settings?.restaurantName || 'Smart Kitchen System'}
+                    </p>
+                </div>
+            </div>
         </div>
 
         {/* Content */}
