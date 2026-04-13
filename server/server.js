@@ -28,6 +28,8 @@ const allowedOrigins = [
     "http://localhost:5174",
     "http://localhost:5175",
     "http://localhost:5005",
+    "http://139.84.152.58:5005",
+    "http://139.84.152.58:5173",
 
     process.env.CLIENT_URL
 ].filter(Boolean).map(o => o.trim().replace(/\/$/, ''));
@@ -56,7 +58,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options('*path', cors(corsOptions));
 
 // ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(helmet({
@@ -236,7 +238,7 @@ if (hasFrontend) {
             }
         }
     }));
-    app.get('*', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+    app.get('*path', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
 } else {
     app.get('/', (req, res) => res.json({ status: 'ok', message: 'API running. MySQL only.' }));
 }

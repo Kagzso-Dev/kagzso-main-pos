@@ -60,6 +60,11 @@ export const syncPendingPayments = async () => {
       }
     } catch (error) {
       console.error('Payment sync failed:', error);
+      // If order is not found (404), don't retry this payment
+      if (error.response?.status === 404) {
+        console.warn(`[SyncEngine] Purging payment sync for non-existent order: ${orderIdToUse}`);
+        continue; 
+      }
       failed.push(p);
     }
   }

@@ -34,14 +34,14 @@ export const getCategories = async () => {
 };
 
 export const saveTables = async (tables) => {
-  await db.tables.clear();
+  await db.table('tables').clear();
   if (tables.length) {
-    await db.tables.bulkAdd(tables);
+    await db.table('tables').bulkAdd(tables);
   }
 };
 
 export const getTables = async () => {
-  return await db.tables.toArray();
+  return await db.table('tables').toArray();
 };
 
 export const saveSetting = async (key, value) => {

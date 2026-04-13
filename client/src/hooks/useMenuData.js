@@ -71,8 +71,16 @@ const useMenuData = () => {
                         api.get('/api/categories'),
                     ])
                         .then(([menuRes, catRes]) => {
-                            const items = applyDefaultImages(menuRes.data);
-                            const cats = catRes.data;
+                            console.log('useMenuData: API Response - Menu:', menuRes.data);
+                            console.log('useMenuData: API Response - Categories:', catRes.data);
+
+                            const items = applyDefaultImages(menuRes.data || []);
+                            const cats = catRes.data || [];
+                            
+                            if (cats.length === 0) {
+                                console.warn('useMenuData: No categories returned from API.');
+                            }
+
                             _cache.items = items;
                             _cache.categories = cats;
                             _cache.fetchedAt = Date.now();
@@ -81,7 +89,9 @@ const useMenuData = () => {
                             saveCategories(cats);
                         })
                         .catch(err => {
-                            console.error('useMenuData:', err);
+                            console.error('useMenuData: API Error:', err);
+                            // Optionally fallback to local DB if API fails
+                            loadFromIndexedDB();
                         })
                         .finally(() => {
                             _pendingFetch = null;

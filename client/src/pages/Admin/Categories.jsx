@@ -74,17 +74,25 @@ const AdminCategories = () => {
     };
 
     const fetchCategories = async () => {
+        console.log('[AdminCategories] Fetching categories from API...');
         if (!navigator.onLine) {
+            console.warn('[AdminCategories] Device is offline. Loading categories from IndexedDB.');
             const cached = await getCategories();
             setCategories(cached || []);
             return;
         }
         try {
             const res = await api.get('/api/categories');
-            setCategories(res.data);
-            await saveCategories(res.data);
+            console.log('[AdminCategories] API Response:', res.data);
+            
+            if (!res.data || res.data.length === 0) {
+                console.warn('[AdminCategories] API returned empty categories list.');
+            }
+            
+            setCategories(res.data || []);
+            await saveCategories(res.data || []);
         } catch (error) {
-            console.error("Error fetching categories", error);
+            console.error("[AdminCategories] Error fetching categories:", error);
             const cached = await getCategories();
             setCategories(cached || []);
         }

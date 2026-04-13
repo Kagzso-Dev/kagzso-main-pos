@@ -343,7 +343,7 @@ const Login = () => {
                     style={{ backgroundImage: 'url("/login.jpeg")' }}
                 ></div>
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-950/60 via-slate-950/40 to-slate-950/80 backdrop-blur-sm"></div>
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+
             </div>
 
             {/* System Status - Top Right Pin (Hidden on mobile to avoid overlap) */}
