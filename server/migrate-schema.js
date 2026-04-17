@@ -5,6 +5,71 @@ async function migrate() {
     try {
         console.log('--- STARTING SCHEMA MIGRATION ---');
 
+        // 0. MULTI-TENANCY SUPPORT
+        console.log('Setting up multi-tenancy core tables...');
+        await mysql.query(`
+            CREATE TABLE IF NOT EXISTS restaurants (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL,
+                slug VARCHAR(255) UNIQUE NOT NULL,
+                plan VARCHAR(50) DEFAULT 'trial',
+                is_active BOOLEAN DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+        await mysql.query(`
+            CREATE TABLE IF NOT EXISTS restaurants_config (
+                tenant_id INT PRIMARY KEY,
+                table_count INT DEFAULT 10,
+                enabled_modules JSON,
+                FOREIGN KEY (tenant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+            )
+        `);
+        await mysql.query(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id VARCHAR(36) PRIMARY KEY,
+                tenant_id INT,
+                user_id VARCHAR(36),
+                title VARCHAR(255),
+                message TEXT,
+                type VARCHAR(50),
+                is_read BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (tenant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+            )
+        `);
+
+        // Check if primary restaurant exists
+        const [tenants] = await mysql.query('SELECT id FROM restaurants WHERE id = 1');
+        if (tenants.length === 0) {
+            console.log('Initializing primary restaurant (id=1)...');
+            await mysql.query('INSERT INTO restaurants (id, name, slug, plan) VALUES (1, "Primary", "primary", "pro")');
+            await mysql.query('INSERT INTO restaurants_config (tenant_id, table_count, enabled_modules) VALUES (1, 15, \'["orders", "kot", "billing"]\')');
+        }
+
+        const tenantTables = [
+            'users', 'categories', 'menu_items', 'tables', 'orders', 
+            'counters', 'settings', 'daily_analytics', 'payments', 
+            'payment_audits'
+        ];
+
+        for (const tableName of tenantTables) {
+            const [cols] = await mysql.query(`SHOW COLUMNS FROM \`${tableName}\` LIKE "tenant_id"`);
+            if (cols.length === 0) {
+                console.log(`Adding tenant_id to ${tableName}...`);
+                await mysql.query(`ALTER TABLE \`${tableName}\` ADD COLUMN tenant_id INT AFTER id`);
+                // If counters, it's part of PK
+                if (tableName === 'counters') {
+                     await mysql.query('ALTER TABLE counters DROP PRIMARY KEY, ADD PRIMARY KEY (counter_key, tenant_id)');
+                }
+                // Backfill existing data
+                await mysql.query(`UPDATE \`${tableName}\` SET tenant_id = 1 WHERE tenant_id IS NULL`);
+                // Add FK
+                await mysql.query(`ALTER TABLE \`${tableName}\` ADD FOREIGN KEY (tenant_id) REFERENCES restaurants(id) ON DELETE CASCADE`);
+            }
+        }
+
         // 1. Fix Tables schema
         console.log('Checking tables for number type conversion...');
         const [numCol] = await mysql.query('SHOW COLUMNS FROM tables LIKE "number"');
@@ -37,7 +102,7 @@ async function migrate() {
 
         // 3. Fix Settings schema
         const settingsColsToAdd = [
-            { name: 'pending_color', type: 'VARCHAR(7) DEFAULT "#3b82f6"' },
+            { name: 'pending_color', type: 'VARCHAR(7) DEFAULT "#fcb336"' },
             { name: 'accepted_color', type: 'VARCHAR(7) DEFAULT "#8b5cf6"' },
             { name: 'preparing_color', type: 'VARCHAR(7) DEFAULT "#f59e0b"' },
             { name: 'ready_color', type: 'VARCHAR(7) DEFAULT "#10b981"' },
@@ -53,8 +118,8 @@ async function migrate() {
             { name: 'cashier_offer_label', type: 'VARCHAR(255) DEFAULT ""' },
             { name: 'cashier_offer_discount', type: 'DECIMAL(10,2) DEFAULT 0' },
             { name: 'cashier_qr_upload_enabled', type: 'BOOLEAN DEFAULT 1' },
-            { name: 'sgst', type: 'DECIMAL(5,2) DEFAULT 0' },
-            { name: 'cgst', type: 'DECIMAL(5,2) DEFAULT 0' }
+            { name: 'sgst', type: 'DECIMAL(5,2) DEFAULT 2.5' },
+            { name: 'cgst', type: 'DECIMAL(5,2) DEFAULT 2.5' }
         ];
 
         for (const col of settingsColsToAdd) {

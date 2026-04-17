@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback, memo } from 'react';
+import { useState, useEffect, useContext, useCallback, memo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -96,14 +96,24 @@ const WaiterBoxCard = memo(({ order, formatPrice }) => {
 
             {/* ── Items ── */}
             <div className="flex-1 px-2 py-2 space-y-1 min-h-[60px] max-h-[120px] overflow-y-auto custom-scrollbar">
-                {visibleItems.map((item, i) => (
-                    <div key={i} className="flex items-start gap-1.5">
-                        <div className="w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-[9px] font-black bg-white/5 text-[var(--theme-text-muted)]">
-                            {item.quantity}
+                {(order.items || []).map((item, i) => {
+                    const isCancelled = item.status?.toUpperCase() === 'CANCELLED';
+                    return (
+                        <div key={i} className="flex flex-col gap-0.5">
+                            <div className="flex items-start gap-1.5">
+                                <div className={`w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-[9px] font-black ${isCancelled ? 'bg-red-50 text-red-400 border border-red-100' : 'bg-white/5 text-[var(--theme-text-muted)]'}`}>
+                                    {item.quantity}
+                                </div>
+                                <span className={`flex-1 text-[11px] font-bold leading-tight line-clamp-2 ${isCancelled ? 'text-red-500 line-through' : 'text-[var(--theme-text-main)]'}`}>
+                                    {item.name}{item.variant ? ` (${item.variant.name})` : ''}
+                                </span>
+                            </div>
+                            {isCancelled && item.cancelReason && (
+                                <p className="text-[8px] text-red-400/80 italic pl-5 leading-none">"{item.cancelReason}"</p>
+                            )}
                         </div>
-                        <span className="flex-1 text-[11px] font-bold text-[var(--theme-text-main)] leading-tight line-clamp-2">{item.name}{item.variant ? ` (${item.variant.name})` : ''}</span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* ── Footer ── */}
@@ -164,8 +174,8 @@ const OrderCard = memo(({ order, formatPrice }) => {
                 </div>
             </div>
             <div className="flex items-center justify-between gap-3 mt-2">
-                <p className="text-[11px] text-[var(--theme-text-muted)] font-medium line-clamp-1 flex-1">
-                    {order.items?.map(i => `${i.quantity}× ${i.name}${i.variant ? ` (${i.variant.name})` : ''}`).join(', ') || 'No items'}
+                <p className="text-[11px] text-[var(--theme-text-subtle)] line-clamp-2 mt-1 px-1 opacity-70">
+                    {(order.items || []).map(i => `${i.status?.toUpperCase() === 'CANCELLED' ? '~~' : ''}${i.quantity}× ${i.name}${i.variant ? ` (${i.variant.name})` : ''}${i.status?.toUpperCase() === 'CANCELLED' ? '~~' : ''}`).join(', ') || 'No items'}
                 </p>
                 <div className="flex items-center gap-1 text-[10px] text-[var(--theme-text-subtle)] font-bold shrink-0">
                     <Clock size={10} />
@@ -257,20 +267,26 @@ const TokenSquare = memo(({ order, onClick, isSelected }) => {
             </div>
 
             {/* Item list */}
-            {activeItems.length > 0 && (
+            {(order.items || []).length > 0 && (
                 <div className="px-2 pb-1.5 space-y-0.5 border-t border-black/[0.04] pt-1.5">
-                    {activeItems.slice(0, 1).map((item, i) => (
-                        <div key={i} className="flex items-center gap-1 text-[9px] font-bold text-gray-950 leading-tight">
-                            <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[7px] font-black shrink-0 ${s.badge} border`}>
-                                {item.quantity}
-                            </span>
-                            <span className="truncate">{item.name}{item.variant ? ` · ${item.variant.name}` : ''}</span>
-                        </div>
-                    ))}
-                    {activeItems.length > 1 && (
+                    {(order.items || []).slice(0, 2).map((item, i) => {
+                        const isCancelled = item.status?.toUpperCase() === 'CANCELLED';
+                        return (
+                            <div key={i} className="flex flex-col">
+                                <div className={`flex items-center gap-1 text-[9px] font-bold leading-tight ${isCancelled ? 'text-red-500 line-through' : 'text-gray-950'}`}>
+                                    <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[7px] font-black shrink-0 ${isCancelled ? 'bg-red-50 text-red-600 border border-red-200' : `${s.badge} border`}`}>
+                                        {item.quantity}
+                                    </span>
+                                    <span className="truncate">{item.name}{item.variant ? ` · ${item.variant.name}` : ''}</span>
+                                </div>
+                                {isCancelled && item.cancelReason && <p className="text-[7px] text-red-400 italic pl-5 truncate">"{item.cancelReason}"</p>}
+                            </div>
+                        );
+                    })}
+                    {(order.items || []).length > 2 && (
                         <div className="pl-[1.25rem] w-full text-left">
                             <span className={`text-[7px] font-black ${s.num} opacity-70 uppercase tracking-tight`}>
-                                +{activeItems.length - 1} more
+                                +{(order.items || []).length - 2} more
                             </span>
                         </div>
                     )}
@@ -305,10 +321,13 @@ const WaiterDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const selectedOrderRef = useRef(null);
+    useEffect(() => { selectedOrderRef.current = selectedOrder; }, [selectedOrder]);
     const [cancelModal, setCancelModal] = useState({ isOpen: false, order: null, item: null });
     const [refreshing, setRefreshing] = useState(false);
     const [isProductionMode, setIsProductionMode] = useState(false);
     const { user, socket, formatPrice, formatOrderNumber, settings } = useContext(AuthContext);
+    const bellRef = useRef(new Audio('/bell.mp3'));
 
     useEffect(() => {
         const local = localStorage.getItem('isProductionMode');
@@ -321,6 +340,54 @@ const WaiterDashboard = () => {
         localStorage.setItem('isProductionMode', isProductionMode);
     }, [isProductionMode]);
     const navigate = useNavigate();
+
+    // ── Voice Announcements ──
+    const announcedReady = useRef(new Set());
+    const announcedPayment = useRef(new Set());
+    useEffect(() => {
+        if (!orders.length) return;
+
+        // "Ready" announcement
+        const newReady = orders.filter(o =>
+            o.orderStatus?.toLowerCase() === 'ready' && !announcedReady.current.has(o._id)
+        );
+        newReady.forEach(o => {
+            announcedReady.current.add(o._id);
+            const identifier = o.orderType === 'dine-in'
+                ? `table number ${o.tableId?.number || o.tableId || '?'}`
+                : `token number ${o.tokenNumber || '?'}`;
+            const msg = new SpeechSynthesisUtterance(`Ready order, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
+            msg.onend = () => {
+                bellRef.current.play().catch(e => console.log('Audio play failed:', e));
+            };
+            window.speechSynthesis.speak(msg);
+        });
+
+        // "Payment" announcement
+        const newPayment = orders.filter(o =>
+            o.orderStatus?.toLowerCase() === 'payment' && !announcedPayment.current.has(o._id)
+        );
+        newPayment.forEach(o => {
+            announcedPayment.current.add(o._id);
+            const identifier = o.orderType === 'dine-in'
+                ? `table number ${o.tableId?.number || o.tableId || '?'}`
+                : `token number ${o.tokenNumber || '?'}`;
+            const msg = new SpeechSynthesisUtterance(`Payment ready, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
+            msg.onend = () => {
+                bellRef.current.play().catch(e => console.log('Audio play failed:', e));
+            };
+            window.speechSynthesis.speak(msg);
+        });
+    }, [orders]);
+
+    const fetchOrders = useCallback(async () => {
+        try {
+            setLoading(true);
+            setFetchError(false);
+            const res = await api.get('/api/orders', { params: { limit: 100 }, headers: { Authorization: `Bearer ${user.token}` } });
+            setOrders(res.data.orders || []);
+        } catch (err) { setFetchError(true); } finally { setLoading(false); }
+    }, [user]);
 
     const handleReserveTable = useCallback(async (tableId) => {
         try {
@@ -336,42 +403,54 @@ const WaiterDashboard = () => {
         } catch (err) { alert(err.response?.data?.message || 'Failed to cancel reservation'); }
     }, [user]);
 
-    const fetchOrders = useCallback(async () => {
-        try {
-            setLoading(true);
-            setFetchError(false);
-            const res = await api.get('/api/orders', { params: { limit: 100 }, headers: { Authorization: `Bearer ${user.token}` } });
-            setOrders(res.data.orders || []);
-        } catch (err) { setFetchError(true); } finally { setLoading(false); }
-    }, [user]);
+    // ── 5s Background Refresh (fallback for any missed socket events) ──
+    useEffect(() => {
+        if (!user) return;
+        const interval = setInterval(fetchOrders, 5000);
+        return () => clearInterval(interval);
+    }, [user, fetchOrders]);
 
     useEffect(() => {
         if (user) fetchOrders();
+
+        const onNew = (o) => setOrders(p => { if (p.find(x => x._id === o._id)) return p; return [o, ...p]; });
+
+        // Uses selectedOrderRef so this handler never needs re-registration when
+        // the user opens/closes order details — prevents listener teardown/re-add on every click
+        const onUpdate = (o) => {
+            setOrders(p => {
+                const exists = p.find(x => x._id === o._id);
+                return exists ? p.map(x => x._id === o._id ? o : x) : [o, ...p];
+            });
+            const cur = selectedOrderRef.current;
+            if (cur?._id === o._id) {
+                if (o.paymentStatus === 'paid' || o.orderStatus === 'cancelled') setSelectedOrder(null);
+                else setSelectedOrder(o);
+            }
+        };
+
+        const onRefresh = () => fetchOrders();
+
         if (socket) {
-            const onNew = (o) => setOrders(p => { if (p.find(x => x._id === o._id)) return p; return [o, ...p]; });
-            const onUpdate = (o) => {
-                setOrders(p => { const exists = p.find(x => x._id === o._id); return exists ? p.map(x => x._id === o._id ? o : x) : [o, ...p]; });
-                if (selectedOrder?._id === o._id) {
-                    if (o.paymentStatus === 'paid' || o.orderStatus === 'cancelled') setSelectedOrder(null);
-                    else setSelectedOrder(o);
-                }
-            };
             socket.on('new-order', onNew);
             socket.on('order-updated', onUpdate);
             socket.on('order-completed', onUpdate);
             socket.on('orderCancelled', onUpdate);
             socket.on('itemUpdated', onUpdate);
+            window.addEventListener('pos-refresh', onRefresh);
             return () => {
                 socket.off('new-order', onNew);
                 socket.off('order-updated', onUpdate);
                 socket.off('order-completed', onUpdate);
                 socket.off('orderCancelled', onUpdate);
                 socket.off('itemUpdated', onUpdate);
+                window.removeEventListener('pos-refresh', onRefresh);
             };
         }
-        window.addEventListener('pos-refresh', fetchOrders);
-        return () => window.removeEventListener('pos-refresh', fetchOrders);
-    }, [user, socket, fetchOrders, selectedOrder]);
+        // No socket — fallback to pos-refresh polling
+        window.addEventListener('pos-refresh', onRefresh);
+        return () => window.removeEventListener('pos-refresh', onRefresh);
+    }, [user, socket, fetchOrders]); // selectedOrder intentionally NOT here — use ref above
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -391,12 +470,21 @@ const WaiterDashboard = () => {
     };
 
     const handleUpdateStatus = async (orderId, newStatus) => {
+        // Optimistic update — card flips immediately on click
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, orderStatus: newStatus } : o));
+        if (selectedOrderRef.current?._id === orderId) {
+            setSelectedOrder(prev => prev ? { ...prev, orderStatus: newStatus } : prev);
+        }
         try {
             await api.put(`/api/orders/${orderId}/status`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${user.token}` } }
             );
-        } catch (err) { alert(err.response?.data?.message || "Action failed"); }
+            // Server confirms and emits order-updated → all pages update via socket
+        } catch (err) {
+            alert(err.response?.data?.message || "Action failed");
+            fetchOrders(); // Roll back on failure
+        }
     };
 
     const handleAddItems = async (orderId, items) => {
@@ -429,8 +517,6 @@ const WaiterDashboard = () => {
     };
 
     const filteredOrders = (activeTab === 'active' ? activeOrders : historyOrders)
-        .filter(o => (settings?.takeawayEnabled !== false && settings?.takeawayEnabled !== 0) || o.orderType !== 'takeaway')
-        .filter(o => (settings?.dineInEnabled !== false && settings?.dineInEnabled !== 0) || o.orderType !== 'dine-in')
         .filter(o => filterType === 'all' || o.orderType === filterType)
         .filter(o => {
             if (activeTab !== 'active') return true;
@@ -480,8 +566,6 @@ const WaiterDashboard = () => {
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {['all', 'dine-in', 'takeaway']
-                                .filter(t => t !== 'takeaway' || settings?.takeawayEnabled !== false)
-                                .filter(t => t !== 'dine-in' || settings?.dineInEnabled !== false)
                                 .map(t => (
                                     <button
                                         key={t}
@@ -553,8 +637,6 @@ const WaiterDashboard = () => {
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {['all', 'dine', 'takeaway']
-                                .filter(t => t !== 'takeaway' || settings?.takeawayEnabled !== false)
-                                .filter(t => t !== 'dine' || settings?.dineInEnabled !== false)
                                 .map(t => (
                                     <button
                                         key={t}

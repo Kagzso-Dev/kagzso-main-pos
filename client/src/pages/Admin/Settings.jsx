@@ -169,7 +169,7 @@ const Settings = () => {
     const [generalConfig, setGeneralConfig] = useState({
         restaurantName: '', address: '', currency: 'INR', currencySymbol: '₹',
         sgst: 0, cgst: 0, gstNumber: '',
-        pendingColor: '#fcb336', readyColor: '#10b981',
+        pendingColor: '#fcb336', acceptedColor: '#8b5cf6', preparingColor: '#f59e0b', readyColor: '#10b981',
         paymentColor: '#140731',
         dashboardView: 'all',
         menuView: 'grid',
@@ -303,7 +303,6 @@ const Settings = () => {
                 <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">Manage restaurant configuration</p>
             </div>
 
-            {/* Feature Toggles - Hidden as requested
             <Card>
                 <SectionHeader icon={Shield} title="Order Types" color="orange" />
                 <div className="p-5 space-y-4">
@@ -344,7 +343,6 @@ const Settings = () => {
                     </div>
                 </div>
             </Card>
-            */}
 
             {/* Business Info */}
             <Card>
@@ -451,6 +449,8 @@ const Settings = () => {
                     <div className="flex flex-col gap-3 mb-4">
                         {[
                             { key: 'pending', label: 'Pending' },
+                            { key: 'accepted', label: 'Accepted' },
+                            { key: 'preparing', label: 'Preparing' },
                             { key: 'ready', label: 'Ready' },
                             { key: 'payment', label: 'Payment' },
                         ].map(({ key, label }) => (
@@ -468,7 +468,7 @@ const Settings = () => {
                                 {/* Manual hex input */}
                                 <input
                                     type="text"
-                                    value={generalConfig[`${key}Color`].toUpperCase()}
+                                    value={(generalConfig[`${key}Color`] || '').toUpperCase()}
                                     onChange={e => {
                                         const val = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value;
                                         if (/^#[0-9A-Fa-f]{0,6}$/.test(val)) {

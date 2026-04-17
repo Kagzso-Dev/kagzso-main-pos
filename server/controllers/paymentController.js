@@ -35,7 +35,7 @@ const initiatePayment = async (req, res) => {
             return res.status(400).json({ message: 'Cannot initiate payment for this order' });
         }
 
-        req.app.get('io').to('restaurant_main').emit('order-updated', order);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', order);
         res.json({ success: true, message: 'Payment initiated — order locked', order });
 
         PaymentAudit.create({
@@ -63,7 +63,7 @@ const cancelPayment = async (req, res) => {
         if (!order) {
             return res.status(400).json({ message: 'No pending payment to cancel' });
         }
-        req.app.get('io').to('restaurant_main').emit('order-updated', order);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', order);
         invalidateCache('dashboard');
         invalidateCache('analytics');
         res.json({ success: true, message: 'Payment cancelled', order });
@@ -103,7 +103,7 @@ const processPayment = async (req, res) => {
 
         // VALIDATE DISCOUNT
         if (discount && Number(discount) > 0) {
-            const settings = await Setting.get();
+            const settings = await Setting.get(req.tenantId);
             if (settings.cashierOfferEnabled && settings.cashierOfferDiscount > 0) {
                 const baseTotal = order.finalAmount || 0;
                 const maxPct = settings.cashierOfferDiscount;
@@ -171,14 +171,14 @@ const processPayment = async (req, res) => {
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
             await Table.updateById(tid, { status: 'cleaning', currentOrderId: null });
-            req.app.get('io').to('restaurant_main').emit('table-updated', { 
+            req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', { 
                 tableId: tid, status: 'cleaning', currentOrderId: null 
             });
         }
 
-        req.app.get('io').to('restaurant_main').emit('order-updated',   updatedOrder);
-        req.app.get('io').to('restaurant_main').emit('order-completed', updatedOrder);
-        req.app.get('io').to('restaurant_main').emit('payment-success', {
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated',   updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-completed', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('payment-success', {
             orderId:       order._id,
             orderNumber:   order.orderNumber,
             paymentMethod,

@@ -14,14 +14,14 @@ const VALID_TRANSITIONS = {
 const getTables = async (req, res) => {
     try {
         const Setting = require('../models/Setting');
-        const settings = await Setting.get();
+        const settings = await Setting.get(req.tenantId);
         
         // If tableMapEnabled is disabled, return empty array
         if (settings.tableMapEnabled === 0 || settings.tableMapEnabled === false) {
             return res.json([]);
         }
         
-        const tables = await Table.findAll();
+        const tables = await Table.findAll(req.tenantId);
         res.json(tables);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -43,14 +43,14 @@ const createTable = async (req, res) => {
             return res.status(400).json({ message: 'Capacity must be a positive integer' });
         }
 
-        // Check for duplicate designation
-        if (await Table.numberExists(String(number).trim())) {
+        // Check for duplicate designation within this tenant
+        if (await Table.numberExists(String(number).trim(), req.tenantId)) {
             return res.status(400).json({ message: `Table "${number}" already exists` });
         }
 
-        const table = await Table.create({ number: String(number).trim(), capacity: parsedCapacity });
+        const table = await Table.create({ number: String(number).trim(), capacity: parsedCapacity, tenantId: req.tenantId });
         Table.clearMapCache();
-        req.app.get('io').to('restaurant_main').emit('table-updated', { action: 'create', table });
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', { action: 'create', table });
         res.status(201).json(table);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -89,7 +89,7 @@ const updateTable = async (req, res) => {
 
         const updated = await Table.updateById(req.params.id, updates);
                 Table.clearMapCache();
-        req.app.get('io').to('restaurant_main').emit('table-updated', {
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id,
             status: updated.status,
             lockedBy: updated.lockedBy,
@@ -114,7 +114,7 @@ const reserveTable = async (req, res) => {
             });
         }
                 Table.clearMapCache();
-        req.app.get('io').to('restaurant_main').emit('table-updated', {
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: table._id,
             status: 'reserved',
             lockedBy: table.lockedBy,
@@ -145,7 +145,7 @@ const releaseTable = async (req, res) => {
             currentOrderId: null,
         });
                 Table.clearMapCache();
-        req.app.get('io').to('restaurant_main').emit('table-updated', {
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id, status: 'available',
         });
         res.json(updated);
@@ -174,7 +174,7 @@ const markTableClean = async (req, res) => {
             currentOrderId: null,
         });
                 Table.clearMapCache();
-        req.app.get('io').to('restaurant_main').emit('table-updated', {
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id, status: 'available',
         });
         res.json(updated);
@@ -198,7 +198,7 @@ const forceResetTable = async (req, res) => {
             currentOrderId: null,
         });
                 Table.clearMapCache();
-        req.app.get('io').to('restaurant_main').emit('table-updated', {
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id, status: 'available',
         });
         res.json({ message: 'Table force-reset to available', table: updated });
@@ -221,7 +221,7 @@ const deleteTable = async (req, res) => {
         }
         await Table.deleteById(req.params.id);
                 Table.clearMapCache();
-        req.app.get('io').to('restaurant_main').emit('table-updated', { action: 'delete', id: req.params.id });
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', { action: 'delete', id: req.params.id });
         res.json({ message: 'Table removed' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -230,8 +230,8 @@ const deleteTable = async (req, res) => {
 
 // ─── AUTO-RELEASE expired reservations ─────────────────────
 const autoReleaseExpiredReservations = async (io) => {
-    const TEN_MINUTES = 10 * 60 * 1000;
-    const cutoff = new Date(Date.now() - TEN_MINUTES);
+    const FIVE_SECONDS = 5 * 1000;
+    const cutoff = new Date(Date.now() - FIVE_SECONDS);
     try {
         const expiredTables = await Table.findExpiredReservations(cutoff);
         for (const table of expiredTables) {
@@ -242,7 +242,7 @@ const autoReleaseExpiredReservations = async (io) => {
                 reservationExpiresAt: null,
             });
             if (io) {
-                io.to('restaurant_main').emit('table-updated', {
+                io.to(`${table.tenantId}:restaurant_main`).emit('table-updated', {
                     tableId: table._id, status: 'available',
                 });
             }

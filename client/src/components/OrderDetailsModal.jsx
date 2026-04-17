@@ -155,7 +155,7 @@ const OrderDetailsModal = ({
                                 <Utensils size={8} className="text-[var(--theme-text-muted)] xs:hidden" />
                                 <Utensils size={10} className="text-[var(--theme-text-muted)] hidden xs:block" />
                                 <span className="text-[9px] xs:text-[10px] font-black text-[var(--theme-text-main)] uppercase tracking-tight xs:tracking-wider whitespace-nowrap">
-                                    {order.items?.filter(i => i.status?.toUpperCase() !== 'CANCELLED').length} Items
+                                    {(order.items || []).length} Items
                                 </span>
                             </div>
                             <span className={`px-2 xs:px-3 py-0.5 xs:py-1 rounded-lg xs:rounded-xl text-[9px] xs:text-[10px] font-black uppercase tracking-tight xs:tracking-wider border shadow-sm whitespace-nowrap ${isPaid ? 'bg-red-600 text-white border-red-700' : 'bg-rose-500/10 border-rose-500/20 text-rose-500 animate-pulse-subtle'}`}>
@@ -303,7 +303,7 @@ const OrderDetailsModal = ({
                     <div className="flex items-center justify-between pb-3 border-b-2 border-[var(--theme-border)]">
                         <div className="flex flex-col">
                             <h3 className="text-[10px] font-black text-[var(--theme-text-muted)] uppercase tracking-[0.2em]">Bill Items</h3>
-                            <span className="text-[9px] font-bold text-orange-500 opacity-70 uppercase tracking-widest">{order.items?.filter(i => i.status?.toUpperCase() !== 'CANCELLED').length} Total</span>
+                            <span className="text-[9px] font-bold text-orange-500 opacity-70 uppercase tracking-widest">{(order.items || []).length} Total</span>
                         </div>
                         <div className="flex items-center gap-1.5 xs:gap-2">
                             {/* Cancel Order button hidden per request */}
@@ -315,21 +315,21 @@ const OrderDetailsModal = ({
                         </div>
                     </div>
                     <div className="space-y-2 xs:space-y-2.5">
-                        {order.items?.filter(i => i.status?.toUpperCase() !== 'CANCELLED').map((item, i) => {
+                        {(order.items || []).map((item, i) => {
                             const cancelled = item.status?.toUpperCase() === 'CANCELLED';
                             return (
-                                <div key={item._id || i} className={`group flex items-center justify-between p-2.5 xs:p-3.5 rounded-xl xs:rounded-2xl border transition-all ${cancelled ? 'opacity-40 bg-[var(--theme-bg-dark)] border-dashed border-[var(--theme-border)]' : 'bg-white dark:bg-[var(--theme-bg-hover)] border-[var(--theme-border)] shadow-sm hover:shadow-md'}`}>
+                                <div key={item._id || i} className={`group flex items-center justify-between p-2.5 xs:p-3.5 rounded-xl xs:rounded-2xl border transition-all ${cancelled ? 'bg-red-500/5 border-red-500/10' : 'bg-white dark:bg-[var(--theme-bg-hover)] border-[var(--theme-border)] shadow-sm hover:shadow-md'}`}>
                                     <div className="flex items-center gap-2.5 xs:gap-3.5 flex-1 min-w-0">
-                                        <div className="w-8 h-8 xs:w-10 xs:h-10 rounded-lg xs:rounded-xl flex items-center justify-center bg-gray-50 dark:bg-white/5 border border-[var(--theme-border)] shrink-0 shadow-inner">
+                                        <div className={`w-8 h-8 xs:w-10 xs:h-10 rounded-lg xs:rounded-xl flex items-center justify-center border shrink-0 shadow-inner ${cancelled ? 'bg-red-50 text-red-400 border-red-100' : 'bg-gray-50 dark:bg-white/5 border-[var(--theme-border)]'}`}>
                                             <span className="text-[11px] xs:text-xs font-black">{item.quantity}</span>
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <p className="text-[13px] xs:text-[14px] font-black truncate text-[var(--theme-text-main)] leading-tight">{item.name}</p>
+                                                <p className={`text-[13px] xs:text-[14px] font-black truncate leading-tight ${cancelled ? 'text-red-500 line-through' : 'text-[var(--theme-text-main)]'}`}>{item.name}</p>
                                                 {/* item NEW badge hidden as per request */}
                                             </div>
                                             <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                <span className="text-[9px] xs:text-[10px] font-bold text-[var(--theme-text-muted)] opacity-50 uppercase tracking-widest leading-none whitespace-nowrap">{formatPrice(item.price)}</span>
+                                                <span className={`text-[9px] xs:text-[10px] font-bold opacity-50 uppercase tracking-widest leading-none whitespace-nowrap ${cancelled ? 'text-red-400' : 'text-[var(--theme-text-muted)]'}`}>{formatPrice(item.price)}</span>
                                                 {item.status && (
                                                     <span className={`text-[7px] xs:text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border whitespace-nowrap leading-none ${
                                                         item.status?.toUpperCase() === 'READY' ? 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5' : 
@@ -340,10 +340,13 @@ const OrderDetailsModal = ({
                                                     </span>
                                                 )}
                                             </div>
+                                            {cancelled && item.cancelReason && (
+                                                <p className="text-[10px] text-red-400/80 italic mt-1.5">"{item.cancelReason}"</p>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 xs:gap-4 ml-2">
-                                        <p className="text-[13px] xs:text-[15px] font-black tabular-nums text-[var(--theme-text-main)] tracking-tight">{formatPrice(item.price * item.quantity)}</p>
+                                        <p className={`text-[13px] xs:text-[15px] font-black tabular-nums tracking-tight ${cancelled ? 'text-red-400 line-through opacity-50' : 'text-[var(--theme-text-main)]'}`}>{formatPrice(item.price * item.quantity)}</p>
 
                                         {(userRole === 'waiter' || userRole === 'admin') && onCancelItem && !cancelled && !isPaymentOngoing && (
                                             <button 

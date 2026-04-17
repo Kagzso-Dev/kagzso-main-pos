@@ -21,6 +21,7 @@ const getOrders = async (req, res) => {
     try {
         const { page = 1, limit = 50, kotStatus, status } = req.query;
         const filter = {};
+        if (req.tenantId) filter.tenantId = req.tenantId;
         if (kotStatus) {
             filter.kotStatus = kotStatus === 'Open' ? { $ne: 'Closed' } : kotStatus;
         }
@@ -95,7 +96,7 @@ const createOrder = async (req, res) => {
 
     try {
         // Check settings from DB to allow/disable order types
-        const settings = await Setting.get();
+        const settings = await Setting.get(req.tenantId);
         
         if (orderType === 'dine-in' && settings.dineInEnabled === 0) {
             return res.status(403).json({ message: 'Dine-in orders are disabled in settings' });
@@ -130,12 +131,13 @@ const createOrder = async (req, res) => {
 
         const createdOrder = await Order.create({
             orderType, tableId, customerInfo, items,
-            totalAmount: subtotal, 
-            sgst: resolvedSgst, 
-            cgst: resolvedCgst, 
-            discount: discValue, 
+            totalAmount: subtotal,
+            sgst: resolvedSgst,
+            cgst: resolvedCgst,
+            discount: discValue,
             finalAmount: resolvedFinal,
             waiterId: req.userId,
+            tenantId: req.tenantId,
         });
 
         // Transition table → occupied
@@ -146,14 +148,14 @@ const createOrder = async (req, res) => {
                 reservedAt: null,
             });
             const table = await Table.findById(tableId);
-            req.app.get('io').to('restaurant_main').emit('table-updated', {
+            req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: table._id,
                 status: 'occupied',
                 lockedBy: table.lockedBy,
             });
         }
 
-        req.app.get('io').to('restaurant_main').emit('new-order', createdOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('new-order', createdOrder);
 
         createAndEmitNotification(req.app.get('io'), {
             title: `New Order #${createdOrder.orderNumber}`,
@@ -234,11 +236,16 @@ const updateOrderStatus = async (req, res) => {
         }
 
 
-        // 1. If we are marking as Accepted/Preparing/Ready, sync all items FIRST
-        // 1. If we are marking as Preparing (Start) or Ready, sync all items FIRST
-        if (['preparing', 'ready'].includes(status)) {
+        // 1. If we are marking as Accepted/Preparing (Start) or Ready, sync all items FIRST
+        if (['accepted', 'preparing', 'ready'].includes(status)) {
             const itemStatus = status.toUpperCase();
-            const activeItems = (order.items || []).filter(i => i.status?.toUpperCase() !== 'CANCELLED');
+            const activeItems = (order.items || []).filter(i => {
+                if (i.status?.toUpperCase() === 'CANCELLED') return false;
+                if (status === 'ready') return true;
+                if (status === 'preparing') return i.status?.toUpperCase() === 'PENDING' || i.status?.toUpperCase() === 'ACCEPTED';
+                if (status === 'accepted') return i.status?.toUpperCase() === 'PENDING';
+                return false;
+            });
             
             await Promise.all(activeItems.map(item => {
                 return Order.updateItemStatus(order._id, item._id, itemStatus);
@@ -255,12 +262,12 @@ const updateOrderStatus = async (req, res) => {
             order.tableId) {
             const tid = rawTableId(order.tableId);
             await Table.updateById(tid, { status: 'cleaning', currentOrderId: null });
-            req.app.get('io').to('restaurant_main').emit('table-updated', {
+            req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'cleaning', currentOrderId: null, lockedBy: null
             });
         }
 
-        req.app.get('io').to('restaurant_main').emit('order-updated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 
         if (status === 'ready') {
             createAndEmitNotification(req.app.get('io'), {
@@ -333,12 +340,12 @@ const updateItemStatus = async (req, res) => {
                 // When order becomes fully ready, clear the partial-ready flag
                 ...(newOrderStatus === 'ready' && { readyAt: toSqlDate(), isPartiallyReady: false }),
             });
-            req.app.get('io').to('restaurant_main').emit('order-updated', finalOrder);
+            req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', finalOrder);
             return res.json(finalOrder);
         }
 
-        req.app.get('io').to('restaurant_main').emit('itemUpdated', updatedOrder);
-        req.app.get('io').to('restaurant_main').emit('order-updated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('itemUpdated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 
         invalidateCache('dashboard');
         invalidateCache('analytics');
@@ -407,14 +414,14 @@ const processPayment = async (req, res) => {
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
             await Table.updateById(tid, { status: 'cleaning', currentOrderId: null });
-            req.app.get('io').to('restaurant_main').emit('table-updated', {
+            req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'cleaning', currentOrderId: null, lockedBy: null
             });
         }
 
-        req.app.get('io').to('restaurant_main').emit('order-updated', updatedOrder);
-        req.app.get('io').to('restaurant_main').emit('order-completed', updatedOrder);
-        req.app.get('io').to('restaurant_main').emit('payment-success', {
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-completed', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('payment-success', {
             orderId:       updatedOrder._id,
             orderNumber:   updatedOrder.orderNumber,
             paymentMethod: method,
@@ -493,13 +500,13 @@ const cancelOrder = async (req, res) => {
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
             await Table.updateById(tid, { status: 'available', currentOrderId: null });
-            req.app.get('io').to('restaurant_main').emit('table-updated', {
+            req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'available', currentOrderId: null, lockedBy: null
             });
         }
 
-        req.app.get('io').to('restaurant_main').emit('orderCancelled', updatedOrder);
-        req.app.get('io').to('restaurant_main').emit('order-updated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('orderCancelled', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 
         invalidateCache('dashboard');
         invalidateCache('analytics');
@@ -581,7 +588,7 @@ const cancelOrderItem = async (req, res) => {
         }
 
         // Recalculate order totals from settings (on discounted subtotal)
-        const settings = await Setting.get();
+        const settings = await Setting.get(req.tenantId);
         const sgstRate = (settings.sgst || 0) / 100;
         const cgstRate = (settings.cgst || 0) / 100;
 
@@ -612,13 +619,13 @@ const cancelOrderItem = async (req, res) => {
         if (nonCancelledItems.length === 0 && order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
             await Table.updateById(tid, { status: 'available', currentOrderId: null });
-            req.app.get('io').to('restaurant_main').emit('table-updated', {
+            req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'available', currentOrderId: null, lockedBy: null
             });
         }
 
-        req.app.get('io').to('restaurant_main').emit('itemUpdated', updatedOrder);
-        req.app.get('io').to('restaurant_main').emit('order-updated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('itemUpdated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
         invalidateCache('dashboard');
         invalidateCache('analytics');
         updateDailyAnalytics();
@@ -654,7 +661,7 @@ const searchOrders = async (req, res) => {
         const q = (req.query.q || '').trim();
         if (!q) return res.json({ orders: [] });
         const limit = Math.min(parseInt(req.query.limit) || 30, 50); // honour client hint, hard-cap at 50
-        const orders = await Order.search(q, limit);
+        const orders = await Order.search(q, limit, req.tenantId);
         res.json({ orders });
     } catch (error) {
         console.error("DB ERROR (searchOrders):", error);
@@ -692,7 +699,7 @@ const addOrderItems = async (req, res) => {
 
         const updatedOrder = await Order.addItems(id, items, { totalAmount, sgst, cgst, finalAmount });
 
-        req.app.get('io').to('restaurant_main').emit('order-updated', updatedOrder);
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 
         createAndEmitNotification(req.app.get('io'), {
             title: `New items on Order #${updatedOrder.orderNumber}`,

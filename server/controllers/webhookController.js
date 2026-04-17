@@ -72,9 +72,10 @@ const handleRazorpayWebhook = async (req, res) => {
 
             const updatedOrder = await Order.findById(orderId);
             const io = req.app.get('io');
-            if (io) {
-                io.to('restaurant_main').emit('order-updated',   updatedOrder);
-                io.to('restaurant_main').emit('payment-success', { orderId: order._id });
+            if (io && order.tenantId) {
+                const room = `${order.tenantId}:restaurant_main`;
+                io.to(room).emit('order-updated',   updatedOrder);
+                io.to(room).emit('payment-success', { orderId: order._id });
             }
         }
 

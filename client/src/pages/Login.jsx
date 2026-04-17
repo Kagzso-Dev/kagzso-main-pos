@@ -8,7 +8,7 @@ import HeroSection from '../components/HeroSection';
 // Helper: get dashboard path by role
 const getDashboardPath = (role) => {
     switch (role) {
-
+        case 'superadmin': return '/superadmin';
         case 'admin': return '/admin';
         case 'kitchen': return '/kitchen';
         case 'cashier': return '/cashier';
@@ -59,12 +59,12 @@ const Login = () => {
     /* ── Cinematic transition loader ── */
     if (transitioning) {
         const ORBIT_DOTS = [
-            { angle: 0,   size: 7, speed: '3s',  opacity: 1,    color: '#FF6B35' },
-            { angle: 60,  size: 5, speed: '3s',  opacity: 0.7,  color: '#FFD700' },
-            { angle: 120, size: 8, speed: '3s',  opacity: 0.9,  color: '#dc2626' },
-            { angle: 180, size: 4, speed: '3s',  opacity: 0.5,  color: '#FFD700' },
-            { angle: 240, size: 6, speed: '3s',  opacity: 0.8,  color: '#FF6B35' },
-            { angle: 300, size: 5, speed: '3s',  opacity: 0.6,  color: '#FFD700' },
+            { angle: 0, size: 7, speed: '3s', opacity: 1, color: '#FF6B35' },
+            { angle: 60, size: 5, speed: '3s', opacity: 0.7, color: '#FFD700' },
+            { angle: 120, size: 8, speed: '3s', opacity: 0.9, color: '#dc2626' },
+            { angle: 180, size: 4, speed: '3s', opacity: 0.5, color: '#FFD700' },
+            { angle: 240, size: 6, speed: '3s', opacity: 0.8, color: '#FF6B35' },
+            { angle: 300, size: 5, speed: '3s', opacity: 0.6, color: '#FFD700' },
         ];
         return (
             <>
@@ -147,138 +147,138 @@ const Login = () => {
 
                 {/* ── Root ── */}
                 <div style={{
-                    position:'fixed', inset:0, zIndex:9999,
-                    background:'url("/login.jpeg") center/cover no-repeat',
-                    display:'flex', flexDirection:'column',
-                    alignItems:'center', justifyContent:'center',
-                    overflow:'hidden',
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'url("/login.jpeg") center/cover no-repeat',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden',
                 }}>
                     {/* Darker Overlay for loading screen */}
                     <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
 
                     {/* Animated grid mesh */}
                     <div style={{
-                        position:'absolute', inset:0, opacity:.06,
-                        backgroundImage:'linear-gradient(rgba(255,107,53,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,53,.6) 1px,transparent 1px)',
-                        backgroundSize:'40px 40px',
-                        animation:'kz-grid-drift 4s linear infinite',
+                        position: 'absolute', inset: 0, opacity: .06,
+                        backgroundImage: 'linear-gradient(rgba(255,107,53,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,53,.6) 1px,transparent 1px)',
+                        backgroundSize: '40px 40px',
+                        animation: 'kz-grid-drift 4s linear infinite',
                     }} />
 
                     {/* Ambient radial glow */}
                     <div style={{
-                        position:'absolute', top:'50%', left:'50%',
-                        transform:'translate(-50%,-50%)',
-                        width:'520px', height:'520px', borderRadius:'50%',
-                        background:'radial-gradient(circle, rgba(255,107,53,.14) 0%, transparent 72%)',
-                        animation:'kz-bg-breathe 2.4s ease-in-out infinite',
-                        pointerEvents:'none',
+                        position: 'absolute', top: '50%', left: '50%',
+                        transform: 'translate(-50%,-50%)',
+                        width: '520px', height: '520px', borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(255,107,53,.14) 0%, transparent 72%)',
+                        animation: 'kz-bg-breathe 2.4s ease-in-out infinite',
+                        pointerEvents: 'none',
                     }} />
 
                     {/* Sonar pulses */}
                     {[0, 0.6, 1.2].map((delay, i) => (
                         <div key={i} style={{
-                            position:'absolute', top:'50%', left:'50%',
-                            width:'110px', height:'110px', borderRadius:'50%',
-                            border:`${i === 0 ? 2 : 1.5}px solid rgba(255,107,53,${i === 0 ? .8 : .5})`,
-                            animation:`kz-sonar 2.4s ${delay}s cubic-bezier(.2,.8,.4,1) infinite`,
+                            position: 'absolute', top: '50%', left: '50%',
+                            width: '110px', height: '110px', borderRadius: '50%',
+                            border: `${i === 0 ? 2 : 1.5}px solid rgba(255,107,53,${i === 0 ? .8 : .5})`,
+                            animation: `kz-sonar 2.4s ${delay}s cubic-bezier(.2,.8,.4,1) infinite`,
                         }} />
                     ))}
 
                     {/* Outer dashed ring — slow CW */}
                     <div style={{
-                        position:'absolute',
-                        width:'190px', height:'190px', borderRadius:'50%',
-                        border:'1.5px dashed rgba(255,107,53,.25)',
-                        animation:'kz-ring-cw 12s linear infinite',
+                        position: 'absolute',
+                        width: '190px', height: '190px', borderRadius: '50%',
+                        border: '1.5px dashed rgba(255,107,53,.25)',
+                        animation: 'kz-ring-cw 12s linear infinite',
                     }} />
 
                     {/* Mid ring — medium CCW */}
                     <div style={{
-                        position:'absolute',
-                        width:'155px', height:'155px', borderRadius:'50%',
-                        border:'2px solid transparent',
-                        borderTopColor:'rgba(255,107,53,.7)',
-                        borderRightColor:'rgba(255,107,53,.2)',
-                        borderBottomColor:'rgba(220,38,38,.4)',
-                        animation:'kz-ring-ccw 2.2s linear infinite',
+                        position: 'absolute',
+                        width: '155px', height: '155px', borderRadius: '50%',
+                        border: '2px solid transparent',
+                        borderTopColor: 'rgba(255,107,53,.7)',
+                        borderRightColor: 'rgba(255,107,53,.2)',
+                        borderBottomColor: 'rgba(220,38,38,.4)',
+                        animation: 'kz-ring-ccw 2.2s linear infinite',
                     }} />
 
                     {/* Inner ring — fast CW */}
                     <div style={{
-                        position:'absolute',
-                        width:'122px', height:'122px', borderRadius:'50%',
-                        border:'2.5px solid transparent',
-                        borderTopColor:'#FF6B35',
-                        borderLeftColor:'rgba(255,107,53,.35)',
-                        animation:'kz-ring-cw 1s linear infinite',
+                        position: 'absolute',
+                        width: '122px', height: '122px', borderRadius: '50%',
+                        border: '2.5px solid transparent',
+                        borderTopColor: '#FF6B35',
+                        borderLeftColor: 'rgba(255,107,53,.35)',
+                        animation: 'kz-ring-cw 1s linear infinite',
                     }} />
 
                     {/* Orbiting satellite dots */}
-                    <div style={{ position:'absolute', width:'160px', height:'160px', borderRadius:'50%' }}>
+                    <div style={{ position: 'absolute', width: '160px', height: '160px', borderRadius: '50%' }}>
                         {ORBIT_DOTS.map((d, i) => (
                             <div key={i} style={{
-                                position:'absolute', top:'50%', left:'50%',
+                                position: 'absolute', top: '50%', left: '50%',
                                 '--start': `${d.angle}deg`,
-                                width:`${d.size}px`, height:`${d.size}px`,
-                                marginTop:`-${d.size/2}px`, marginLeft:`-${d.size/2}px`,
-                                borderRadius:'50%',
-                                background:d.color,
-                                opacity:d.opacity,
-                                boxShadow:`0 0 ${d.size*2}px ${d.color}`,
-                                animation:`kz-orbit ${d.speed} ${(i*0.08).toFixed(2)}s linear infinite`,
+                                width: `${d.size}px`, height: `${d.size}px`,
+                                marginTop: `-${d.size / 2}px`, marginLeft: `-${d.size / 2}px`,
+                                borderRadius: '50%',
+                                background: d.color,
+                                opacity: d.opacity,
+                                boxShadow: `0 0 ${d.size * 2}px ${d.color}`,
+                                animation: `kz-orbit ${d.speed} ${(i * 0.08).toFixed(2)}s linear infinite`,
                             }} />
                         ))}
                     </div>
 
                     {/* Central glowing orb */}
                     <div style={{
-                        position:'relative', zIndex:2,
-                        width:'88px', height:'88px', borderRadius:'50%',
-                        background:'radial-gradient(circle at 38% 32%, #FFD700, #FF6B35 45%, #c62828)',
-                        animation:'kz-orb-glow 2s ease-in-out infinite',
-                        display:'flex', alignItems:'center', justifyContent:'center',
+                        position: 'relative', zIndex: 2,
+                        width: '88px', height: '88px', borderRadius: '50%',
+                        background: 'radial-gradient(circle at 38% 32%, #FFD700, #FF6B35 45%, #c62828)',
+                        animation: 'kz-orb-glow 2s ease-in-out infinite',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                         {/* Glare highlight */}
                         <div style={{
-                            position:'absolute', top:'14%', left:'18%',
-                            width:'32%', height:'22%', borderRadius:'50%',
-                            background:'rgba(255,255,255,0.35)',
-                            filter:'blur(4px)',
+                            position: 'absolute', top: '14%', left: '18%',
+                            width: '32%', height: '22%', borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.35)',
+                            filter: 'blur(4px)',
                         }} />
                         {/* Icon */}
                         <span style={{
-                            fontSize:'34px', lineHeight:1, userSelect:'none',
-                            animation:'kz-icon-pop .7s .15s cubic-bezier(.34,1.56,.64,1) both',
+                            fontSize: '34px', lineHeight: 1, userSelect: 'none',
+                            animation: 'kz-icon-pop .7s .15s cubic-bezier(.34,1.56,.64,1) both',
                         }}>🍽️</span>
                     </div>
 
                     {/* Text block */}
-                    <div style={{ marginTop:'48px', textAlign:'center', position:'relative', zIndex:2 }}>
+                    <div style={{ marginTop: '48px', textAlign: 'center', position: 'relative', zIndex: 2 }}>
                         {/* Brand name shimmer */}
                         <h2 style={{
-                            margin:0, fontSize:'26px', fontWeight:900,
-                            textTransform:'uppercase',
-                            background:'linear-gradient(90deg, #FF6B35 0%, #FFD700 30%, #FF6B35 50%, #FFD700 70%, #FF6B35 100%)',
-                            backgroundSize:'400% auto',
-                            WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                            animation:'kz-shimmer 2.4s linear infinite, kz-title-in .7s .2s ease both',
+                            margin: 0, fontSize: '26px', fontWeight: 900,
+                            textTransform: 'uppercase',
+                            background: 'linear-gradient(90deg, #FF6B35 0%, #FFD700 30%, #FF6B35 50%, #FFD700 70%, #FF6B35 100%)',
+                            backgroundSize: '400% auto',
+                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                            animation: 'kz-shimmer 2.4s linear infinite, kz-title-in .7s .2s ease both',
                         }}>KAGZSO</h2>
 
                         {/* Subtitle */}
                         <p style={{
-                            margin:'8px 0 0', fontSize:'11px', fontWeight:600,
-                            color:'rgba(255,255,255,0.55)', letterSpacing:'.18em',
-                            textTransform:'uppercase',
-                            animation:'kz-sub-in .6s .5s ease both',
-                        }}>{settings?.restaurantName || 'Smart Kitchen System'}</p>
+                            margin: '8px 0 0', fontSize: '11px', fontWeight: 600,
+                            color: 'rgba(255,255,255,0.55)', letterSpacing: '.18em',
+                            textTransform: 'uppercase',
+                            animation: 'kz-sub-in .6s .5s ease both',
+                        }}>Smart Kitchen System</p>
 
                         {/* Bouncing dots */}
-                        <div style={{ display:'flex', gap:'7px', justifyContent:'center', marginTop:'18px' }}>
+                        <div style={{ display: 'flex', gap: '7px', justifyContent: 'center', marginTop: '18px' }}>
                             {[0, .18, .36].map((delay, i) => (
                                 <div key={i} style={{
-                                    width:'7px', height:'7px', borderRadius:'50%',
-                                    background:'#FF6B35',
-                                    animation:`kz-bounce-dot 1.1s ${delay}s ease-in-out infinite`,
+                                    width: '7px', height: '7px', borderRadius: '50%',
+                                    background: '#FF6B35',
+                                    animation: `kz-bounce-dot 1.1s ${delay}s ease-in-out infinite`,
                                 }} />
                             ))}
                         </div>
@@ -286,39 +286,39 @@ const Login = () => {
 
                     {/* Progress bar */}
                     <div style={{
-                        position:'absolute', bottom:'44px',
-                        width:'220px', height:'3px', borderRadius:'999px',
-                        background:'rgba(255,255,255,0.08)', overflow:'visible',
+                        position: 'absolute', bottom: '44px',
+                        width: '220px', height: '3px', borderRadius: '999px',
+                        background: 'rgba(255,255,255,0.08)', overflow: 'visible',
                     }}>
                         <div style={{
-                            height:'100%', borderRadius:'999px',
-                            background:'linear-gradient(90deg,#dc2626,#FF6B35,#ffb347)',
-                            animation:`kz-bar 2.4s cubic-bezier(.4,0,.2,1) forwards, kz-bar-glow 1.2s ease-in-out infinite`,
-                            position:'relative', overflow:'hidden',
+                            height: '100%', borderRadius: '999px',
+                            background: 'linear-gradient(90deg,#dc2626,#FF6B35,#ffb347)',
+                            animation: `kz-bar 2.4s cubic-bezier(.4,0,.2,1) forwards, kz-bar-glow 1.2s ease-in-out infinite`,
+                            position: 'relative', overflow: 'hidden',
                         }}>
                             {/* Sweep shine on bar */}
                             <div style={{
-                                position:'absolute', inset:0, top:'-2px', bottom:'-2px',
-                                background:'linear-gradient(90deg,transparent 0%,rgba(255,255,255,.55) 50%,transparent 100%)',
-                                animation:'kz-sweep 1.6s .3s ease-in-out infinite',
+                                position: 'absolute', inset: 0, top: '-2px', bottom: '-2px',
+                                background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,.55) 50%,transparent 100%)',
+                                animation: 'kz-sweep 1.6s .3s ease-in-out infinite',
                             }} />
                         </div>
                     </div>
 
                     {/* Corner decorations */}
                     {[
-                        { top:18, left:18, r:'0deg' },
-                        { top:18, right:18, r:'90deg' },
-                        { bottom:18, right:18, r:'180deg' },
-                        { bottom:18, left:18, r:'270deg' },
+                        { top: 18, left: 18, r: '0deg' },
+                        { top: 18, right: 18, r: '90deg' },
+                        { bottom: 18, right: 18, r: '180deg' },
+                        { bottom: 18, left: 18, r: '270deg' },
                     ].map((pos, i) => (
                         <div key={i} style={{
-                            position:'absolute', ...pos,
-                            width:'28px', height:'28px',
-                            borderTop:'2px solid rgba(255,107,53,.4)',
-                            borderLeft:'2px solid rgba(255,107,53,.4)',
-                            animation:`kz-corner-spin ${6 + i}s linear infinite`,
-                            transformOrigin:'center',
+                            position: 'absolute', ...pos,
+                            width: '28px', height: '28px',
+                            borderTop: '2px solid rgba(255,107,53,.4)',
+                            borderLeft: '2px solid rgba(255,107,53,.4)',
+                            animation: `kz-corner-spin ${6 + i}s linear infinite`,
+                            transformOrigin: 'center',
                         }} />
                     ))}
                 </div>
@@ -338,7 +338,7 @@ const Login = () => {
             {/* Background Image & Effects */}
             <div className="fixed top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none animate-blur-in">
                 <div className="absolute inset-0 bg-slate-950/40"></div>
-                <div 
+                <div
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] scale-110 animate-slow-zoom"
                     style={{ backgroundImage: 'url("/login.jpeg")' }}
                 ></div>
@@ -374,7 +374,7 @@ const Login = () => {
                             </div>
                             <p className="text-[7.5px] sm:text-[10px] text-white font-black tracking-[0.1em] uppercase mt-1.5 leading-none flex items-center gap-1.5">
                                 <span className="w-1 h-1 rounded-full bg-yellow-500 animate-ping"></span>
-                                {settings?.restaurantName || 'Smart Kitchen System'}
+                                Smart Kitchen System
                             </p>
                         </div>
                     </div>
@@ -382,7 +382,7 @@ const Login = () => {
 
                 {/* Login Card - Glassmorphism */}
                 <div className="w-full max-w-[calc(100%-1.5rem)] sm:max-w-[420px] bg-slate-900/60 backdrop-blur-3xl p-7 sm:p-10 rounded-[2.5rem] shadow-[0_45px_100px_-25px_rgba(0,0,0,0.6)] border border-white/10 animate-fade-in-up animation-delay-100 relative group/card">
-                    <button 
+                    <button
                         onClick={() => { sessionStorage.removeItem('loginView'); setHeroVisible(true); }}
                         className="absolute top-6 right-6 px-3 py-1 flex flex-col items-center justify-center rounded-xl bg-white/5 hover:bg-orange-500/20 text-white/40 hover:text-orange-500 border border-white/10 transition-all active:scale-95 z-20 group/back"
                         title="Go Back"
@@ -416,7 +416,7 @@ const Login = () => {
                                 placeholder="Username"
                                 id="username"
                             />
-                            <label 
+                            <label
                                 htmlFor="username"
                                 className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs uppercase tracking-widest transition-all pointer-events-none peer-focus:top-0 peer-focus:text-[10px] peer-focus:text-orange-500 peer-focus:bg-white dark:peer-focus:bg-[#111827] peer-focus:px-2 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:bg-white dark:peer-[:not(:placeholder-shown)]:bg-[#111827] peer-[:not(:placeholder-shown)]:px-2"
                             >
@@ -438,7 +438,7 @@ const Login = () => {
                                 placeholder="Password"
                                 id="password"
                             />
-                            <label 
+                            <label
                                 htmlFor="password"
                                 className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs uppercase tracking-widest transition-all pointer-events-none peer-focus:top-0 peer-focus:text-[10px] peer-focus:text-orange-500 peer-focus:bg-white dark:peer-focus:bg-[#111827] peer-focus:px-2 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:bg-white dark:peer-[:not(:placeholder-shown)]:bg-[#111827] peer-[:not(:placeholder-shown)]:px-2"
                             >

@@ -40,6 +40,7 @@ const fmtOrder = (row, items = [], tableNum = null) => ({
     discountLabel: row.discount_label || '',
     finalAmount: parseFloat(row.final_amount),
     waiterId: row.waiter_id,
+    tenantId: row.tenant_id || null,
     prepStartedAt: row.prep_started_at,
     isPartiallyReady: row.is_partially_ready === 1,
     readyAt: row.ready_at,
@@ -115,22 +116,22 @@ const Order = {
         const orderNumber = `ORD-${seq}`;
         const orderId = crypto.randomUUID();
 
-        // 17 Columns — All validated against schema (DESCRIBE orders)
+        // 18 Columns — All validated against schema (DESCRIBE orders)
         const sql = `
             INSERT INTO orders (
-                id, order_number, token_number, order_type, table_id, 
-                customer_name, customer_phone, total_amount, sgst, cgst, 
-                discount, final_amount, waiter_id, order_status, payment_status, 
-                payment_method, kot_status
-            ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, 'Open')
+                id, order_number, token_number, order_type, table_id,
+                customer_name, customer_phone, total_amount, sgst, cgst,
+                discount, final_amount, waiter_id, order_status, payment_status,
+                payment_method, kot_status, tenant_id
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, 'Open', ?)
         `;
 
         const values = [
-            orderId, orderNumber, seq, orderType, data.tableId || null, 
-            data.customerInfo?.name || null, data.customerInfo?.phone || null, 
-            totalAmount, sgst, cgst, discount, finalAmount, data.waiterId || null, 
-            data.paymentMethod || null
+            orderId, orderNumber, seq, orderType, data.tableId || null,
+            data.customerInfo?.name || null, data.customerInfo?.phone || null,
+            totalAmount, sgst, cgst, discount, finalAmount, data.waiterId || null,
+            data.paymentMethod || null, data.tenantId || null
         ];
 
         await mysql.query(sql, values);
@@ -270,19 +271,24 @@ const Order = {
         return fmtItem(rows[0]);
     },
 
-    async search(q, limit = 30) {
+    async search(q, limit = 30, tenantId = null) {
         const pattern = `%${q}%`;
+        const tenantClause = tenantId ? 'AND o.tenant_id = ?' : '';
         const query = `
-            SELECT o.* 
+            SELECT o.*
             FROM orders o
             LEFT JOIN tables t ON o.table_id = t.id
-            WHERE o.order_number LIKE ? 
-               OR o.customer_name LIKE ? 
-               OR t.number LIKE ?
+            WHERE (o.order_number LIKE ?
+               OR o.customer_name LIKE ?
+               OR t.number LIKE ?)
+               ${tenantClause}
             ORDER BY o.created_at DESC
             LIMIT ?
         `;
-        const [rows] = await mysql.query(query, [pattern, pattern, pattern, parseInt(limit)]);
+        const params = tenantId
+            ? [pattern, pattern, pattern, tenantId, parseInt(limit)]
+            : [pattern, pattern, pattern, parseInt(limit)];
+        const [rows] = await mysql.query(query, params);
         
         if (rows.length === 0) return [];
 
@@ -329,6 +335,11 @@ function buildWhereClause(filter) {
     if (filter.paymentStatus) {
         conditions.push('payment_status = ?');
         values.push(filter.paymentStatus);
+    }
+
+    if (filter.tenantId) {
+        conditions.push('tenant_id = ?');
+        values.push(filter.tenantId);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

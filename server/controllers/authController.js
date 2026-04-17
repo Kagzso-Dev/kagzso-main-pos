@@ -2,13 +2,13 @@ const jwt    = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User   = require('../models/User');
 
-const generateToken = ({ userId, role }) =>
-    jwt.sign({ userId, role }, process.env.JWT_SECRET, {
+const generateToken = ({ userId, role, tenantId }) =>
+    jwt.sign({ userId, role, tenantId: tenantId || null }, process.env.JWT_SECRET, {
         expiresIn: '30d',
         issuer:    'KOT_AUTH',
     });
 
-const VALID_ROLES = ['admin', 'waiter', 'kitchen', 'cashier', 'manager'];
+const VALID_ROLES = ['admin', 'waiter', 'kitchen', 'cashier', 'manager', 'superadmin'];
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -30,13 +30,15 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const user = await User.create({ username, password, role, name, image });
+        const tenantId = req.body.tenantId || req.tenantId || 1;
+        const user = await User.create({ username, password, role, name, image, tenantId });
 
         res.status(201).json({
             _id:      user._id,
             username: user.username,
             role:     user.role,
-            token:    generateToken({ userId: user._id, role: user.role }),
+            tenantId: user.tenantId,
+            token:    generateToken({ userId: user._id, role: user.role, tenantId: user.tenantId }),
         });
     } catch (error) {
         console.error('Register error:', error);
@@ -65,7 +67,8 @@ const loginUser = async (req, res) => {
             _id:      user._id,
             username: user.username,
             role:     user.role,
-            token:    generateToken({ userId: user._id, role: user.role }),
+            tenantId: user.tenantId || null,
+            token:    generateToken({ userId: user._id, role: user.role, tenantId: user.tenantId }),
         });
     } catch (error) {
         console.error('Login error:', error);

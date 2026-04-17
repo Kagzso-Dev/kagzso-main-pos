@@ -40,8 +40,9 @@ const socketAuthMiddleware = (socket, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Attach user context to socket for downstream use
-        socket.userId = decoded.userId;
-        socket.role = decoded.role;
+        socket.userId   = decoded.userId;
+        socket.role     = decoded.role;
+        socket.tenantId = decoded.tenantId || null;
 
         logger.debug(`Socket ${socket.id} authenticated`, {
             userId: decoded.userId,
@@ -61,10 +62,12 @@ const socketAuthMiddleware = (socket, next) => {
 
 /**
  * Authorized room join handler.
- * Simple global room for the restaurant.
+ * Joins the tenant-scoped room: {tenantId}:restaurant_main
+ * Falls back to 'restaurant_main' for legacy/dev connections without a tenantId.
  */
-const authorizedRoomJoin = (socket) => {
-    const room = 'restaurant_main';
+const authorizedRoomJoin = (socket, tenantId) => {
+    const resolvedTenantId = tenantId || socket.tenantId;
+    const room = resolvedTenantId ? `${resolvedTenantId}:restaurant_main` : 'restaurant_main';
     socket.join(room);
     logger.debug(`Socket ${socket.id} joined room: ${room}`);
     return true;

@@ -122,6 +122,17 @@ const TableGrid = ({
     };
 
     const getActions = (table) => {
+        if (table.status === 'reserved') {
+            return (
+                <button
+                    onClick={(e) => handleCancelReservation(e, table)}
+                    className="p-1.5 bg-rose-500 text-white rounded-lg shadow-lg hover:bg-rose-600 transition-all active:scale-90"
+                    title="Cancel Reservation"
+                >
+                    <X size={14} strokeWidth={3} />
+                </button>
+            );
+        }
         return null;
     };
 

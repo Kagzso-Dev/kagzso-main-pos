@@ -15,7 +15,7 @@ const AuthLoading = () => (
 // ── Maps a role to its home dashboard path ────────────────────────────────────
 const getDashboardPath = (role) => {
     switch (role) {
-
+        case 'superadmin': return '/superadmin';
         case 'admin': return '/admin';
         case 'kitchen': return '/kitchen';
         case 'cashier': return '/cashier';
@@ -52,7 +52,7 @@ const AdminRoute = () => (
 );
 
 const KitchenRoute = () => (
-    <RoleRoute allowedRoles={['kitchen', 'admin']} />
+    <RoleRoute allowedRoles={['kitchen', 'admin', 'waiter', 'cashier']} />
 );
 
 const CashierRoute = () => (
@@ -63,4 +63,8 @@ const WaiterRoute = () => (
     <RoleRoute allowedRoles={['waiter', 'cashier', 'admin']} />
 );
 
-export { AdminRoute, KitchenRoute, CashierRoute, WaiterRoute };
+const SuperAdminRoute = () => (
+    <RoleRoute allowedRoles={['superadmin']} />
+);
+
+export { AdminRoute, KitchenRoute, CashierRoute, WaiterRoute, SuperAdminRoute };

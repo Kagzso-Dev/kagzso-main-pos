@@ -312,9 +312,17 @@ const DineIn = () => {
                             allowedStatuses={['available']}
                             filterByAllowedStatuses={false}
                             showCleanAction={false}
-                            onSelectTable={(table) => {
-                                setSelectedTable(table);
-                                setStep(3);
+                            onSelectTable={async (table) => {
+                                try {
+                                    // Reserve the table immediately in the DB to block others
+                                    await api.put(`/api/tables/${table._id}/reserve`, {}, { 
+                                        headers: { Authorization: `Bearer ${user.token}` } 
+                                    });
+                                    setSelectedTable(table);
+                                    setStep(3);
+                                } catch (err) {
+                                    alert(err.response?.data?.message || 'This table was just reserved by another waiter.');
+                                }
                             }}
                         />
                     </div>

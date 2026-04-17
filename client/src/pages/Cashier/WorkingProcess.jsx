@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import { useState, useEffect, useContext, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../api';
@@ -10,6 +10,8 @@ const WorkingProcess = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [loading, setLoading] = useState(false);
     const { user, socket, formatPrice, settings } = useContext(AuthContext);
+    const bellRef = useRef(new Audio('/bell.mp3'));
+    const prevOrdersCount = useRef(0);
 
     const [filterType, setFilterType] = useState('all');
     const [statusFilter, setStatusFilter] = useState(null);
@@ -69,6 +71,15 @@ const WorkingProcess = () => {
         window.addEventListener('pos-refresh', fetchOrders);
         return () => window.removeEventListener('pos-refresh', fetchOrders);
     }, [fetchOrders]);
+
+    // ── Audio Notifications (Kitchen Role Only) ──────────────────
+    useEffect(() => {
+        if (user?.role !== 'kitchen') return;
+        if (orders.length > prevOrdersCount.current) {
+            bellRef.current.play().catch(e => console.log('Audio play failed:', e));
+        }
+        prevOrdersCount.current = orders.length;
+    }, [orders, user?.role]);
 
     const enabledOrders = orders
         .filter(o => settings?.takeawayEnabled !== false || o.orderType !== 'takeaway')

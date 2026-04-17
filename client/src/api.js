@@ -44,7 +44,7 @@ const api = axios.create({
     },
 });
 
-// Request interceptor (Token)
+// Request interceptor (Token + Tenant)
 api.interceptors.request.use(
     (config) => {
         // Fix duplicate /api/api in URL paths globally
@@ -58,6 +58,16 @@ api.interceptors.request.use(
             // Add JWT token
             if (user?.token) {
                 config.headers.Authorization = `Bearer ${user.token}`;
+            }
+
+            // Stamp tenant header so both protected AND public routes (including
+            // the login endpoint itself) can resolve the correct restaurant.
+            // Priority: logged-in user's tenantId → VITE_TENANT_ID env variable.
+            // In production each tenant gets their own frontend build with their
+            // own VITE_TENANT_ID, so this never leaks across tenants.
+            const tenantId = user?.tenantId ?? import.meta.env.VITE_TENANT_ID;
+            if (tenantId) {
+                config.headers['X-Tenant-Id'] = tenantId;
             }
         } catch (error) {
             console.error("LocalStorage error:", error);

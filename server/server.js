@@ -51,7 +51,7 @@ const corsOptions = {
     origin: corsOriginFn,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Tenant-Id'],
     exposedHeaders: ['Set-Cookie'],
     preflightContinue: false,
     optionsSuccessStatus: 204
@@ -119,7 +119,8 @@ io.use(socketAuthMiddleware);
 app.set('io', io);
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth',       require('./routes/authRoutes'));
+app.use('/api/superadmin', require('./routes/superAdminRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/settings', require('./routes/settingRoutes'));
 app.use('/api/tables', require('./routes/tableRoutes'));
@@ -179,8 +180,8 @@ app.get('/api/analytics/daily', protect, authorize('admin'), async (req, res) =>
 io.on('connection', (socket) => {
     logger.info('Socket connected', { id: socket.id, user: socket.userId });
 
-    socket.on('join_branch', () => {
-        authorizedRoomJoin(socket);
+    socket.on('join_branch', (tenantId) => {
+        authorizedRoomJoin(socket, tenantId);
     });
 
     socket.on('join_role', (role) => {
@@ -192,7 +193,7 @@ io.on('connection', (socket) => {
 
 // ─── Auto-Release Timer ──────────────────────────────────────────────────────
 const { autoReleaseExpiredReservations } = require('./controllers/tableController');
-setInterval(() => autoReleaseExpiredReservations(io), 2 * 60 * 1000);
+setInterval(() => autoReleaseExpiredReservations(io), 1000);
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 let _healthDbCache = { status: 'unknown', ts: 0 };

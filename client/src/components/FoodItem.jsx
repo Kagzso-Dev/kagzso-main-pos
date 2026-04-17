@@ -80,6 +80,7 @@ const FoodItem = memo(({
                         alt={item.name}
                         width={120}
                         containerClassName="w-14 h-14 sm:w-16 sm:h-16 rounded-lg flex-shrink-0"
+                        aspectRatio="aspect-square"
                     >
                         {item.availability === false && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -174,7 +175,8 @@ const FoodItem = memo(({
                 <OptimizedImage
                     src={item.image}
                     alt={item.name}
-                    fill
+                    containerClassName="w-full h-full"
+                    aspectRatio="aspect-auto"
                     className="group-hover:scale-105 duration-500 ease-out object-cover"
                 />
 

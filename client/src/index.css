@@ -51,25 +51,25 @@
 
   /* ── Order Status Color Tokens (used in Kitchen, Waiter, StatusBadge) ── */
   /* Default values (blue-dark theme). Overridden per theme or via Settings. */
-  --status-pending:           #3b82f6;
-  --status-pending-bg:        rgba(59, 130, 246, 0.08);
-  --status-pending-border:    rgba(59, 130, 246, 0.25);
+  --status-pending:           #f59e0b; /* Amber - Needs Attention */
+  --status-pending-bg:        rgba(245, 158, 11, 0.08);
+  --status-pending-border:    rgba(245, 158, 11, 0.25);
 
-  --status-accepted:          #8b5cf6;
-  --status-accepted-bg:       rgba(139, 92, 246, 0.08);
-  --status-accepted-border:   rgba(139, 92, 246, 0.25);
+  --status-accepted:          #3b82f6; /* Blue - Acknowledged */
+  --status-accepted-bg:       rgba(59, 130, 246, 0.08);
+  --status-accepted-border:   rgba(59, 130, 246, 0.25);
 
-  --status-preparing:         #f59e0b;
-  --status-preparing-bg:      rgba(245, 158, 11, 0.08);
-  --status-preparing-border:  rgba(245, 158, 11, 0.25);
+  --status-preparing:         #6366f1; /* Indigo - In Progress */
+  --status-preparing-bg:      rgba(99, 102, 241, 0.08);
+  --status-preparing-border:  rgba(99, 102, 241, 0.25);
 
-  --status-ready:             #10b981;
+  --status-ready:             #10b981; /* Emerald - Completed */
   --status-ready-bg:          rgba(16, 185, 129, 0.08);
   --status-ready-border:      rgba(16, 185, 129, 0.25);
 
-  --status-readyToServe:      #3b82f6;
-  --status-readyToServe-bg:   rgba(59, 130, 246, 0.08);
-  --status-readyToServe-border: rgba(59, 130, 246, 0.25);
+  --status-readyToServe:      #0ea5e9; /* Sky Blue */
+  --status-readyToServe-bg:   rgba(14, 165, 233, 0.08);
+  --status-readyToServe-border: rgba(14, 165, 233, 0.25);
 
   --status-payment:           #ef4444;
   --status-payment-bg:        rgba(239, 68, 68, 0.08);

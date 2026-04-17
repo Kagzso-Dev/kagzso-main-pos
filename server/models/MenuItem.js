@@ -4,49 +4,60 @@ const crypto = require('crypto');
 const fmt = (row, catDoc = null) => {
     if (!row) return null;
     return {
-        _id: row.id,
-        name: row.name,
-        description: row.description,
-        price: parseFloat(row.price),
-        category: catDoc 
+        _id:          row.id,
+        name:         row.name,
+        description:  row.description,
+        price:        parseFloat(row.price),
+        category:     catDoc
             ? { _id: catDoc.id, name: catDoc.name, color: catDoc.color, status: catDoc.status }
             : row.category_id,
-        image: row.image,
+        image:        row.image,
         availability: row.availability === 1,
-        isVeg: row.is_veg === 1,
-        variants: row.variants ? (typeof row.variants === 'string' ? JSON.parse(row.variants) : row.variants) : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        isVeg:        row.is_veg === 1,
+        tenantId:     row.tenant_id || null,
+        variants:     row.variants ? (typeof row.variants === 'string' ? JSON.parse(row.variants) : row.variants) : [],
+        createdAt:    row.created_at,
+        updatedAt:    row.updated_at,
     };
 };
 
 const MenuItem = {
-    async findAll() {
-        const [itemsResp] = await mysql.query('SELECT * FROM menu_items ORDER BY name ASC');
-        const [catsResp] = await mysql.query('SELECT * FROM categories');
-        
+    async findAll(tenantId) {
+        const [itemsResp] = tenantId
+            ? await mysql.query('SELECT * FROM menu_items WHERE tenant_id = ? ORDER BY name ASC', [tenantId])
+            : await mysql.query('SELECT * FROM menu_items ORDER BY name ASC');
+
+        const [catsResp] = tenantId
+            ? await mysql.query('SELECT * FROM categories WHERE tenant_id = ?', [tenantId])
+            : await mysql.query('SELECT * FROM categories');
+
         const catMap = {};
         catsResp.forEach(c => catMap[c.id] = c);
-        
         return itemsResp.map(item => fmt(item, catMap[item.category_id]));
     },
 
-    async findAvailable() {
-        const [itemsResp] = await mysql.query('SELECT * FROM menu_items WHERE availability = 1 ORDER BY name ASC');
-        const [catsResp] = await mysql.query('SELECT * FROM categories');
-        
+    async findAvailable(tenantId) {
+        const [itemsResp] = tenantId
+            ? await mysql.query('SELECT * FROM menu_items WHERE availability = 1 AND tenant_id = ? ORDER BY name ASC', [tenantId])
+            : await mysql.query('SELECT * FROM menu_items WHERE availability = 1 ORDER BY name ASC');
+
+        const [catsResp] = tenantId
+            ? await mysql.query('SELECT * FROM categories WHERE tenant_id = ?', [tenantId])
+            : await mysql.query('SELECT * FROM categories');
+
         const catMap = {};
         catsResp.forEach(c => catMap[c.id] = c);
-        
         return itemsResp.map(item => fmt(item, catMap[item.category_id]));
     },
 
-    async findById(id) {
+    async findById(id, tenantId) {
         try {
-            const [items] = await mysql.query('SELECT * FROM menu_items WHERE id = ? LIMIT 1', [id]);
+            const [items] = tenantId
+                ? await mysql.query('SELECT * FROM menu_items WHERE id = ? AND tenant_id = ? LIMIT 1', [id, tenantId])
+                : await mysql.query('SELECT * FROM menu_items WHERE id = ? LIMIT 1', [id]);
             const item = items[0];
             if (!item) return null;
-            
+
             let catDoc = null;
             if (item.category_id) {
                 const [cats] = await mysql.query('SELECT * FROM categories WHERE id = ? LIMIT 1', [item.category_id]);
@@ -58,25 +69,25 @@ const MenuItem = {
         }
     },
 
-    async create({ name, description, price, category, image, isVeg, availability, variants }) {
+    async create({ name, description, price, category, image, isVeg, availability, variants, tenantId }) {
         const id = crypto.randomUUID();
         await mysql.query(
-            'INSERT INTO menu_items (id, name, description, price, category_id, image, availability, is_veg, variants) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [id, name, description || null, parseFloat(price), category, image || null, availability !== false ? 1 : 0, isVeg !== false ? 1 : 0, variants?.length ? JSON.stringify(variants) : null]
+            'INSERT INTO menu_items (id, name, description, price, category_id, image, availability, is_veg, variants, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, name, description || null, parseFloat(price), category, image || null, availability !== false ? 1 : 0, isVeg !== false ? 1 : 0, variants?.length ? JSON.stringify(variants) : null, tenantId || null]
         );
         return this.findById(id);
     },
 
-    async updateById(id, updates) {
+    async updateById(id, updates, tenantId) {
         const fieldMap = {
-            name: 'name',
-            description: 'description',
-            price: 'price',
-            category: 'category_id',
-            image: 'image',
+            name:         'name',
+            description:  'description',
+            price:        'price',
+            category:     'category_id',
+            image:        'image',
             availability: 'availability',
-            isVeg: 'is_veg',
-            variants: 'variants',
+            isVeg:        'is_veg',
+            variants:     'variants',
         };
         const updateKeys = [];
         const updateValues = [];
@@ -97,16 +108,22 @@ const MenuItem = {
             }
         }
 
-        if (updateKeys.length === 0) return this.findById(id);
-        
+        if (updateKeys.length === 0) return this.findById(id, tenantId);
+
+        const whereClause = tenantId ? 'WHERE id = ? AND tenant_id = ?' : 'WHERE id = ?';
         updateValues.push(id);
-        const query = `UPDATE menu_items SET ${updateKeys.join(', ')} WHERE id = ?`;
-        await mysql.query(query, updateValues);
-        return this.findById(id);
+        if (tenantId) updateValues.push(tenantId);
+
+        await mysql.query(`UPDATE menu_items SET ${updateKeys.join(', ')} ${whereClause}`, updateValues);
+        return this.findById(id, tenantId);
     },
 
-    async deleteById(id) {
-        await mysql.query('DELETE FROM menu_items WHERE id = ?', [id]);
+    async deleteById(id, tenantId) {
+        if (tenantId) {
+            await mysql.query('DELETE FROM menu_items WHERE id = ? AND tenant_id = ?', [id, tenantId]);
+        } else {
+            await mysql.query('DELETE FROM menu_items WHERE id = ?', [id]);
+        }
     },
 };
 

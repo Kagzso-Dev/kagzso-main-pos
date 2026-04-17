@@ -8,6 +8,7 @@ const fmt = (row) => row ? {
     password:     row.password_hash,
     name:         row.name || null,
     role:         row.role,
+    tenantId:     row.tenant_id || null,
     image:        row.image || null,
     isVerified:   row.is_verified === 1,
     lastLoginAt:  row.last_login_at || null,
@@ -44,16 +45,19 @@ const User = {
         return rows.length > 0;
     },
 
-    async create({ username, password, role, name, image }) {
+    async create({ username, password, role, name, image, tenantId }) {
         const salt   = await bcrypt.genSalt(10);
         const hashed = await bcrypt.hash(password, salt);
         const id = crypto.randomUUID();
 
+        // superadmin is a system-level user with no tenant (tenantId stays null)
+        const resolvedTenantId = (role === 'superadmin') ? null : (tenantId || 1);
+
         await mysql.query(
-            'INSERT INTO users (id, username, password_hash, role, name, image, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [id, username, hashed, role, name || null, image || null, 0]
+            'INSERT INTO users (id, username, password_hash, role, name, image, is_verified, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, username, hashed, role, name || null, image || null, 0, resolvedTenantId]
         );
-        return { _id: id, username, role, name: name || null };
+        return { _id: id, username, role, name: name || null, tenantId: resolvedTenantId };
     },
 
     async updatePassword(id, newPassword) {

@@ -90,8 +90,10 @@ export const AuthProvider = ({ children }) => {
         });
 
         const joinRooms = () => {
-            newSocket.emit('join_branch');
-            console.log('%c✅ Socket connected to restaurant main room', 'color: #10b981; font-weight: bold;');
+            const sUser = JSON.parse(sessionStorage.getItem('user') || 'null');
+            const tenantId = sUser?.tenantId ?? import.meta.env.VITE_TENANT_ID ?? null;
+            newSocket.emit('join_branch', tenantId);
+            console.log('%c✅ Socket connected to restaurant main room', 'color: #10b981; font-weight: bold;', `tenant: ${tenantId}`);
 
             if (role) {
                 newSocket.emit('join_role', role);

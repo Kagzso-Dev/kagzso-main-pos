@@ -1,23 +1,17 @@
 const MenuItem = require('../models/MenuItem');
 const { invalidateCache } = require('../utils/cache');
 
-// @desc    Get menu items
-// @route   GET /api/menu
-// @access  Private
 const getMenuItems = async (req, res) => {
     try {
         const items = req.role === 'admin'
-            ? await MenuItem.findAll()
-            : await MenuItem.findAvailable();
+            ? await MenuItem.findAll(req.tenantId)
+            : await MenuItem.findAvailable(req.tenantId);
         res.json(items);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Create menu item
-// @route   POST /api/menu
-// @access  Private (Admin)
 const createMenuItem = async (req, res) => {
     const { name, description, price, category, image, isVeg, availability, variants } = req.body;
     if (!name || !name.trim()) {
@@ -33,9 +27,10 @@ const createMenuItem = async (req, res) => {
         const item = await MenuItem.create({
             name: name.trim(), description, price, category, image,
             isVeg, availability: availability !== false, variants,
+            tenantId: req.tenantId,
         });
         invalidateCache('menu');
-        req.app.get('io').to('restaurant_main').emit('menu-updated', { action: 'create', item });
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('menu-updated', { action: 'create', item });
         res.status(201).json(item);
     } catch (error) {
         if (error.code === 'ER_NO_REFERENCED_ROW_2') {
@@ -45,18 +40,15 @@ const createMenuItem = async (req, res) => {
     }
 };
 
-// @desc    Update menu item
-// @route   PUT /api/menu/:id
-// @access  Private (Admin)
 const updateMenuItem = async (req, res) => {
     try {
-        const item = await MenuItem.findById(req.params.id);
+        const item = await MenuItem.findById(req.params.id, req.tenantId);
         if (!item) {
             return res.status(404).json({ message: 'Item not found' });
         }
-        const updated = await MenuItem.updateById(req.params.id, req.body);
+        const updated = await MenuItem.updateById(req.params.id, req.body, req.tenantId);
         invalidateCache('menu');
-        req.app.get('io').to('restaurant_main').emit('menu-updated', { action: 'update', item: updated });
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('menu-updated', { action: 'update', item: updated });
         res.json(updated);
     } catch (error) {
         if (error.code === 'ER_NO_REFERENCED_ROW_2') {
@@ -66,18 +58,15 @@ const updateMenuItem = async (req, res) => {
     }
 };
 
-// @desc    Delete menu item
-// @route   DELETE /api/menu/:id
-// @access  Private (Admin)
 const deleteMenuItem = async (req, res) => {
     try {
-        const item = await MenuItem.findById(req.params.id);
+        const item = await MenuItem.findById(req.params.id, req.tenantId);
         if (!item) {
             return res.status(404).json({ message: 'Item not found' });
         }
-        await MenuItem.deleteById(req.params.id);
+        await MenuItem.deleteById(req.params.id, req.tenantId);
         invalidateCache('menu');
-        req.app.get('io').to('restaurant_main').emit('menu-updated', { action: 'delete', id: req.params.id });
+        req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('menu-updated', { action: 'delete', id: req.params.id });
         res.json({ message: 'Item removed' });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -17,12 +17,22 @@ const protect = async (req, res, next) => {
 
             // Attach user context from JWT payload
             req.userId = decoded.userId;
-            req.role = decoded.role;
+            req.role   = decoded.role;
+
+            // Parse tenantId as integer — JWT takes priority, then X-Tenant-Id header.
+            // Always parseInt so a string "1" from headers becomes the integer 1.
+            // If result is NaN or 0, fall back to null (prevents FK constraint errors).
+            const rawTenantId = decoded.tenantId ?? req.headers['x-tenant-id'] ?? null;
+            const parsed = rawTenantId !== null && rawTenantId !== undefined
+                ? parseInt(rawTenantId, 10)
+                : null;
+            req.tenantId = (parsed && !isNaN(parsed)) ? parsed : null;
 
             // Convenience alias
             req.user = {
-                _id: decoded.userId,
-                role: decoded.role,
+                _id:      decoded.userId,
+                role:     decoded.role,
+                tenantId: req.tenantId,
             };
 
             next();

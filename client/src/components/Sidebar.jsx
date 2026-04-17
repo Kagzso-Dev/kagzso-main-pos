@@ -47,7 +47,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
     /* ── NavItem ─────────────────────────────────────────────────────── */
     const NavItem = ({ to, onClick, icon: Icon, label, color = 'text-[var(--theme-text-muted)]', badge }) => {
         const active = to ? isActive(to) : false;
-        
+
         const handleClick = () => {
             if (onClick) {
                 onClick();
@@ -121,7 +121,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
 
             {/* ── Header ─────────────────────────────────────────────── */}
             <div className={`flex items-center border-b border-[var(--theme-border)] flex-shrink-0 pt-safe relative h-[80px] ${collapsed ? 'justify-center' : 'justify-start px-5'} bg-gradient-to-b from-white/5 to-transparent`}>
-                
+
                 {/* Logo & Brand Group - Left Aligned */}
                 <div
                     onClick={() => handleNav('/')}
@@ -198,6 +198,11 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
                         <NavItem to="/admin/notifications" icon={Bell} label="Notifications" color="text-orange-400" badge={unreadCount > 0 ? unreadCount : null} />
                         <NavItem to="/admin/menu" icon={Coffee} label="Menu Items" />
                         <NavItem to="/admin/categories" icon={Layers} label="Categories" />
+
+                        {/* <SectionLabel>Live Views</SectionLabel>
+                        <NavItem to="/kitchen" icon={ChefHat} label="Kitchen View" color="text-orange-400" />
+                        <NavItem to="/cashier" icon={Monitor} label="Cashier Point" color="text-green-400" />
+                        <NavItem to="/waiter" icon={Armchair} label="Order View" color="text-yellow-400" /> */}
                     </>
                 )}
 
@@ -208,7 +213,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
 
                         {user.role === 'kitchen' && (
                             <>
-                                <NavItem to="/kitchen?tab=active" icon={ChefHat} label="Active" color="text-orange-400" />
+                                <NavItem to="/kitchen" icon={ChefHat} label="Kitchen Dashboard" color="text-orange-400" />
                             </>
                         )}
 
@@ -216,14 +221,14 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
                             <>
                                 <NavItem to="/cashier" icon={Monitor} label="Cashier Point" color="text-green-400" />
                                 <NavItem to="/waiter" icon={Armchair} label="Order View" color="text-yellow-400" />
-                                <NavItem to="/cashier/kitchen-view" icon={ChefHat} label="Kitchen View" color="text-orange-400" />
+                                <NavItem to="/kitchen" icon={ChefHat} label="Kitchen View" color="text-orange-400" />
                             </>
                         )}
 
                         {user.role === 'waiter' && (
                             <>
                                 <NavItem to="/waiter" icon={LayoutDashboard} label="Waiter Dashboard" color="text-pink-400" />
-                                <NavItem to="/waiter/kitchen-view" icon={ChefHat} label="Kitchen View" color="text-emerald-400" />
+                                <NavItem to="/kitchen" icon={ChefHat} label="Kitchen View" color="text-emerald-400" />
                                 <NavItem to="/waiter/history" icon={History} label="Order History" color="text-purple-400" />
                             </>
                         )}
@@ -232,16 +237,16 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
 
                 {/* Theme Selector - Bottom of Nav */}
                 <div className={`mt-auto pt-4 border-t border-[var(--theme-border)] ${collapsed ? 'px-0' : 'px-2'}`}>
-                     <ThemeSwitcher collapsed={collapsed} />
+                    <ThemeSwitcher collapsed={collapsed} />
                 </div>
 
                 {/* RELOCATED: Logout button - Always visible for all devices and roles */}
                 <div className="mt-2 mb-2 px-1">
-                    <NavItem 
-                        onClick={handleLogout} 
-                        icon={LogOut} 
-                        label="Sign Out" 
-                        color="text-rose-500" 
+                    <NavItem
+                        onClick={handleLogout}
+                        icon={LogOut}
+                        label="Sign Out"
+                        color="text-rose-500"
                     />
                 </div>
             </nav>

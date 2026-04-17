@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
-import { AdminRoute, KitchenRoute, CashierRoute, WaiterRoute } from './PrivateRoutes';
+import { AdminRoute, KitchenRoute, CashierRoute, WaiterRoute, SuperAdminRoute } from './PrivateRoutes';
 import Layout from './components/Layout';
 import DynamicTheme from './components/DynamicTheme';
 import NotificationToast from './components/NotificationToast'; // Added
@@ -29,6 +29,9 @@ const WaiterDashboard = lazy(() => import('./pages/Waiter/Dashboard'));
 const DineIn = lazy(() => import('./pages/Waiter/DineIn'));
 const TakeAway = lazy(() => import('./pages/Waiter/TakeAway'));
 const LogoutConfirm = lazy(() => import('./pages/LogoutConfirm'));
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/Dashboard'));
+const SuperAdminRestaurants = lazy(() => import('./pages/SuperAdmin/Restaurants'));
+const SuperAdminRestaurantDetail = lazy(() => import('./pages/SuperAdmin/RestaurantDetail'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const ConnectionPage = lazy(() => import('./pages/ConnectionPage'));
 
@@ -143,6 +146,13 @@ function App() {
               {/* Shared Mobile-Specific Routes */}
               <Route path="/logout" element={<LogoutConfirm />} />
 
+            </Route>
+
+            {/* Super Admin Routes — no Layout wrapper (has its own full-page UI) */}
+            <Route element={<SuperAdminRoute />}>
+              <Route path="/superadmin" element={<SuperAdminDashboard />} />
+              <Route path="/superadmin/restaurants" element={<SuperAdminRestaurants />} />
+              <Route path="/superadmin/restaurants/:id" element={<SuperAdminRestaurantDetail />} />
             </Route>
 
             {/* Root + catch-all: always go to login (Login.jsx redirects logged-in users to their dashboard) */}

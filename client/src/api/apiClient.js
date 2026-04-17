@@ -18,13 +18,20 @@ const api = axios.create({
 const OFFLINE_METHODS = ['GET'];
 const QUEUEABLE_METHODS = ['POST', 'PUT', 'DELETE'];
 
-// Request interceptor (JWT Token) — essential for cross-origin authentication
+// Request interceptor (JWT Token + Tenant) — essential for cross-origin authentication
 api.interceptors.request.use(
     (config) => {
         try {
             const user = JSON.parse(sessionStorage.getItem("user"));
             if (user?.token) {
                 config.headers.Authorization = `Bearer ${user.token}`;
+            }
+            // Stamp tenant header so both protected AND public routes (including
+            // the login endpoint itself) can resolve the correct restaurant.
+            // Priority: logged-in user's tenantId → VITE_TENANT_ID env variable.
+            const tenantId = user?.tenantId ?? import.meta.env.VITE_TENANT_ID;
+            if (tenantId) {
+                config.headers['X-Tenant-Id'] = tenantId;
             }
         } catch (error) {
             console.error("SessionStorage error:", error);

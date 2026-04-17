@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback, useMemo, memo } from 'react';
+import { useState, useEffect, useContext, useCallback, useMemo, memo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -13,7 +13,8 @@ import { printBill } from '../../components/BillPrint';
 import {
     Printer, Banknote, CheckCircle,
     ShoppingBag, RefreshCw, ArrowLeft,
-    Clock, AlertTriangle, Grid, List, LogOut
+    Clock, AlertTriangle, Grid, List, LogOut,
+    ChefHat, Bell
 } from 'lucide-react';
 
 /* ── Order List Item ──────────────────────────────────────────────────────── */
@@ -177,16 +178,20 @@ const Receipt = ({ order, formatPrice, settings }) => (
                 </tr>
             </thead>
             <tbody>
-                {order.items?.filter(item => item.status?.toUpperCase() !== 'CANCELLED').map((item, i) => (
-                    <tr key={i} className="border-b border-dashed border-gray-200">
-                        <td className="py-2">
-                            {item.name}
-                            {item.variant?.name && <span className="text-xs opacity-70"> ({item.variant.name})</span>}
-                        </td>
-                        <td className="py-2 text-center">{item.quantity}</td>
-                        <td className="py-2 text-right">{formatPrice(item.price * item.quantity)}</td>
-                    </tr>
-                ))}
+                {(order.items || []).map((item, i) => {
+                    const isCancelled = item.status?.toUpperCase() === 'CANCELLED';
+                    return (
+                        <tr key={i} className="border-b border-dashed border-gray-200">
+                            <td className={`py-2 ${isCancelled ? 'text-red-500 line-through opacity-60' : ''}`}>
+                                {item.name}
+                                {item.variant?.name && <span className="text-xs opacity-70"> ({item.variant.name})</span>}
+                                {isCancelled && item.cancelReason && <p className="text-[8px] italic mt-0.5">({item.cancelReason})</p>}
+                            </td>
+                            <td className={`py-2 text-center ${isCancelled ? 'text-red-400 opacity-60' : ''}`}>{item.quantity}</td>
+                            <td className={`py-2 text-right ${isCancelled ? 'text-red-400 opacity-60' : ''}`}>{formatPrice(item.price * item.quantity)}</td>
+                        </tr>
+                    );
+                })}
             </tbody>
         </table>
 
@@ -259,6 +264,8 @@ const CashierDashboard = () => {
         return (sidebar && sidebar.offsetWidth > 120) ? 3 : 4;
     });
     const { user, socket, formatPrice, formatOrderNumber, settings } = useContext(AuthContext);
+    const announcedOrders = useRef(new Set());
+    const bellRef = useRef(new Audio('/bell.mp3'));
     const location = useLocation();
     const navigate = useNavigate();
     const isHistoryMode = location.pathname.includes('/history');
@@ -405,6 +412,28 @@ const CashierDashboard = () => {
         return () => window.removeEventListener('pos-refresh', fetchOrders);
     }, [user, socket, fetchOrders]);
 
+    // ── Voice & Audio Notifications ──────────────────────────────────
+    useEffect(() => {
+        if (!orders?.length || isHistoryMode) return;
+        
+        const paymentReadyOrders = orders.filter(o => 
+            o.orderStatus?.toLowerCase() === 'payment' && !announcedOrders.current.has(o._id)
+        );
+
+        paymentReadyOrders.forEach(o => {
+            announcedOrders.current.add(o._id);
+            const identifier = o.orderType === 'dine-in' 
+                ? `Table ${o.tableId?.number || o.tableId || '?'}` 
+                : `Token ${o.tokenNumber || '?'}`;
+            
+            const msg = new SpeechSynthesisUtterance(`Payment ready, ${identifier}`);
+            msg.onend = () => {
+                bellRef.current.play().catch(e => console.log('Audio play failed:', e));
+            };
+            window.speechSynthesis.speak(msg);
+        });
+    }, [orders, isHistoryMode]);
+
     /* ── Select Order ────────────────────────────────────────────────── */
     const handleSelect = (order) => {
         setSelectedOrder(order);
@@ -499,6 +528,14 @@ const CashierDashboard = () => {
                         <div className="bg-orange-500/10 border border-orange-500/20 text-orange-500 px-2 xs:px-2.5 h-8 xs:h-9 flex items-center justify-center rounded-lg xs:rounded-xl text-[9px] xs:text-[10px] font-black transition-all">
                             {(orders || []).filter(o => filterType === 'all' || o.orderType === filterType).length}
                         </div>
+
+                         <button
+                            onClick={() => navigate('/kitchen')}
+                            title="Kitchen View"
+                            className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center rounded-lg xs:rounded-xl border border-orange-500/30 bg-orange-500/5 text-orange-500 hover:bg-orange-500/15 transition-all active:scale-95"
+                        >
+                            <ChefHat size={16} strokeWidth={2.5} />
+                        </button>
 
                          <button
                             onClick={() => { const next = !isCardView; setIsCardView(next); localStorage.setItem('cashierCardView', next); }}

@@ -8,7 +8,7 @@ const crypto = require('crypto');
 // GET /api/settings
 const getSettings = async (req, res) => {
     try {
-        res.json(await Setting.get());
+        res.json(await Setting.get(req.tenantId));
     } catch (error) {
         res.status(500).json({ message: 'Error fetching settings' });
     }
@@ -17,12 +17,12 @@ const getSettings = async (req, res) => {
 // PUT /api/settings
 const updateSettings = async (req, res) => {
     try {
-        const settings = await Setting.update(req.body);
+        const settings = await Setting.update(req.body, req.tenantId);
         invalidateCache('settings');
-        
+
         const io = req.app.get('io');
         if (io) {
-            io.to('restaurant_main').emit('settings-updated', settings);
+            io.to(`${req.tenantId}:restaurant_main`).emit('settings-updated', settings);
         }
 
         res.json(settings);
@@ -67,7 +67,7 @@ const changePassword = async (req, res) => {
 // GET /api/settings/qr
 const getQrSettings = async (req, res) => {
     try {
-        const settings = await Setting.get();
+        const settings = await Setting.get(req.tenantId);
         res.json({
             standardQrUrl:  settings.standardQrUrl  || null,
             secondaryQrUrl: settings.secondaryQrUrl || null,
@@ -97,14 +97,13 @@ const uploadQr = async (req, res) => {
 
         const uploadName = `${type}_qr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${path.extname(file.originalname) || '.png'}`;
         const publicImagesPath = path.join(__dirname, '../../client/public/images');
-        
+
         if (!fs.existsSync(publicImagesPath)) {
             fs.mkdirSync(publicImagesPath, { recursive: true });
         }
 
         fs.writeFileSync(path.join(publicImagesPath, uploadName), file.buffer);
 
-        // Also write to dist if exists
         const distImagesPath = path.join(__dirname, '../../client/dist/images');
         if (fs.existsSync(path.join(__dirname, '../../client/dist'))) {
             if (!fs.existsSync(distImagesPath)) fs.mkdirSync(distImagesPath, { recursive: true });
@@ -112,21 +111,21 @@ const uploadQr = async (req, res) => {
         }
 
         const url = `/images/${uploadName}`;
-        const settings = await Setting.updateQr({ type, fileId: uploadName, url });
+        const settings = await Setting.updateQr({ type, fileId: uploadName, url }, req.tenantId);
         invalidateCache('settings');
 
         const io = req.app.get('io');
-        if (io) io.to('restaurant_main').emit('settings-updated', settings);
+        if (io) io.to(`${req.tenantId}:restaurant_main`).emit('settings-updated', settings);
 
         res.json({
             message: `${type} QR updated successfully`,
             url,
-            standardQrUrl: settings.standardQrUrl,
+            standardQrUrl:  settings.standardQrUrl,
             secondaryQrUrl: settings.secondaryQrUrl,
         });
     } catch (error) {
         console.error('QR upload error:', error);
-        res.status(500).json({ message: "QR upload failed", error: error.message });
+        res.status(500).json({ message: 'QR upload failed', error: error.message });
     }
 };
 
