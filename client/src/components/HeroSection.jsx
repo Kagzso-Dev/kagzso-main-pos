@@ -389,7 +389,7 @@ const HeroSection = ({ onSignIn, settings }) => {
             </div>
             <div className="flex flex-col animate-fade-in-right animation-delay-300">
               <h1 className="text-sm sm:text-lg glass-brand-text leading-none">KAGZSO</h1>
-              <p className="text-[7px] sm:text-[9px] text-white/50 font-black tracking-[0.1em] uppercase mt-1 leading-none">
+              <p className="text-[7px] sm:text-[9px] font-black tracking-[0.1em] uppercase mt-1 leading-none" style={{ color: '#ffffff' }}>
                 Smart Kitchen System
               </p>
             </div>
@@ -455,7 +455,7 @@ const HeroSection = ({ onSignIn, settings }) => {
               <div className="h-[0.5px] w-full bg-gradient-to-r from-blue-500/60 via-purple-500/60 to-transparent mt-1.5 rounded-full overflow-hidden">
                 <div className="h-full w-full bg-white/40 animate-progress-glow"></div>
               </div>
-              <p className="text-[7.5px] text-white font-black tracking-[0.1em] uppercase mt-1.5 leading-none flex items-center gap-1.5">
+              <p className="text-[7.5px] font-black tracking-[0.1em] uppercase mt-1.5 leading-none flex items-center gap-1.5" style={{ color: '#ffffff' }}>
                 <span className="w-1 h-1 rounded-full bg-blue-500 animate-ping"></span>
                 Smart Kitchen System
               </p>

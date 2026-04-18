@@ -372,7 +372,7 @@ const Login = () => {
                             <div className="h-[0.5px] sm:h-px w-full bg-gradient-to-r from-yellow-500/60 via-blue-500/60 to-transparent mt-1.5 rounded-full overflow-hidden">
                                 <div className="h-full w-full bg-white/40 animate-progress-glow"></div>
                             </div>
-                            <p className="text-[7.5px] sm:text-[10px] text-white font-black tracking-[0.1em] uppercase mt-1.5 leading-none flex items-center gap-1.5">
+                            <p className="text-[7.5px] sm:text-[10px] font-black tracking-[0.1em] uppercase mt-1.5 leading-none flex items-center gap-1.5" style={{ color: '#ffffff' }}>
                                 <span className="w-1 h-1 rounded-full bg-yellow-500 animate-ping"></span>
                                 Smart Kitchen System
                             </p>

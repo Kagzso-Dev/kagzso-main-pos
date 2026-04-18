@@ -105,7 +105,7 @@ export default function SuperAdminDashboard() {
     const fmtCur = (n) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0)}`;
 
     return (
-        <div className="min-h-screen bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
+        <div className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
             {/* ── Top bar ── */}
             <header className="sticky top-0 z-50 bg-[var(--theme-topbar-bg)] backdrop-blur border-b border-[var(--theme-border)] px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">

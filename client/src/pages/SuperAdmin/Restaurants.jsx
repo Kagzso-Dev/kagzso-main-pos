@@ -431,7 +431,7 @@ export default function Restaurants() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
+        <div className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
             {/* Header */}
             <header className="sticky top-0 z-50 bg-[var(--theme-topbar-bg)] backdrop-blur border-b border-[var(--theme-border)] px-4 sm:px-6 h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
                 <button onClick={() => navigate('/superadmin')} className="p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex-shrink-0">
