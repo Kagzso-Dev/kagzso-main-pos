@@ -24,14 +24,19 @@ const hasFrontend = fs.existsSync(CLIENT_DIST);
 
 // ─── CORS Configuration ───────────────────────────────────────────────────────
 const allowedOrigins = [
+    // ── Production ──────────────────────────────────────────────────────────────
+    "https://pos.kagzso.com",
+    "https://food.kagzso.com",
+    // ── VPS direct access (fallback / health checks) ────────────────────────────
+    "http://139.84.152.58:5005",
+    "http://139.84.152.58:5173",
+    // ── Local development ───────────────────────────────────────────────────────
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
     "http://localhost:5005",
-    "http://139.84.152.58:5005",
-    "http://139.84.152.58:5173",
-
-    process.env.CLIENT_URL
+    // ── Dynamic override via environment variable ───────────────────────────────
+    process.env.CLIENT_URL,
 ].filter(Boolean).map(o => o.trim().replace(/\/$/, ''));
 
 const corsOriginFn = (origin, callback) => {

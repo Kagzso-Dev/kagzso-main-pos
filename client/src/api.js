@@ -2,35 +2,31 @@ import axios from "axios";
 
 // ─── Dynamic API Configuration for Multi-Device Dev ────────────────
 const getBaseURL = () => {
-    // 1. Prioritize explicit environment override (e.g., from Vercel/Render)
+    // 1. Explicit environment override always wins (set via .env.production or CI)
     if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
 
-    // 2. Production fallback if not in development
-    if (import.meta.env.MODE !== 'development') {
-        return "https://restaurant-kagzso-backend.onrender.com";
-    }
-
-    // 3. Smart Dev Discovery: If we are on mobile/tab via IP (e.g. 192.168.x.x), 
-    // use that same hostname for the API instead of 'localhost'.
     const hostname = window.location.hostname;
-    
-    // If on live domain, use relative /api (nginx handles proxy)
-    if (hostname === 'food.kagzso.com') {
+
+    // 2. Any live domain — use relative /api so Nginx proxies to the backend.
+    //    This is the single-domain architecture: https://pos.kagzso.com/api
+    if (hostname === 'pos.kagzso.com' || hostname === 'food.kagzso.com') {
         return "/api";
     }
 
+    // 3. Production build running on an unknown host — still prefer relative /api
+    //    so the same build artifact works on any domain without CORS issues.
+    if (import.meta.env.MODE !== 'development') {
+        return "/api";
+    }
+
+    // 4. Dev: LAN IP (mobile/tablet testing on the same network)
     const isIP = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(hostname);
-    if (isIP || (hostname !== 'localhost' && hostname !== '127.0.0.1')) {
+    if (isIP) {
         return `http://${hostname}:5005/api`;
     }
 
-    // 4. Smart Local Development: If on localhost, use local backend
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return "http://localhost:5005/api";
-    }
-
-    // 5. Default VPS/Production URL as requested
-    return "http://139.84.152.58:5005/api";
+    // 5. Dev: localhost
+    return "http://localhost:5005/api";
 };
 
 const baseURL = getBaseURL().replace(/\/+$/, "");
