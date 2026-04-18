@@ -118,6 +118,9 @@ const io = new Server(server, {
 io.use(socketAuthMiddleware);
 app.set('io', io);
 
+// ─── Public Routes (no auth — must be registered BEFORE route files) ─────────
+app.get('/api/health', (_req, res) => res.json({ status: 'OK' }));
+
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth',       require('./routes/authRoutes'));
 app.use('/api/superadmin', require('./routes/superAdminRoutes'));
@@ -225,11 +228,6 @@ app.get('/health', async (req, res) => {
         },
         cache: getCacheStats()
     });
-});
-
-// ─── API Health Check (no auth) ───────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK' });
 });
 
 // ─── Serve Uploads (QR images, etc.) ──────────────────────────────────────────
