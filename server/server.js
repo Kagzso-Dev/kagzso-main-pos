@@ -58,7 +58,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*path', cors(corsOptions));
+app.options(/(.*)/, cors(corsOptions));
 
 // ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(helmet({
@@ -214,12 +214,12 @@ app.get('/health', async (req, res) => {
         status: dbStatus === 'connected' ? 'healthy' : 'degraded',
         timestamp: new Date().toISOString(),
         uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
-        database: { 
-            state: dbStatus, 
+        database: {
+            state: dbStatus,
             type: 'mysql',
-            poolLimit: 10 
+            poolLimit: 10
         },
-        sockets: { 
+        sockets: {
             connected: io.engine.clientsCount,
             transport: 'live-websocket-polling'
         },
@@ -227,25 +227,33 @@ app.get('/health', async (req, res) => {
     });
 });
 
+// ─── API Health Check (no auth) ───────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK' });
+});
+
+// ─── Serve Uploads (QR images, etc.) ──────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ─── Serve React Frontend ─────────────────────────────────────────────────────
 if (hasFrontend) {
-    app.use(express.static(CLIENT_DIST, { 
+    app.use(express.static(CLIENT_DIST, {
         maxAge: '1d',
-        setHeaders: (res, path) => {
-            if (path.endsWith('.html')) {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.html')) {
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
                 res.setHeader('Pragma', 'no-cache');
                 res.setHeader('Expires', '0');
             }
         }
     }));
-    app.get('*path', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+    // Catch-all: serve React app for any unmatched route (SPA fallback)
+    app.use((_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
 } else {
-    app.get('/', (req, res) => res.json({ status: 'ok', message: 'API running. MySQL only.' }));
+    app.get('/', (_req, res) => res.json({ status: 'ok', message: 'API running. MySQL only.' }));
+    // 404 fallback for API-only mode
+    app.use((_req, res) => res.status(404).json({ message: 'Route not found' }));
 }
-
-// ─── Serve Uploads (QR images, etc.) ──────────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ─── Error Handler ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
