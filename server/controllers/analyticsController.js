@@ -1,13 +1,12 @@
 const mysql = require('../config/mysql');
 
-// ── Label formatter ───────────────────────────────────────────────────────────
 const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 function formatGroupLabel(raw, range) {
     if (raw === null || raw === undefined) return String(raw);
     if (range === 'year') {
-        const m = parseInt(raw) - 1; // MySQL MONTH() is 1-12
+        const m = parseInt(raw) - 1;
         return FULL_MONTHS[m] ?? String(raw);
     }
     if (range === 'week' || range === 'month') {
@@ -33,28 +32,21 @@ function rangeStart(range) {
     }
 }
 
-/**
- * @desc    Comprehensive analytics summary (all time or by range)
- */
 const getSummary = async (req, res) => {
     try {
         const { range } = req.query;
+        const tenantId = req.tenantId;
         const start = rangeStart(range);
-        
-        let where = 'WHERE payment_status = "paid"';
-        let params = [];
+
+        let where = 'WHERE payment_status = "paid" AND tenant_id = ?';
+        let params = [tenantId];
         if (start) {
             where += ' AND created_at >= ?';
             params.push(start);
         }
 
         const [rows] = await mysql.query(
-            `SELECT 
-                SUM(final_amount) as totalRevenue, 
-                SUM(sgst) as totalSgst, 
-                SUM(cgst) as totalCgst, 
-                COUNT(*) as orderCount 
-             FROM orders ${where}`,
+            `SELECT SUM(final_amount) as totalRevenue, SUM(sgst) as totalSgst, SUM(cgst) as totalCgst, COUNT(*) as orderCount FROM orders ${where}`,
             params
         );
 
@@ -64,7 +56,6 @@ const getSummary = async (req, res) => {
         const totalCgst = parseFloat(summary.totalCgst || 0);
         const orderCount = parseInt(summary.orderCount || 0);
 
-        // Payment Method breakdown
         const [payRows] = await mysql.query(
             `SELECT payment_method, SUM(final_amount) as amount FROM orders ${where} GROUP BY payment_method`,
             params
@@ -77,10 +68,7 @@ const getSummary = async (req, res) => {
         });
 
         res.json({
-            totalRevenue,
-            totalSgst,
-            totalCgst,
-            orderCount,
+            totalRevenue, totalSgst, totalCgst, orderCount,
             avgOrderValue: orderCount > 0 ? totalRevenue / orderCount : 0,
             paymentSummary
         });
@@ -90,17 +78,15 @@ const getSummary = async (req, res) => {
     }
 };
 
-/**
- * @desc    Hourly/Daily revenue distribution
- */
 const getHeatmap = async (req, res) => {
     try {
         const { type, range } = req.query;
+        const tenantId = req.tenantId;
         const start = rangeStart(range);
-        
+
         let select = type === 'hourly' ? 'HOUR(created_at) as label' : 'DAYOFWEEK(created_at) as label';
-        let where = 'WHERE payment_status = "paid"';
-        let params = [];
+        let where = 'WHERE payment_status = "paid" AND tenant_id = ?';
+        let params = [tenantId];
         if (start) {
             where += ' AND created_at >= ?';
             params.push(start);
@@ -122,16 +108,14 @@ const getHeatmap = async (req, res) => {
     }
 };
 
-/**
- * @desc    Waiter productivity ranking
- */
 const getWaitersRanking = async (req, res) => {
     try {
         const { range } = req.query;
+        const tenantId = req.tenantId;
         const start = rangeStart(range);
-        
-        let where = 'WHERE o.payment_status = "paid"';
-        let params = [];
+
+        let where = 'WHERE o.payment_status = "paid" AND o.tenant_id = ?';
+        let params = [tenantId];
         if (start) {
             where += ' AND o.created_at >= ?';
             params.push(start);
@@ -161,14 +145,12 @@ const getWaitersRanking = async (req, res) => {
     }
 };
 
-/**
- * @desc    Kitchen performance
- */
 const getKitchenPerformance = async (req, res) => {
     try {
         const { range } = req.query;
+        const tenantId = req.tenantId;
         const start = rangeStart(range);
-        
+
         let labelSelect;
         switch (range) {
             case 'week':
@@ -177,15 +159,15 @@ const getKitchenPerformance = async (req, res) => {
             default:      labelSelect = 'HOUR(created_at)'; break;
         }
 
-        let where = 'WHERE payment_status = "paid" AND completed_at IS NOT NULL';
-        let params = [];
+        let where = 'WHERE payment_status = "paid" AND completed_at IS NOT NULL AND tenant_id = ?';
+        let params = [tenantId];
         if (start) {
             where += ' AND created_at >= ?';
             params.push(start);
         }
 
         const query = `
-            SELECT ${labelSelect} as label, 
+            SELECT ${labelSelect} as label,
             AVG(TIMESTAMPDIFF(SECOND, COALESCE(prep_started_at, created_at), COALESCE(ready_at, completed_at))) as avgPrepTime,
             COUNT(*) as ordersCompleted,
             SUM(CASE WHEN TIMESTAMPDIFF(SECOND, COALESCE(prep_started_at, created_at), COALESCE(ready_at, completed_at)) > 1200 THEN 1 ELSE 0 END) as delayedCount
@@ -209,21 +191,19 @@ const getKitchenPerformance = async (req, res) => {
     }
 };
 
-/**
- * @desc    Time-based revenue report
- */
 const getReport = async (req, res) => {
     try {
         const { range } = req.query;
+        const tenantId = req.tenantId;
         const start = rangeStart(range);
         if (!start) return res.status(400).json({ message: 'Invalid range' });
 
         if (range === 'today') {
             const [rows] = await mysql.query(
-                `SELECT HOUR(created_at) as label, SUM(final_amount) as revenue, COUNT(*) as orders 
-                 FROM orders WHERE payment_status = "paid" AND created_at >= ? 
+                `SELECT HOUR(created_at) as label, SUM(final_amount) as revenue, COUNT(*) as orders
+                 FROM orders WHERE payment_status = "paid" AND created_at >= ? AND tenant_id = ?
                  GROUP BY label ORDER BY label ASC`,
-                [start]
+                [start, tenantId]
             );
             return res.json(rows.map(r => ({
                 label: formatGroupLabel(r.label, range),
@@ -233,8 +213,8 @@ const getReport = async (req, res) => {
         }
 
         const [rows] = await mysql.query(
-            `SELECT date, revenue, completed_orders as orders FROM daily_analytics WHERE date >= ? ORDER BY date ASC`,
-            [start]
+            `SELECT date, revenue, completed_orders as orders FROM daily_analytics WHERE date >= ? AND tenant_id = ? ORDER BY date ASC`,
+            [start, tenantId]
         );
 
         res.json(rows.map(r => ({
@@ -248,16 +228,14 @@ const getReport = async (req, res) => {
     }
 };
 
-/**
- * @desc    Per-item performance
- */
 const getItemPerformance = async (req, res) => {
     try {
         const { range } = req.query;
+        const tenantId = req.tenantId;
         const start = rangeStart(range);
-        
-        let where = 'WHERE o.payment_status = "paid" AND oi.status != "CANCELLED"';
-        let params = [];
+
+        let where = 'WHERE o.payment_status = "paid" AND oi.status != "CANCELLED" AND o.tenant_id = ?';
+        let params = [tenantId];
         if (start) {
             where += ' AND o.created_at >= ?';
             params.push(start);

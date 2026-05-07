@@ -164,8 +164,8 @@ app.get('/api/analytics/daily', protect, authorize('admin'), async (req, res) =>
         const isoSince = since.toISOString().slice(0, 10);
 
         const [rows] = await mysql.query(
-            'SELECT * FROM daily_analytics WHERE date >= ? ORDER BY date ASC',
-            [isoSince]
+            'SELECT * FROM daily_analytics WHERE date >= ? AND tenant_id = ? ORDER BY date ASC',
+            [isoSince, req.tenantId]
         );
 
         res.json(rows.map(r => ({

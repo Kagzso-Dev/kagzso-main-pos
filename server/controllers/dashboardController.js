@@ -1,24 +1,20 @@
 const mysql = require('../config/mysql');
 
-/**
- * @desc    Calculate revenue growth (today vs yesterday)
- * @route   GET /api/dashboard/growth
- * @access  Private (admin only)
- */
 const getGrowth = async (req, res) => {
     try {
+        const tenantId = req.tenantId;
         const todayStr = new Date().toISOString().slice(0, 10);
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().slice(0, 10);
 
         const [todayRows] = await mysql.query(
-            'SELECT final_amount FROM orders WHERE payment_status = "paid" AND DATE(created_at) = ?',
-            [todayStr]
+            'SELECT final_amount FROM orders WHERE payment_status = "paid" AND DATE(created_at) = ? AND tenant_id = ?',
+            [todayStr, tenantId]
         );
         const [yesterdayRows] = await mysql.query(
-            'SELECT final_amount FROM orders WHERE payment_status = "paid" AND DATE(created_at) = ?',
-            [yesterdayStr]
+            'SELECT final_amount FROM orders WHERE payment_status = "paid" AND DATE(created_at) = ? AND tenant_id = ?',
+            [yesterdayStr, tenantId]
         );
 
         const todayRevenue = todayRows.reduce((sum, r) => sum + parseFloat(r.final_amount || 0), 0);
@@ -45,17 +41,19 @@ const getGrowth = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get today's order stats
- * @route   GET /api/dashboard/stats
- * @access  Private (admin only)
- */
 const getStats = async (req, res) => {
     try {
+        const tenantId = req.tenantId;
         const todayStr = new Date().toISOString().slice(0, 10);
 
-        const [todayRows] = await mysql.query('SELECT order_status, final_amount FROM orders WHERE DATE(created_at) = ?', [todayStr]);
-        const [totalCountRow] = await mysql.query('SELECT COUNT(*) as total FROM orders');
+        const [todayRows] = await mysql.query(
+            'SELECT order_status, final_amount FROM orders WHERE DATE(created_at) = ? AND tenant_id = ?',
+            [todayStr, tenantId]
+        );
+        const [totalCountRow] = await mysql.query(
+            'SELECT COUNT(*) as total FROM orders WHERE tenant_id = ?',
+            [tenantId]
+        );
 
         const activeStatuses = ['pending', 'accepted', 'preparing', 'ready'];
         let active = 0, completed = 0, cancelled = 0, revenue = 0;

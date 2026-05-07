@@ -43,24 +43,32 @@ const createRestaurant = async (req, res) => {
     await connection.beginTransaction();
 
     try {
-        // 1. Create restaurant row + config
-        const restaurant = await Tenant.create({ name, slug, plan });
-        const tenantId = restaurant.id;
+        // 1. Restaurant row — inside transaction
+        const [result] = await connection.query(
+            'INSERT INTO restaurants (name, slug, plan) VALUES (?, ?, ?)',
+            [name, slug.toLowerCase(), plan || 'pro']
+        );
+        const tenantId = result.insertId;
 
-        // 2. Settings
+        // 2. Restaurant config
+        await connection.query(
+            'INSERT INTO restaurants_config (tenant_id, table_count, enabled_modules) VALUES (?, ?, ?)',
+            [tenantId, 10, JSON.stringify(['orders', 'kot', 'billing'])]
+        );
+
+        // 3. Settings
         await connection.query(
             'INSERT INTO settings (tenant_id, restaurant_name, currency, currency_symbol, sgst, cgst) VALUES (?, ?, ?, ?, ?, ?)',
             [tenantId, name, 'INR', '₹', 2.5, 2.5]
         );
 
-        // 3. Counter
+        // 4. Counter
         await connection.query(
             'INSERT IGNORE INTO counters (counter_key, tenant_id, sequence_value) VALUES (?, ?, ?)',
             ['tokenNumber_global', tenantId, 0]
         );
 
-        // 4. Auto-create admin, waiter, kitchen, cashier
-        // Credentials pattern: role + tenantId + '123'  (e.g. admin6 / admin6123)
+        // 5. Auto-create staff — credentials: role + tenantId + '123'
         const roles = ['admin', 'waiter', 'kitchen', 'cashier'];
         const createdUsers = [];
         for (const role of roles) {
@@ -76,10 +84,8 @@ const createRestaurant = async (req, res) => {
 
         await connection.commit();
 
-        res.status(201).json({
-            ...restaurant,
-            autoCreatedStaff: createdUsers,
-        });
+        const restaurant = await Tenant.findById(tenantId);
+        res.status(201).json({ ...restaurant, autoCreatedStaff: createdUsers });
     } catch (error) {
         await connection.rollback();
         if (error.code === 'ER_DUP_ENTRY') {
