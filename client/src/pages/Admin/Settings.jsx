@@ -607,55 +607,57 @@ const Settings = () => {
                 </div>
             </Card>
 
-            {/* Password */}
-            <Card>
-                <SectionHeader icon={Shield} title="Change Password" color="rose" />
-                <form onSubmit={savePassword} className="p-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                        <Field label="Role">
-                            <select value={passwordData.role} onChange={e => setPasswordData({ ...passwordData, role: e.target.value })}
-                                className={inputCls.replace('focus:border-blue-500 focus:ring-blue-500/10', 'focus:border-rose-500 focus:ring-rose-500/10')}>
-                                <option value="admin">Admin</option>
-                                <option value="waiter">Waiter</option>
-                                <option value="kitchen">Kitchen</option>
-                                <option value="cashier">Cashier</option>
-                            </select>
-                        </Field>
-                        <Field label="New Password">
-                            <div className="relative">
-                                <input type={showNew ? 'text' : 'password'} value={passwordData.newPassword}
-                                    onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                    placeholder="••••••••"
-                                    className={`${inputCls.replace('focus:border-blue-500 focus:ring-blue-500/10', 'focus:border-rose-500 focus:ring-rose-500/10')} pr-10`} />
-                                <button type="button" onClick={() => setShowNew(!showNew)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-subtle)] hover:text-[var(--theme-text-main)] transition-colors">
-                                    {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                        </Field>
-                        <Field label="Confirm Password">
-                            <div className="relative">
-                                <input type={showConfirm ? 'text' : 'password'} value={passwordData.confirmPassword}
-                                    onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                    placeholder="••••••••"
-                                    className={`${inputCls.replace('focus:border-blue-500 focus:ring-blue-500/10', 'focus:border-rose-500 focus:ring-rose-500/10')} pr-10`} />
-                                <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-subtle)] hover:text-[var(--theme-text-main)] transition-colors">
-                                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                        </Field>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-5 border-t border-[var(--theme-border)]">
-                        <Notice msg={msgs['security']} />
-                        <button type="submit" disabled={loading}
-                            className="h-10 px-6 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-rose-500/20 disabled:opacity-50 flex items-center gap-2">
-                            {loading ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
-                            Apply New Password
-                        </button>
-                    </div>
-                </form>
-            </Card>
+            {/* Password — hidden from UI */}
+            <div className="hidden">
+                <Card>
+                    <SectionHeader icon={Shield} title="Change Password" color="rose" />
+                    <form onSubmit={savePassword} className="p-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            <Field label="Role">
+                                <select value={passwordData.role} onChange={e => setPasswordData({ ...passwordData, role: e.target.value })}
+                                    className={inputCls.replace('focus:border-blue-500 focus:ring-blue-500/10', 'focus:border-rose-500 focus:ring-rose-500/10')}>
+                                    <option value="admin">Admin</option>
+                                    <option value="waiter">Waiter</option>
+                                    <option value="kitchen">Kitchen</option>
+                                    <option value="cashier">Cashier</option>
+                                </select>
+                            </Field>
+                            <Field label="New Password">
+                                <div className="relative">
+                                    <input type={showNew ? 'text' : 'password'} value={passwordData.newPassword}
+                                        onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                        placeholder="••••••••"
+                                        className={`${inputCls.replace('focus:border-blue-500 focus:ring-blue-500/10', 'focus:border-rose-500 focus:ring-rose-500/10')} pr-10`} />
+                                    <button type="button" onClick={() => setShowNew(!showNew)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-subtle)] hover:text-[var(--theme-text-main)] transition-colors">
+                                        {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </Field>
+                            <Field label="Confirm Password">
+                                <div className="relative">
+                                    <input type={showConfirm ? 'text' : 'password'} value={passwordData.confirmPassword}
+                                        onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                        placeholder="••••••••"
+                                        className={`${inputCls.replace('focus:border-blue-500 focus:ring-blue-500/10', 'focus:border-rose-500 focus:ring-rose-500/10')} pr-10`} />
+                                    <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-subtle)] hover:text-[var(--theme-text-main)] transition-colors">
+                                        {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </Field>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-5 border-t border-[var(--theme-border)]">
+                            <Notice msg={msgs['security']} />
+                            <button type="submit" disabled={loading}
+                                className="h-10 px-6 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-rose-500/20 disabled:opacity-50 flex items-center gap-2">
+                                {loading ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
+                                Apply New Password
+                            </button>
+                        </div>
+                    </form>
+                </Card>
+            </div>
 
         </div>
     );

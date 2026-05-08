@@ -362,8 +362,8 @@ const StaffRow = ({ s, restaurantId, roleColor, onUpdate }) => {
                 <div className="flex items-center gap-1.5 px-3 pb-2 font-mono text-xs opacity-80">
                     <span className="text-[10px] opacity-60">pw:</span>
                     <span>{showPass ? displayPw : '••••••••'}</span>
-                    <button onClick={() => setShowPass(v => !v)} className="p-0.5 rounded hover:bg-black/10">
-                        {showPass ? <Check size={10} /> : <Copy size={10} />}
+                    <button onClick={() => setShowPass(v => !v)} className="p-0.5 rounded hover:bg-black/10" title={showPass ? 'Hide password' : 'Show password'}>
+                        {showPass ? <EyeOff size={10} /> : <Eye size={10} />}
                     </button>
                     <CopyBtn text={displayPw} />
                 </div>
