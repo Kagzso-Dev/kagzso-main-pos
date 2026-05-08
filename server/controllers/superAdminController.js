@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Tenant = require('../models/Tenant');
+const Setting = require('../models/Setting');
+const { emitNotification } = require('./notificationController');
 
 /**
  * Super Admin Controller
@@ -76,8 +78,8 @@ const createRestaurant = async (req, res) => {
             const password = `${role}${tenantId}123`;
             const hashed   = await bcrypt.hash(password, 10);
             await connection.query(
-                'INSERT INTO users (id, username, password_hash, role, name, is_verified, tenant_id) VALUES (?, ?, ?, ?, ?, 1, ?)',
-                [crypto.randomUUID(), username, hashed, role, username, tenantId]
+                'INSERT INTO users (id, username, password_hash, plain_password, role, name, is_verified, tenant_id) VALUES (?, ?, ?, ?, ?, ?, 1, ?)',
+                [crypto.randomUUID(), username, hashed, password, role, username, tenantId]
             );
             createdUsers.push({ role, username, password });
         }
@@ -174,11 +176,12 @@ const getTenantStaff = async (req, res) => {
         if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
 
         const [rows] = await mysql.query(
-            'SELECT id, username, role, name, is_verified, last_login_at, created_at FROM users WHERE tenant_id = ? ORDER BY role, username',
+            'SELECT id, username, role, name, is_verified, last_login_at, created_at, plain_password FROM users WHERE tenant_id = ? ORDER BY role, username',
             [tenantId]
         );
         res.json(rows.map((r) => ({
             _id: r.id, username: r.username, role: r.role, name: r.name,
+            plainPassword: r.plain_password,
             isVerified: r.is_verified === 1, lastLoginAt: r.last_login_at, createdAt: r.created_at,
         })));
     } catch (error) {
@@ -228,8 +231,33 @@ const resetStaffPassword = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ message: 'Staff member not found' });
         const bcrypt = require('bcryptjs');
         const hashed = await bcrypt.hash(password, 10);
-        await mysql.query('UPDATE users SET password_hash = ? WHERE id = ? AND tenant_id = ?', [hashed, userId, tenantId]);
+        await mysql.query('UPDATE users SET password_hash = ?, plain_password = ? WHERE id = ? AND tenant_id = ?', [hashed, password, userId, tenantId]);
         res.json({ message: `Password updated for "${rows[0].username}"` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// PATCH /api/superadmin/restaurants/:id/staff/:userId/username
+const updateStaffUsername = async (req, res) => {
+    try {
+        const { id: tenantId, userId } = req.params;
+        const clean = (req.body.username || '').trim().toLowerCase();
+        if (clean.length < 3) {
+            return res.status(400).json({ message: 'Username must be at least 3 characters' });
+        }
+        const [rows] = await mysql.query(
+            'SELECT id FROM users WHERE id = ? AND tenant_id = ? LIMIT 1',
+            [userId, tenantId]
+        );
+        if (rows.length === 0) return res.status(404).json({ message: 'Staff member not found' });
+        const [taken] = await mysql.query(
+            'SELECT id FROM users WHERE username = ? AND tenant_id = ? AND id != ? LIMIT 1',
+            [clean, tenantId, userId]
+        );
+        if (taken.length > 0) return res.status(400).json({ message: 'Username already taken' });
+        await mysql.query('UPDATE users SET username = ? WHERE id = ? AND tenant_id = ?', [clean, userId, tenantId]);
+        res.json({ message: `Username updated to "${clean}"`, username: clean });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -247,6 +275,70 @@ const deleteTenantStaff = async (req, res) => {
         await mysql.query('DELETE FROM users WHERE id = ? AND tenant_id = ?', [userId, tenantId]);
         res.json({ message: `User "${rows[0].username}" removed` });
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ─── ORDER STATUSES ─────────────────────────────────────────────────────────
+
+// GET /api/superadmin/restaurants/:id/settings
+const getTenantSettings = async (req, res) => {
+    try {
+        await ensureOrderStatusesCol();
+        const restaurant = await Tenant.findById(req.params.id);
+        if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
+        const settings = await Setting.get(req.params.id);
+        res.json({ orderStatusesConfig: settings.orderStatusesConfig });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ensure order_statuses_config column exists (auto-migration)
+let _orderStatusesColChecked = false;
+const ensureOrderStatusesCol = async () => {
+    if (_orderStatusesColChecked) return;
+    const [cols] = await mysql.query('SHOW COLUMNS FROM settings LIKE "order_statuses_config"');
+    if (cols.length === 0) {
+        await mysql.query('ALTER TABLE settings ADD COLUMN order_statuses_config JSON');
+        console.log('[migration] Added order_statuses_config column to settings');
+    }
+    _orderStatusesColChecked = true;
+};
+
+// PATCH /api/superadmin/restaurants/:id/order-statuses
+const updateTenantOrderStatuses = async (req, res) => {
+    try {
+        await ensureOrderStatusesCol();
+
+        const tenantId = req.params.id;
+        const { key, enabled } = req.body;
+
+        const validKeys = ['pending', 'accepted', 'preparing', 'ready', 'payment', 'completed', 'cancelled'];
+        if (!validKeys.includes(key) || typeof enabled !== 'boolean') {
+            return res.status(400).json({ message: 'Valid key and enabled (boolean) are required' });
+        }
+
+        const restaurant = await Tenant.findById(tenantId);
+        if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
+
+        const current = await Setting.get(tenantId);
+        const updated = { ...current.orderStatusesConfig, [key]: enabled };
+        await Setting.update({ orderStatusesConfig: updated }, tenantId);
+
+        const io = req.app.get('io');
+        if (io) {
+            const label = key.charAt(0).toUpperCase() + key.slice(1);
+            emitNotification(io, parseInt(tenantId), 'admin', {
+                title: `Order Status ${enabled ? 'Enabled' : 'Disabled'}`,
+                message: `"${label}" order status has been ${enabled ? 'enabled' : 'disabled'} by Super Admin.`,
+                type: 'SYSTEM_ALERT',
+            });
+        }
+
+        res.json({ orderStatusesConfig: updated });
+    } catch (error) {
+        console.error('[updateTenantOrderStatuses]', error.message);
         res.status(500).json({ message: error.message });
     }
 };
@@ -337,5 +429,8 @@ module.exports = {
     createTenantStaff,
     deleteTenantStaff,
     resetStaffPassword,
+    updateStaffUsername,
     setupRestaurant,
+    getTenantSettings,
+    updateTenantOrderStatuses,
 };

@@ -63,6 +63,11 @@ const DineIn = () => {
     // ── Shared menu cache ────────────────────────────────────────────────
     const { menuItems, categories: rawCategories, loading: menuLoading } = useMenuData();
 
+    // Auto-close cart panel when cart is emptied
+    useEffect(() => {
+        if (cart.length === 0) setIsCartOpen(false);
+    }, [cart.length]);
+
     // Sync with global settings
     useEffect(() => {
         const isMobile = window.innerWidth < 768;
@@ -350,17 +355,17 @@ const DineIn = () => {
                                 <div className="flex-1 flex justify-end items-center gap-2">
                                     {!settings?.enforceMenuView && <ViewToggle viewMode={viewMode} setViewMode={handleViewToggle} />}
                                     
-                                    <button
-                                        onClick={() => setIsCartOpen(!isCartOpen)}
-                                        className={`relative w-12 h-12 flex items-center justify-center rounded-2xl transition-all border shadow-sm active:scale-95 shrink-0 ${isCartOpen ? 'bg-orange-500 text-white border-orange-600 shadow-orange-500/20' : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}`}
-                                    >
-                                        <ShoppingCart size={20} />
-                                        {cart.length > 0 && (
+                                    {cart.length > 0 && (
+                                        <button
+                                            onClick={() => setIsCartOpen(!isCartOpen)}
+                                            className={`relative w-12 h-12 flex items-center justify-center rounded-2xl transition-all border shadow-sm active:scale-95 shrink-0 ${isCartOpen ? 'bg-orange-500 text-white border-orange-600 shadow-orange-500/20' : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}`}
+                                        >
+                                            <ShoppingCart size={20} />
                                             <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black bg-orange-600 text-white border-2 border-[var(--theme-bg-card)] shadow-lg">
                                                 {cart.length}
                                             </span>
-                                        )}
-                                    </button>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

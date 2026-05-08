@@ -24,16 +24,6 @@ const TakeAway = () => {
     const { user, formatPrice, settings, socket, socketConnected } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    // Redirect away if takeaway is disabled in settings
-    useEffect(() => {
-        console.log('[TakeAway] settings:', settings);
-        console.log('[TakeAway] takeawayEnabled:', settings?.takeawayEnabled);
-        if (settings?.takeawayEnabled === false || settings?.takeawayEnabled === 0) {
-            console.log('[TakeAway] Redirecting - takeaway disabled!');
-            navigate('/waiter', { replace: true });
-        }
-    }, [settings, navigate]);
-
     const orderType = 'takeaway';
     const [cart, setCart] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +38,21 @@ const TakeAway = () => {
         if (isMobile && settings?.mobileMenuView) return settings.mobileMenuView;
         return settings?.menuView || 'grid';
     });
+
+    // Auto-close cart panel when cart is emptied
+    useEffect(() => {
+        if (cart.length === 0) setIsCartOpen(false);
+    }, [cart.length]);
+
+    // Redirect away if takeaway is disabled in settings
+    useEffect(() => {
+        console.log('[TakeAway] settings:', settings);
+        console.log('[TakeAway] takeawayEnabled:', settings?.takeawayEnabled);
+        if (settings?.takeawayEnabled === false || settings?.takeawayEnabled === 0) {
+            console.log('[TakeAway] Redirecting - takeaway disabled!');
+            navigate('/waiter', { replace: true });
+        }
+    }, [settings, navigate]);
 
     // ── Shared menu cache ────────────────────────────────────────────────
     const { menuItems, categories: rawCategories, loading } = useMenuData();
@@ -203,7 +208,7 @@ const TakeAway = () => {
             navigate('/waiter', { replace: true });
         } catch (apiErr) {
             console.log('[TakeAway] Order failed, queuing offline:', apiErr.message);
-            const { localId, tokenNumber } = await queueOrder({
+            const { tokenNumber } = await queueOrder({
                 tableId: null,
                 type: orderType,
                 items: orderData.items,
@@ -265,26 +270,25 @@ const TakeAway = () => {
                                 )}
                             </div>
                             {!settings?.enforceMenuView && <ViewToggle viewMode={viewMode} setViewMode={handleViewToggle} />}
-                            <button
-                                onClick={() => setIsCartOpen(!isCartOpen)}
-                                className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm border shadow-sm shrink-0 active:scale-95
-                                    ${isCartOpen
-                                        ? 'bg-orange-500 text-white border-orange-600 shadow-md'
-                                        : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}
-                                `}
-                            >
-                                <ShoppingCart size={18} className="shrink-0" />
-                                {/* 3D animated double arrow */}
-                                <span className={`flex items-center transition-transform duration-300 ${isCartOpen ? 'rotate-180' : ''}`} style={{ perspective: '120px' }}>
-                                    <ChevronLeft size={14} className="animate-cart-arrow-1" strokeWidth={3} />
-                                    <ChevronLeft size={14} className="animate-cart-arrow-2 -ml-2" strokeWidth={3} />
-                                </span>
-                                {cart.length > 0 && (
+                            {cart.length > 0 && (
+                                <button
+                                    onClick={() => setIsCartOpen(!isCartOpen)}
+                                    className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all font-black text-sm border shadow-sm shrink-0 active:scale-95
+                                        ${isCartOpen
+                                            ? 'bg-orange-500 text-white border-orange-600 shadow-md'
+                                            : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}
+                                    `}
+                                >
+                                    <ShoppingCart size={18} className="shrink-0" />
+                                    <span className={`flex items-center transition-transform duration-300 ${isCartOpen ? 'rotate-180' : ''}`} style={{ perspective: '120px' }}>
+                                        <ChevronLeft size={14} className="animate-cart-arrow-1" strokeWidth={3} />
+                                        <ChevronLeft size={14} className="animate-cart-arrow-2 -ml-2" strokeWidth={3} />
+                                    </span>
                                     <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${isCartOpen ? 'bg-white text-orange-600 border-orange-500' : 'bg-orange-600 text-white border-[var(--theme-bg-card)]'}`}>
                                         {cart.length}
                                     </span>
-                                )}
-                            </button>
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -529,7 +533,7 @@ const TakeAway = () => {
                                     type="text" 
                                     placeholder="Search categories..."
                                     className="w-full pl-10 pr-4 py-2 bg-[var(--theme-bg-card)] border border-[var(--theme-border)] rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20"
-                                    onChange={(e) => {/* search logic */}}
+                                    onChange={() => {/* search logic */}}
                                 />
                             </div>
                         </div>

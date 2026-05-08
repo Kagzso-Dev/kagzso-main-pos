@@ -39,6 +39,7 @@ const createTables = async () => {
             id VARCHAR(36) PRIMARY KEY,
             username VARCHAR(255) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
+            plain_password VARCHAR(255),
             name VARCHAR(255),
             role VARCHAR(50) NOT NULL,
             tenant_id INT,

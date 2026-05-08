@@ -119,7 +119,8 @@ async function migrate() {
             { name: 'cashier_offer_discount', type: 'DECIMAL(10,2) DEFAULT 0' },
             { name: 'cashier_qr_upload_enabled', type: 'BOOLEAN DEFAULT 1' },
             { name: 'sgst', type: 'DECIMAL(5,2) DEFAULT 2.5' },
-            { name: 'cgst', type: 'DECIMAL(5,2) DEFAULT 2.5' }
+            { name: 'cgst', type: 'DECIMAL(5,2) DEFAULT 2.5' },
+            { name: 'order_statuses_config', type: 'JSON' }
         ];
 
         for (const col of settingsColsToAdd) {
@@ -147,7 +148,15 @@ async function migrate() {
             }
         }
 
-        // 5. Fix Orders schema
+        // 5. Fix Users schema
+        console.log('Checking users for plain_password...');
+        const [plainPwCol] = await mysql.query('SHOW COLUMNS FROM users LIKE "plain_password"');
+        if (plainPwCol.length === 0) {
+            console.log('Adding plain_password to users...');
+            await mysql.query('ALTER TABLE users ADD COLUMN plain_password VARCHAR(255) AFTER password_hash');
+        }
+
+        // 6. Fix Orders schema
         console.log('Checking orders for sgst and cgst...');
         const orderColsToAdd = [
             { name: 'sgst', type: 'DECIMAL(10,2) DEFAULT 0' },

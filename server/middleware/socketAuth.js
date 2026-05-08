@@ -90,7 +90,8 @@ const authorizedRoleJoin = (socket, role) => {
         }
     }
 
-    const roleRoom = `role_${role}`;
+    const tenantId = socket.tenantId;
+    const roleRoom = tenantId ? `${tenantId}:role_${role}` : `role_${role}`;
     socket.join(roleRoom);
     logger.debug(`Socket ${socket.id} joined role room: ${roleRoom}`);
     return true;

@@ -690,7 +690,11 @@ const WaiterDashboard = () => {
                                 { key: 'ready', count: counts.ready, color: 'emerald', label: 'READY' },
                                 { key: 'preparing', count: activeOrders.filter(o => o.orderStatus === 'preparing').length, color: 'blue', label: 'PREPARING' },
                                 { key: null, count: activeOrders.length, color: 'orange', label: 'ALL ACTIVE', isClear: true }
-                            ].map(({ key, count, color, label, isClear }, idx) => {
+                            ].filter(({ key }) => {
+                                if (key === null) return true;
+                                const cfg = settings?.orderStatusesConfig;
+                                return !cfg || cfg[key] !== false;
+                            }).map(({ key, count, color, label, isClear }, idx) => {
                                 const isActive = (statusFilter === key || (isClear && !statusFilter));
                                 return (
                                     <button
@@ -742,7 +746,11 @@ const WaiterDashboard = () => {
                                 { key: 'ready', count: counts.ready, color: 'emerald', label: 'READY' },
                                 { key: 'preparing', count: activeOrders.filter(o => o.orderStatus === 'preparing').length, color: 'blue', label: 'PREPARING' },
                                 { key: null, count: activeOrders.length, color: 'orange', label: 'ALL ACTIVE', isClear: true }
-                            ].map(({ key, count, color, label, isClear }, idx) => {
+                            ].filter(({ key }) => {
+                                if (key === null) return true;
+                                const cfg = settings?.orderStatusesConfig;
+                                return !cfg || cfg[key] !== false;
+                            }).map(({ key, count, color, label, isClear }, idx) => {
                                 const isActive = (statusFilter === key || (isClear && !statusFilter));
                                 return (
                                     <button

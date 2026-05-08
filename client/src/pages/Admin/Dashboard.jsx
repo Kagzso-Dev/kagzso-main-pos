@@ -323,15 +323,6 @@ const AdminDashboard = () => {
                         <h1 className="text-3xl sm:text-4xl font-[900] text-[var(--theme-text-main)] tracking-tight">
                             Dashboard <span className="text-orange-500">Summary</span>
                         </h1>
-                        <div className={`
-                            flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-widest
-                            ${isLive 
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                                : 'bg-red-500/10 text-red-400 border-red-500/20'}
-                        `}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                            {isLive ? 'Live Connection' : 'Disconnected'}
-                        </div>
                     </div>
                     <p className="text-[var(--theme-text-subtle)] text-sm font-medium opacity-70">
                         Welcome back, Admin. Here's your restaurant's performance Overview.

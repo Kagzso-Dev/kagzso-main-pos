@@ -453,7 +453,10 @@ const Settings = () => {
                             { key: 'preparing', label: 'Preparing' },
                             { key: 'ready', label: 'Ready' },
                             { key: 'payment', label: 'Payment' },
-                        ].map(({ key, label }) => (
+                        ].filter(({ key }) => {
+                            const cfg = settings?.orderStatusesConfig;
+                            return !cfg || cfg[key] !== false;
+                        }).map(({ key, label }) => (
                             <div key={key} className="flex items-center gap-3">
                                 {/* Color swatch + native picker */}
                                 <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-[var(--theme-border)] relative shrink-0 shadow-sm"

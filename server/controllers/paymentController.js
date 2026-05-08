@@ -191,6 +191,7 @@ const processPayment = async (req, res) => {
             message:       `${paymentMethod.toUpperCase()} payment of ${(orderTotal || 0).toFixed(2)} processed`,
             type:          'PAYMENT_SUCCESS',
             roleTarget:    'admin',
+            tenantId:      req.tenantId,
             referenceId:   order._id,
             referenceType: 'payment',
             createdBy:     req.userId,

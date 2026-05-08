@@ -32,6 +32,10 @@ const fmt = (row) => row ? {
     cashierOfferLabel:    row.cashier_offer_label || '',
     cashierOfferDiscount: parseFloat(row.cashier_offer_discount || 0),
     cashierQrUploadEnabled: row.cashier_qr_upload_enabled !== 0,
+    orderStatusesConfig: row.order_statuses_config || {
+        pending: true, accepted: true, preparing: true,
+        ready: true, payment: true, completed: true, cancelled: true,
+    },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
 } : null;
@@ -62,6 +66,7 @@ const fieldMap = {
     cashierOfferLabel:    'cashier_offer_label',
     cashierOfferDiscount: 'cashier_offer_discount',
     cashierQrUploadEnabled: 'cashier_qr_upload_enabled',
+    orderStatusesConfig:  'order_statuses_config',
     standardQrUrl:        'standard_qr_url',
     secondaryQrUrl:       'secondary_qr_url',
     standardQrFileId:     'standard_qr_file_id',
@@ -93,7 +98,10 @@ const Setting = {
             const col = fieldMap[key] || key;
             if (val !== undefined) {
                 updateKeys.push(`\`${col}\` = ?`);
-                updateValues.push(typeof val === 'boolean' ? (val ? 1 : 0) : val);
+                const serialized = typeof val === 'boolean' ? (val ? 1 : 0)
+                    : (val !== null && typeof val === 'object') ? JSON.stringify(val)
+                    : val;
+                updateValues.push(serialized);
             }
         }
 

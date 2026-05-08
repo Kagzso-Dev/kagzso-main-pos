@@ -278,7 +278,10 @@ const WorkingProcess = () => {
                                 { key: 'accepted',  dot: 'bg-[var(--status-accepted)]' },
                                 { key: 'preparing', dot: 'bg-[var(--status-preparing)]' },
                                 { key: 'ready',     dot: 'bg-[var(--status-ready)]' },
-                            ].map((stat) => (
+                            ].filter(({ key }) => {
+                                const cfg = settings?.orderStatusesConfig;
+                                return !cfg || cfg[key] !== false;
+                            }).map((stat) => (
                                 <button
                                     key={stat.key}
                                     onClick={() => setStatusFilter(f => f === stat.key ? null : stat.key)}

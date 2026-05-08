@@ -50,7 +50,20 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
     const [isMarkingAll, setIsMarkingAll] = useState(false);
     const [loadingItems, setLoadingItems] = useState({});
     const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+    const { settings } = useContext(AuthContext);
     const isList = viewType === 'list';
+    const _statusChain = ['pending', 'accepted', 'preparing', 'ready'];
+    const _statusLabels = { accepted: 'ACCEPT KOT', preparing: 'PREPARE', ready: 'READY ✓' };
+    const _statusLabelsShort = { accepted: 'ACCEPT', preparing: 'PREPARE', ready: 'READY' };
+    const getNextEnabledStatus = (cur) => {
+        const cfg = settings?.orderStatusesConfig;
+        const idx = _statusChain.indexOf(cur?.toLowerCase());
+        if (idx === -1) return null;
+        for (let i = idx + 1; i < _statusChain.length; i++) {
+            if (!cfg || cfg[_statusChain[i]] !== false) return _statusChain[i];
+        }
+        return null;
+    };
     const elapsed = useElapsed(order.createdAt);
     const urgency = (Date.now() - new Date(order.createdAt)) > 600000;
     const tColor = tokenColors[order.orderStatus] || 'bg-[var(--theme-bg-card)] border-[var(--theme-border)]';
@@ -96,33 +109,23 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                 <div className="shrink-0"><StatusBadge status={order.orderStatus} items={order.items || []} size="sm" /></div>
                 {(userRole === 'kitchen' || userRole === 'admin') && (
                     <div className="shrink-0 flex items-center gap-1">
-                        {/* 4-Stage Workflow transitions */}
-                        {['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && (
+                        {/* 4-Stage Workflow transitions (skips disabled statuses) */}
+                        {['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && getNextEnabledStatus(order.orderStatus) && (
                             <button
                                 onClick={async (e) => {
                                     e.stopPropagation();
                                     if (isUpdatingOrder) return;
                                     setIsUpdatingOrder(true);
-                                    const nextStatus = {
-                                        pending: 'accepted',
-                                        accepted: 'preparing',
-                                        preparing: 'ready'
-                                    }[order.orderStatus?.toLowerCase()] || 'ready';
+                                    const nextStatus = getNextEnabledStatus(order.orderStatus);
                                     try { await onUpdateStatus(order._id, nextStatus); } finally { setIsUpdatingOrder(false); }
-                                }} 
-                                disabled={isUpdatingOrder} 
+                                }}
+                                disabled={isUpdatingOrder}
                                 className={`px-5 flex items-center justify-center min-w-[100px] h-9 text-white text-[11px] font-black rounded-xl active:scale-95 transition-all shadow-lg uppercase tracking-wider
                                     ${order.orderStatus?.toLowerCase() === 'pending' ? 'bg-[var(--status-pending)] hover:brightness-110 shadow-[var(--status-pending-border)]' :
                                       order.orderStatus?.toLowerCase() === 'accepted' ? 'bg-[var(--status-accepted)] hover:brightness-110 shadow-[var(--status-accepted-border)]' :
                                       'bg-[var(--status-ready)] hover:brightness-110 shadow-[var(--status-ready-border)]'}
                                 `}>
-                                {isUpdatingOrder ? <Loader2 size={14} className="animate-spin" /> : 
-                                    {
-                                        pending: 'ACCEPT KOT',
-                                        accepted: 'PREPARE',
-                                        preparing: 'READY ✓'
-                                    }[order.orderStatus?.toLowerCase()] || 'MARK READY'
-                                }
+                                {isUpdatingOrder ? <Loader2 size={14} className="animate-spin" /> : (_statusLabels[getNextEnabledStatus(order.orderStatus)] || 'NEXT')}
                             </button>
                         )}
                         {order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' &&
@@ -235,33 +238,24 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
 
                 <div className="flex items-center gap-1.5 min-w-0">
                     {(userRole === 'kitchen' || userRole === 'admin') &&
-                        ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) ? (
+                        ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) &&
+                        getNextEnabledStatus(order.orderStatus) ? (
                         <button
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 if (isUpdatingOrder) return;
                                 setIsUpdatingOrder(true);
-                                const nextStatus = {
-                                    pending: 'accepted',
-                                    accepted: 'preparing',
-                                    preparing: 'ready'
-                                }[order.orderStatus?.toLowerCase()] || 'ready';
+                                const nextStatus = getNextEnabledStatus(order.orderStatus);
                                 try { await onUpdateStatus(order._id, nextStatus); } finally { setIsUpdatingOrder(false); }
                             }}
                             disabled={isUpdatingOrder}
-                            className={`px-3 py-1 flex items-center justify-center min-w-[60px] h-7 text-white text-[10px] font-black rounded-lg shadow-sm transition-all active:scale-95 uppercase tracking-wider 
+                            className={`px-3 py-1 flex items-center justify-center min-w-[60px] h-7 text-white text-[10px] font-black rounded-lg shadow-sm transition-all active:scale-95 uppercase tracking-wider
                                 ${order.orderStatus?.toLowerCase() === 'pending' ? 'bg-[var(--status-pending)] hover:brightness-110' :
                                     order.orderStatus?.toLowerCase() === 'accepted' ? 'bg-[var(--status-accepted)] hover:brightness-110' :
-                                        'bg-[var(--status-ready)] hover:brightness-110'} 
+                                        'bg-[var(--status-ready)] hover:brightness-110'}
                                 ${isUpdatingOrder ? 'opacity-30' : ''}`}
                         >
-                            {isUpdatingOrder ? <Loader2 size={12} className="animate-spin" /> :
-                                {
-                                    pending: 'ACCEPT',
-                                    accepted: 'PREPARE',
-                                    preparing: 'READY'
-                                }[order.orderStatus?.toLowerCase()] || 'READY'
-                            }
+                            {isUpdatingOrder ? <Loader2 size={12} className="animate-spin" /> : (_statusLabelsShort[getNextEnabledStatus(order.orderStatus)] || 'NEXT')}
                         </button>
                     ) : null}
 

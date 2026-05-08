@@ -1,8 +1,8 @@
-// ─── Helper: emit to restaurant-wide room ─────────────────────────────────────
-const emitNotification = (io, roleTarget, notification) => {
-    // Generate a simple unique ID and timestamp for client-side storage
+// ─── Helper: emit to tenant-scoped room ───────────────────────────────────────
+const emitNotification = (io, tenantId, roleTarget, notification) => {
     const payload = {
         _id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        tenantId,
         title: notification.title,
         message: notification.message,
         type: notification.type || 'SYSTEM_ALERT',
@@ -13,7 +13,15 @@ const emitNotification = (io, roleTarget, notification) => {
         isRead: false
     };
 
-    const targetRoom = (roleTarget && roleTarget !== 'all') ? `role_${roleTarget}` : 'restaurant_main';
+    let targetRoom;
+    if (tenantId) {
+        targetRoom = (roleTarget && roleTarget !== 'all')
+            ? `${tenantId}:role_${roleTarget}`
+            : `${tenantId}:restaurant_main`;
+    } else {
+        targetRoom = (roleTarget && roleTarget !== 'all') ? `role_${roleTarget}` : 'restaurant_main';
+    }
+
     io.to(targetRoom).emit('notification', payload);
     return payload;
 };
@@ -21,8 +29,7 @@ const emitNotification = (io, roleTarget, notification) => {
 // ─── Helper: emit (called from other controllers) ──────────
 const createAndEmitNotification = async (io, data) => {
     try {
-        // No DB storage anymore. Just emit.
-        return emitNotification(io, data.roleTarget, data);
+        return emitNotification(io, data.tenantId, data.roleTarget, data);
     } catch (err) {
         console.error('[Notification] Emit error:', err.message);
         return null;
@@ -39,7 +46,7 @@ const createOfferNotification = async (req, res) => {
         const validTargets = ['kitchen', 'admin', 'waiter', 'cashier', 'all'];
         const target       = validTargets.includes(roleTarget) ? roleTarget : 'all';
 
-        const notification = emitNotification(req.app.get('io'), target, {
+        const notification = emitNotification(req.app.get('io'), req.tenantId, target, {
             title: title.trim(),
             message: message.trim(),
             type: 'OFFER_ANNOUNCEMENT'
@@ -59,7 +66,7 @@ const createOfferNotification = async (req, res) => {
 const testNotification = async (req, res) => {
     try {
         const { type, title, message, roleTarget } = req.body;
-        const notification = emitNotification(req.app.get('io'), roleTarget || 'all', {
+        const notification = emitNotification(req.app.get('io'), req.tenantId, roleTarget || 'all', {
             title: title || 'Test Notification',
             message: message || 'This is a real-time test notification.',
             type: type || 'SYSTEM_ALERT'

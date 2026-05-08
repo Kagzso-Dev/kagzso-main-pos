@@ -5,29 +5,32 @@ export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
     const { socket, user } = useContext(AuthContext);
-    
-    // ─── State initialization from localStorage ─────────────────────────────
-    const [notifications, setNotifications] = useState(() => {
-        try {
-            const saved = localStorage.getItem('notifications');
-            const parsed = saved ? JSON.parse(saved) : [];
-            // Auto-expire items older than 24h on initial load
-            const dayAgo = Date.now() - 86400000;
-            return parsed.filter(n => new Date(n.createdAt).getTime() > dayAgo);
-        } catch (e) {
-            console.error('[NotificationContext] Failed to load from localStorage:', e);
-            return [];
-        }
-    });
 
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [toasts, setToasts] = useState([]);
+    const tenantId    = user?.tenantId ?? null;
+    const storageKey  = tenantId ? `notifications_${tenantId}` : 'notifications';
+    const soundKey    = tenantId ? `notif_sound_${tenantId}` : 'notif_sound';
+
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount]     = useState(0);
+    const [toasts, setToasts]               = useState([]);
+
+    // ─── Load from localStorage when tenant is known ────────────────────────
+    useEffect(() => {
+        try {
+            const saved  = localStorage.getItem(storageKey);
+            const parsed = saved ? JSON.parse(saved) : [];
+            const dayAgo = Date.now() - 86400000;
+            setNotifications(parsed.filter(n => new Date(n.createdAt).getTime() > dayAgo));
+        } catch (e) {
+            setNotifications([]);
+        }
+    }, [storageKey]);
 
     // ─── Sound alert (Synthetic Oscillator) ──────────────────────────────────
     const playSound = useCallback(() => {
         try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
+            const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+            const osc  = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.connect(gain);
             gain.connect(ctx.destination);
@@ -42,9 +45,9 @@ export const NotificationProvider = ({ children }) => {
 
     // ─── Persist to localStorage whenever history changes ───────────────────
     useEffect(() => {
-        localStorage.setItem('notifications', JSON.stringify(notifications));
+        localStorage.setItem(storageKey, JSON.stringify(notifications));
         setUnreadCount(notifications.filter(n => !n.isRead).length);
-    }, [notifications]);
+    }, [notifications, storageKey]);
 
     // ─── Auto-expiry Timer (Every hour) ─────────────────────────────────────
     useEffect(() => {
@@ -65,36 +68,29 @@ export const NotificationProvider = ({ children }) => {
         if (!socket) return;
 
         const handleNewNotification = (notification) => {
-            // 1. Add to history state
+            // Ignore notifications from other tenants (defence-in-depth)
+            if (tenantId && notification.tenantId && notification.tenantId !== tenantId) return;
+
             setNotifications(prev => {
                 if (prev.find(n => n._id === notification._id)) return prev;
-                const updated = [notification, ...prev];
-                return updated.slice(0, 50);
+                return [notification, ...prev].slice(0, 50);
             });
 
-            // 2. Add to active toasts (limit 3)
-            setToasts(prev => {
-                const updated = [...prev, notification];
-                return updated.slice(-3);
-            });
+            setToasts(prev => [...prev, notification].slice(-3));
 
-            // 3. Play sound (if enabled)
-            const soundOn = localStorage.getItem('notif_sound') !== 'off';
+            const soundOn = localStorage.getItem(soundKey) !== 'off';
             if (soundOn) playSound();
 
-            // 4. Auto-dismiss toast
-            setTimeout(() => {
-                removeToast(notification._id);
-            }, 5000);
+            setTimeout(() => removeToast(notification._id), 5000);
         };
 
         socket.on('notification', handleNewNotification);
         return () => socket.off('notification', handleNewNotification);
-    }, [socket, playSound, removeToast]);
+    }, [socket, tenantId, soundKey, playSound, removeToast]);
 
     // ─── Actions ────────────────────────────────────────────────────────────
     const markAsRead = useCallback((notificationId) => {
-        setNotifications(prev => prev.map(n => 
+        setNotifications(prev => prev.map(n =>
             n._id === notificationId ? { ...n, isRead: true } : n
         ));
     }, []);
