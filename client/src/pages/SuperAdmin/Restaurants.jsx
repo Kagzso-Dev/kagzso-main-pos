@@ -4,7 +4,8 @@ import api from '../../api';
 import {
     Building2, Plus, Search, ChevronRight, CheckCircle2,
     XCircle, RefreshCw, ArrowLeft, ToggleLeft, ToggleRight,
-    Trash2, X, Copy, Check, KeyRound, User, Pencil, Eye, EyeOff
+    Trash2, X, Copy, Check, KeyRound, User, Pencil, Eye, EyeOff,
+    Sun, Moon, Monitor, IndianRupee, TrendingUp
 } from 'lucide-react';
 
 /* ── Copy Button ─────────────────────────────────────────────────────────── */
@@ -428,6 +429,8 @@ const ORDER_STATUSES = [
 
 const DEFAULT_STATUSES = { pending: true, accepted: true, preparing: true, ready: true, payment: true, completed: true, cancelled: true };
 
+const fmtINR = (n) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0)}`;
+
 /* ── Right Detail Panel ──────────────────────────────────────────────────── */
 const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLoading, navigate }) => {
     const [staff, setStaff] = useState([]);
@@ -509,6 +512,10 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                         <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
                             <span className="text-xs text-[var(--theme-text-muted)]">Plan</span>
                             <span className="text-xs font-semibold text-[var(--theme-text-main)] capitalize">{restaurant.plan}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
+                            <span className="text-xs text-[var(--theme-text-muted)]">Revenue</span>
+                            <span className="text-xs font-semibold text-emerald-400">{fmtINR(restaurant.revenue ?? 0)}</span>
                         </div>
                         <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
                             <span className="text-xs text-[var(--theme-text-muted)]">Orders</span>
@@ -601,6 +608,78 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
     );
 };
 
+/* ── Theme Cycle Button (page-local only) ──────────────────────────────── */
+const PAGE_THEMES  = ['default', 'dark', 'light'];
+const THEME_ICONS  = { default: Monitor, dark: Moon, light: Sun };
+const THEME_LABELS = { default: 'Default', dark: 'Dark', light: 'Light' };
+
+const ThemeCycleBtn = ({ theme, onCycle }) => {
+    const Icon = THEME_ICONS[theme] || Monitor;
+    return (
+        <button
+            onClick={onCycle}
+            title={`Page theme: ${THEME_LABELS[theme] || theme} — click to switch`}
+            className="p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)] transition-colors flex items-center gap-1.5"
+        >
+            <Icon size={16} />
+            <span className="hidden lg:inline text-xs font-medium capitalize">{THEME_LABELS[theme]}</span>
+        </button>
+    );
+};
+
+/* ── Revenue Summary Cards ───────────────────────────────────────────────── */
+const RevenueCards = ({ restaurants }) => {
+    const totalRevenue = restaurants.reduce((s, r) => s + (r.revenue || 0), 0);
+    const activeRevenue = restaurants.filter(r => r.isActive).reduce((s, r) => s + (r.revenue || 0), 0);
+    const topRestaurant = [...restaurants].sort((a, b) => (b.revenue || 0) - (a.revenue || 0))[0];
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {/* Total Revenue */}
+            <div className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-4 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                    <IndianRupee size={18} />
+                </div>
+                <div className="min-w-0">
+                    <p className="text-xs text-[var(--theme-text-muted)] font-medium uppercase tracking-wide">Total Revenue</p>
+                    <p className="text-xl font-bold text-[var(--theme-text-main)] mt-0.5 truncate">{fmtINR(totalRevenue)}</p>
+                    <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">{restaurants.length} restaurants</p>
+                </div>
+            </div>
+
+            {/* Active Revenue */}
+            <div className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-4 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0">
+                    <TrendingUp size={18} />
+                </div>
+                <div className="min-w-0">
+                    <p className="text-xs text-[var(--theme-text-muted)] font-medium uppercase tracking-wide">Active Revenue</p>
+                    <p className="text-xl font-bold text-[var(--theme-text-main)] mt-0.5 truncate">{fmtINR(activeRevenue)}</p>
+                    <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">{restaurants.filter(r => r.isActive).length} active</p>
+                </div>
+            </div>
+
+            {/* Top Earner */}
+            <div className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-4 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 flex-shrink-0">
+                    <Building2 size={18} />
+                </div>
+                <div className="min-w-0">
+                    <p className="text-xs text-[var(--theme-text-muted)] font-medium uppercase tracking-wide">Top Earner</p>
+                    {topRestaurant ? (
+                        <>
+                            <p className="text-sm font-bold text-[var(--theme-text-main)] mt-0.5 truncate">{topRestaurant.name}</p>
+                            <p className="text-xs text-orange-400 font-semibold mt-0.5">{fmtINR(topRestaurant.revenue)}</p>
+                        </>
+                    ) : (
+                        <p className="text-sm text-[var(--theme-text-muted)] mt-0.5">—</p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 /* ── Main Page ──────────────────────────────────────────────────────────────── */
 export default function Restaurants() {
     const navigate = useNavigate();
@@ -613,6 +692,15 @@ export default function Restaurants() {
     const [actionLoading, setActionLoading] = useState(false);
     const [selectedRestaurant, setSelectedRestaurant] = useState(null);
     const [toast, setToast] = useState(null);
+
+    /* ── Page-local theme (never touches global ThemeContext) ───────────── */
+    const [pageTheme, setPageTheme] = useState('default');
+    const cyclePageTheme = () => {
+        setPageTheme(prev => {
+            const idx = PAGE_THEMES.indexOf(prev);
+            return PAGE_THEMES[(idx + 1) % PAGE_THEMES.length];
+        });
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -671,7 +759,7 @@ export default function Restaurants() {
     };
 
     return (
-        <div className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
+        <div data-theme={pageTheme} className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
             {/* Header */}
             <header className="sticky top-0 z-50 bg-[var(--theme-topbar-bg)] backdrop-blur border-b border-[var(--theme-border)] px-4 sm:px-6 h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
                 <button onClick={() => navigate('/superadmin')} className="p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex-shrink-0">
@@ -680,6 +768,7 @@ export default function Restaurants() {
                 <Building2 size={16} className="text-purple-400 flex-shrink-0" />
                 <h1 className="font-semibold truncate">Manage Restaurants</h1>
                 <div className="ml-auto flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+                    <ThemeCycleBtn theme={pageTheme} onCycle={cyclePageTheme} />
                     <button onClick={load} className="p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]" title="Refresh">
                         <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
                     </button>
@@ -693,6 +782,11 @@ export default function Restaurants() {
             </header>
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
+                {/* Revenue Summary */}
+                {!loading && restaurants.length > 0 && (
+                    <RevenueCards restaurants={restaurants} />
+                )}
+
                 {/* Search */}
                 <div className="relative">
                     <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--theme-text-muted)]" />
@@ -769,6 +863,7 @@ export default function Restaurants() {
                                             <th className="px-5 py-3 text-left font-medium">Restaurant</th>
                                             <th className="px-5 py-3 text-left font-medium">Status</th>
                                             <th className="px-5 py-3 text-left font-medium hidden lg:table-cell">Plan</th>
+                                            <th className="px-5 py-3 text-right font-medium hidden lg:table-cell">Revenue</th>
                                             <th className="px-5 py-3 text-right font-medium hidden lg:table-cell">Orders</th>
                                             <th className="px-5 py-3 text-right font-medium hidden lg:table-cell">Staff</th>
                                             <th className="px-5 py-3 text-right font-medium">Actions</th>
@@ -807,6 +902,9 @@ export default function Restaurants() {
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-3 text-[var(--theme-text-muted)] capitalize text-sm hidden lg:table-cell">{r.plan}</td>
+                                                <td className="px-5 py-3 text-right hidden lg:table-cell">
+                                                    <span className="text-emerald-400 font-semibold text-xs">{fmtINR(r.revenue)}</span>
+                                                </td>
                                                 <td className="px-5 py-3 text-[var(--theme-text-muted)] text-right hidden lg:table-cell">{r.orderCount}</td>
                                                 <td className="px-5 py-3 text-[var(--theme-text-muted)] text-right hidden lg:table-cell">{r.userCount}</td>
                                                 <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>

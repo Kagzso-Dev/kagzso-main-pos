@@ -5,6 +5,7 @@ import TopBar from './TopBar';
 import BottomNav from './BottomNav';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { Menu, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useTenantTheme } from '../hooks/useTenantTheme';
 
 /**
  * Responsive Layout
@@ -18,6 +19,10 @@ import { Menu, ChevronsLeft, ChevronsRight } from 'lucide-react';
 const Layout = () => {
     const { user, loading } = useContext(AuthContext);
     const location = useLocation();
+
+    /* ── Per-tenant theme (isolated from global ThemeContext) ────────── */
+    const { theme: tenantTheme, setTheme: setTenantTheme } =
+        useTenantTheme(user?.tenantId ?? null);
 
     // Controls whether the sidebar drawer is open on mobile
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -111,7 +116,11 @@ const Layout = () => {
     }
 
     return (
-        <div className="flex h-full text-[var(--theme-text-main)] font-sans overflow-hidden" style={{ backgroundColor: 'var(--theme-bg-dark)' }}>
+        <div
+            data-theme={tenantTheme}
+            className="flex h-full text-[var(--theme-text-main)] font-sans overflow-hidden"
+            style={{ backgroundColor: 'var(--theme-bg-dark)' }}
+        >
 
             {/* ── Mobile: Overlay backdrop when drawer open ─────── */}
             {drawerOpen && (
@@ -142,6 +151,8 @@ const Layout = () => {
                         return next;
                     })}
                     onClose={isMobile ? closeDrawer : null}
+                    tenantTheme={tenantTheme}
+                    setTenantTheme={setTenantTheme}
                 />
             </aside>
 

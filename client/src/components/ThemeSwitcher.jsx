@@ -2,13 +2,44 @@ import { useState, useRef, useEffect } from 'react';
 import { Palette, Check } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
-const ThemeSwitcher = ({ collapsed = false, isNav = false }) => {
-    const { theme: currentTheme, setTheme, themes: THEMES } = useTheme();
+/**
+ * ThemeSwitcher
+ *
+ * Two modes:
+ *  1. Global mode (default)  — uses ThemeContext; changes the app-wide theme.
+ *  2. Tenant-local mode      — when `tenantTheme` + `setTenantTheme` props are
+ *                              provided, uses those instead. The parent (Layout)
+ *                              applies the theme as `data-theme` only on its own
+ *                              root div, so no other pages are affected.
+ *
+ * SuperAdmin pages never render <Layout>, so they are completely unaffected
+ * regardless of which mode is active.
+ */
+const THEMES_META = [
+    { id: 'default', label: 'Default',   icon: '🌌', description: 'Blue-black premium dark' },
+    { id: 'dark',    label: 'Pure Dark', icon: '⚫', description: 'True black, maximum contrast' },
+    { id: 'light',   label: 'Light',     icon: '☀️', description: 'Clean white, easy on eyes' },
+];
+
+const ThemeSwitcher = ({
+    collapsed = false,
+    isNav = false,
+    /* Tenant-local props — passed from Layout → Sidebar */
+    tenantTheme,
+    setTenantTheme,
+}) => {
+    /* Decide which theme source to use */
+    const globalCtx = useTheme();
+    const isTenantMode = tenantTheme !== undefined && setTenantTheme !== undefined;
+
+    const currentThemeId = isTenantMode ? tenantTheme : globalCtx.theme;
+    const changeTheme    = isTenantMode ? setTenantTheme : globalCtx.setTheme;
+
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
 
     const handleThemeChange = (id) => {
-        setTheme(id);
+        changeTheme(id);
         setOpen(false);
     };
 
@@ -26,7 +57,7 @@ const ThemeSwitcher = ({ collapsed = false, isNav = false }) => {
         return () => document.removeEventListener('keydown', handler);
     }, []);
 
-    const current = THEMES.find(t => t.id === currentTheme);
+    const current = THEMES_META.find(t => t.id === currentThemeId);
 
     return (
         <div ref={ref} className="relative flex-shrink-0">
@@ -67,13 +98,13 @@ const ThemeSwitcher = ({ collapsed = false, isNav = false }) => {
                 `}>
                     <div className="px-3 py-2.5 border-b border-[var(--theme-border)]">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--theme-text-muted)] text-center">
-                            Interface Style
+                            {isTenantMode ? 'Restaurant Theme' : 'Interface Style'}
                         </p>
                     </div>
 
                     <div className="p-1.5 space-y-0.5">
-                        {THEMES.map(t => {
-                            const active = t.id === currentTheme;
+                        {THEMES_META.map(t => {
+                            const active = t.id === currentThemeId;
                             return (
                                 <button
                                     key={t.id}

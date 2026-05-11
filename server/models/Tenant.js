@@ -11,12 +11,13 @@ const fmt = (row) => row ? {
 } : null;
 
 const Tenant = {
-    // List all restaurants with user + order counts
+    // List all restaurants with user + order counts + revenue
     async findAll() {
         const [rows] = await mysql.query(`
             SELECT r.*,
                    COUNT(DISTINCT u.id)  AS user_count,
-                   COUNT(DISTINCT o.id)  AS order_count
+                   COUNT(DISTINCT o.id)  AS order_count,
+                   COALESCE(SUM(CASE WHEN o.payment_status = 'paid' THEN o.total_amount ELSE 0 END), 0) AS total_revenue
             FROM restaurants r
             LEFT JOIN users u ON u.tenant_id = r.id
             LEFT JOIN \`orders\` o ON o.tenant_id = r.id
@@ -27,6 +28,7 @@ const Tenant = {
             ...fmt(row),
             userCount:  parseInt(row.user_count  || 0),
             orderCount: parseInt(row.order_count || 0),
+            revenue:    parseFloat(row.total_revenue || 0),
         }));
     },
 

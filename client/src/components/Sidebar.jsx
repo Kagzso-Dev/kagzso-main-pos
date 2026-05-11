@@ -20,7 +20,7 @@ import ThemeSwitcher from './ThemeSwitcher';
  *   onToggleCollapse   – fn to toggle collapsed
  *   onClose            – fn to close drawer on mobile
  */
-const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
+const Sidebar = ({ collapsed = false, onToggleCollapse, onClose, tenantTheme, setTenantTheme }) => {
     const { user, logout, settings, socketConnected } = useContext(AuthContext);
     const { unreadCount } = useContext(NotificationContext);
     const navigate = useNavigate();
@@ -235,9 +235,12 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose }) => {
                     </>
                 )}
 
-                {/* Theme Selector - Bottom of Nav */}
                 <div className={`mt-auto pt-4 border-t border-[var(--theme-border)] ${collapsed ? 'px-0' : 'px-2'}`}>
-                    <ThemeSwitcher collapsed={collapsed} />
+                    <ThemeSwitcher
+                        collapsed={collapsed}
+                        tenantTheme={tenantTheme}
+                        setTenantTheme={setTenantTheme}
+                    />
                 </div>
 
                 {/* RELOCATED: Logout button - Always visible for all devices and roles */}
