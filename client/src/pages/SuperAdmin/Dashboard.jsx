@@ -4,9 +4,10 @@ import { AuthContext } from '../../context/AuthContext';
 import api from '../../api';
 import {
     Building2, Users, ShoppingBag, IndianRupee,
-    TrendingUp, LogOut, RefreshCw, ChevronRight,
+    LogOut, RefreshCw, ChevronRight,
     CheckCircle2, XCircle, Activity
 } from 'lucide-react';
+import ThemeSwitcher from '../../components/ThemeSwitcher';
 
 /* ── Stat Card ──────────────────────────────────────────────────────────── */
 const StatCard = ({ title, value, icon: Icon, color, sub }) => {
@@ -125,6 +126,7 @@ export default function SuperAdminDashboard() {
                     >
                         <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                     </button>
+                    <ThemeSwitcher isNav />
                     <span className="text-sm text-[var(--theme-text-muted)] hidden sm:block">{user?.username}</span>
                     <button
                         onClick={handleLogout}
