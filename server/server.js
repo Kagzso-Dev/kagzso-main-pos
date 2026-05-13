@@ -26,6 +26,7 @@ const hasFrontend = fs.existsSync(CLIENT_DIST);
 const allowedOrigins = [
     // ── Production ──────────────────────────────────────────────────────────────
     "https://pos.kagzso.com",
+    "https://db.pos.kagzso.com",
     "https://food.kagzso.com",
     // ── VPS direct access (fallback / health checks) ────────────────────────────
     "http://139.84.152.58:5005",

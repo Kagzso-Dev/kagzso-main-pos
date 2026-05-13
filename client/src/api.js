@@ -7,16 +7,15 @@ const getBaseURL = () => {
 
     const hostname = window.location.hostname;
 
-    // 2. Any live domain — use relative /api so Nginx proxies to the backend.
-    //    This is the single-domain architecture: https://pos.kagzso.com/api
+    // 2. Two-domain architecture: frontend at pos.kagzso.com calls backend at db.pos.kagzso.com.
+    //    Must be an absolute URL because they are different origins.
     if (hostname === 'pos.kagzso.com' || hostname === 'food.kagzso.com') {
-        return "/api";
+        return "https://db.pos.kagzso.com/api";
     }
 
-    // 3. Production build running on an unknown host — still prefer relative /api
-    //    so the same build artifact works on any domain without CORS issues.
+    // 3. Production build on any other unknown host — point to the production backend.
     if (import.meta.env.MODE !== 'development') {
-        return "/api";
+        return "https://db.pos.kagzso.com/api";
     }
 
     // 4. Dev: LAN IP (mobile/tablet testing on the same network)

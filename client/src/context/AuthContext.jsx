@@ -72,8 +72,9 @@ export const AuthProvider = ({ children }) => {
         const sUser = JSON.parse(sessionStorage.getItem('user') || 'null');
         const token = customToken || sUser?.token || user?.token;
 
-        const socketURL = import.meta.env.VITE_SOCKET_URL || API_BASE;
-        const normalizedURL = socketURL.startsWith('http') ? socketURL : window.location.origin;
+        // Strip any /api suffix so we always connect to the server root, not /api/socket.io/
+        const rawSocketURL = import.meta.env.VITE_SOCKET_URL || API_BASE.replace(/\/api\/?$/, '');
+        const normalizedURL = rawSocketURL.startsWith('http') ? rawSocketURL : window.location.origin;
 
         const newSocket = io(normalizedURL, {
             transports: ['websocket', 'polling'], // Prioritize websocket

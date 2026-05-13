@@ -28,8 +28,9 @@ module.exports = {
 
             // ── Environment ────────────────────────────────────────────────
             env_production: {
-                NODE_ENV:  'production',
-                PORT:      5005,
+                NODE_ENV:   'production',
+                PORT:        5005,
+                CLIENT_URL: 'https://pos.kagzso.com',
             },
 
             // ── Logging ────────────────────────────────────────────────────
