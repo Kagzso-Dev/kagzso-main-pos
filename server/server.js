@@ -88,7 +88,7 @@ app.use(compression({ level: 6, threshold: 1024 }));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(logger.requestLogger);
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // ─── Rate Limiting ────────────────────────────────────────────────────────────
 const apiLimiter = rateLimit({
