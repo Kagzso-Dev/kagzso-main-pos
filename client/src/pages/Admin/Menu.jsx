@@ -22,7 +22,7 @@ const AdminMenu = () => {
     const [formError, setFormError] = useState('');
 
     const [formData, setFormData] = useState({
-        name: '', description: '', price: '', category: '', image: '', isVeg: true, availability: true, variants: [],
+        name: '', description: '', price: '', category: '', image: '', isVeg: true, availability: true, isActive: true, variants: [],
     });
     const [imageUploading, setImageUploading] = useState(false);
     const imageFileRef = useRef(null);
@@ -229,14 +229,15 @@ const AdminMenu = () => {
                 image: item.image || '',
                 isVeg: item.isVeg,
                 availability: item.availability,
+                isActive: item.isActive !== false,
                 variants: item.variants || [],
             });
         } else {
             setEditingItem(null);
             setFormData({
                 name: '', description: '', price: '',
-                category: categories.find(c => c.status === 'active')?._id || categories[0]?._id || '',
-                image: '', isVeg: true, availability: true, variants: [],
+                category: categories.find(c => c.isActive)?._id || categories[0]?._id || '',
+                image: '', isVeg: true, availability: true, isActive: true, variants: [],
             });
         }
         setIsModalOpen(true);
@@ -257,7 +258,7 @@ const AdminMenu = () => {
         });
     }, [items, filterCategory, debouncedSearch]);
 
-    const activeCategories = categories.filter(c => c.status === 'active');
+    const activeCategories = categories.filter(c => c.isActive);
 
     return (
         <div className="space-y-5 pb-40 animate-fade-in">
@@ -266,7 +267,7 @@ const AdminMenu = () => {
                 <div>
                     <h2 className="text-xl font-bold text-[var(--theme-text-main)]">Menu Items</h2>
                     <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">
-                        {items.length} total &middot; <span className="text-emerald-400 font-semibold">{items.filter(i => i.availability).length} available</span>
+                        {items.length} total &middot; <span className="text-emerald-400 font-semibold">{items.filter(i => i.availability && i.isActive).length} active</span>
                     </p>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -438,7 +439,7 @@ const AdminMenu = () => {
                                             <option value="">-- Select --</option>
                                             {categories.map(c => (
                                                 <option key={c._id} value={c._id}>
-                                                    {c.name}{c.status === 'inactive' ? ' (inactive)' : ''}
+                                                    {c.name}{!c.isActive ? ' (inactive)' : ''}
                                                 </option>
                                             ))}
                                         </select>
@@ -496,13 +497,13 @@ const AdminMenu = () => {
                                 </div>
 
                                 {/* Toggles */}
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setFormData(f => ({ ...f, isVeg: !f.isVeg }))}
-                                        className={`px-3 py-2.5 rounded-xl border transition-all flex items-center justify-between gap-1.5 ${formData.isVeg ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-gray-500/5 text-gray-500 border-gray-500/20'}`}
+                                        className={`px-2 py-2.5 rounded-xl border transition-all flex flex-col items-center justify-center gap-1.5 ${formData.isVeg ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-gray-500/5 text-gray-500 border-gray-500/20'}`}
                                     >
-                                        <span className="text-[9px] font-black uppercase tracking-widest">Veg</span>
+                                        <span className="text-[8px] font-black uppercase tracking-widest">Veg</span>
                                         <div className={`w-7 h-3.5 rounded-full relative transition-colors ${formData.isVeg ? 'bg-emerald-500' : 'bg-gray-600'}`}>
                                             <div className={`absolute top-0.5 w-2.5 h-2.5 bg-white rounded-full transition-all ${formData.isVeg ? 'left-4' : 'left-0.5'}`} />
                                         </div>
@@ -511,11 +512,22 @@ const AdminMenu = () => {
                                     <button
                                         type="button"
                                         onClick={() => setFormData(f => ({ ...f, availability: !f.availability }))}
-                                        className={`px-3 py-2.5 rounded-xl border transition-all flex items-center justify-between gap-1.5 ${formData.availability ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}
+                                        className={`px-2 py-2.5 rounded-xl border transition-all flex flex-col items-center justify-center gap-1.5 ${formData.availability ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}
                                     >
-                                        <span className="text-[9px] font-black uppercase tracking-widest">Stock</span>
+                                        <span className="text-[8px] font-black uppercase tracking-widest">Stock</span>
                                         <div className={`w-7 h-3.5 rounded-full relative transition-colors ${formData.availability ? 'bg-blue-500' : 'bg-gray-600'}`}>
                                             <div className={`absolute top-0.5 w-2.5 h-2.5 bg-white rounded-full transition-all ${formData.availability ? 'left-4' : 'left-0.5'}`} />
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(f => ({ ...f, isActive: !f.isActive }))}
+                                        className={`px-2 py-2.5 rounded-xl border transition-all flex flex-col items-center justify-center gap-1.5 ${formData.isActive ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' : 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}
+                                    >
+                                        <span className="text-[8px] font-black uppercase tracking-widest">POS</span>
+                                        <div className={`w-7 h-3.5 rounded-full relative transition-colors ${formData.isActive ? 'bg-indigo-500' : 'bg-gray-600'}`}>
+                                            <div className={`absolute top-0.5 w-2.5 h-2.5 bg-white rounded-full transition-all ${formData.isActive ? 'left-4' : 'left-0.5'}`} />
                                         </div>
                                     </button>
                                 </div>

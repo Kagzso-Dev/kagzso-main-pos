@@ -16,7 +16,7 @@ const rawTableId = (tableId) =>
 const initiatePayment = async (req, res) => {
     const { orderId } = req.params;
     try {
-        const preCheck = await Order.findById(orderId);
+        const preCheck = await Order.findById(orderId, req.tenantId);
         if (!preCheck)                           return res.status(404).json({ message: 'Order not found' });
         if (preCheck.paymentStatus === 'paid')   return res.status(400).json({ message: 'Order is already paid' });
         if (!['ready', 'readyToServe', 'payment'].includes(preCheck.orderStatus)) {
@@ -26,7 +26,7 @@ const initiatePayment = async (req, res) => {
         // Atomic: only transition unpaid → payment_pending
         const order = await Order.atomicPaymentStatusUpdate(orderId, 'unpaid', 'payment_pending');
         if (!order) {
-            const existing = await Order.findById(orderId);
+            const existing = await Order.findById(orderId, req.tenantId);
             if (!existing)                                return res.status(404).json({ message: 'Order not found' });
             if (existing.paymentStatus === 'paid')        return res.status(400).json({ message: 'Order is already paid' });
             if (existing.paymentStatus === 'payment_pending') {
@@ -64,8 +64,8 @@ const cancelPayment = async (req, res) => {
             return res.status(400).json({ message: 'No pending payment to cancel' });
         }
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', order);
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         res.json({ success: true, message: 'Payment cancelled', order });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -87,7 +87,7 @@ const processPayment = async (req, res) => {
         return res.status(400).json({ message: 'Invalid payment method' });
     }
     try {
-        const order = await Order.findById(orderId);
+        const order = await Order.findById(orderId, req.tenantId);
         if (!order)                              return res.status(404).json({ message: 'Order not found' });
         if (order.paymentStatus === 'paid')      return res.json({ success: true, message: 'Payment already processed', order });
         if (!['ready', 'readyToServe', 'payment'].includes(order.orderStatus)) {
@@ -166,11 +166,11 @@ const processPayment = async (req, res) => {
             orderUpdates.finalAmount   = orderTotal;
         }
 
-        const updatedOrder = await Order.updateById(orderId, orderUpdates);
+        const updatedOrder = await Order.updateById(orderId, orderUpdates, req.tenantId);
 
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
-            await Table.updateById(tid, { status: 'cleaning', currentOrderId: null });
+            await Table.updateById(tid, { status: 'cleaning', currentOrderId: null }, req.tenantId);
             req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', { 
                 tableId: tid, status: 'cleaning', currentOrderId: null 
             });
@@ -224,8 +224,8 @@ const processPayment = async (req, res) => {
             cashierId:    req.userId,
         });
 
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
 
         res.json({

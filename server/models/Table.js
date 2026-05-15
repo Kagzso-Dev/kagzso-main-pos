@@ -38,9 +38,13 @@ const Table = {
         return rows.map(fmt);
     },
 
-    async findById(id) {
+    async findById(id, tenantId) {
         try {
-            const [rows] = await mysql.query('SELECT * FROM tables WHERE id = ? LIMIT 1', [id]);
+            const query = tenantId 
+                ? 'SELECT * FROM tables WHERE id = ? AND tenant_id = ? LIMIT 1'
+                : 'SELECT * FROM tables WHERE id = ? LIMIT 1';
+            const params = tenantId ? [id, tenantId] : [id];
+            const [rows] = await mysql.query(query, params);
             return fmt(rows[0]);
         } catch (error) {
             return null;
@@ -60,10 +64,10 @@ const Table = {
             'INSERT INTO tables (id, number, capacity, status, tenant_id) VALUES (?, ?, ?, "available", ?)',
             [id, String(number), parseInt(capacity), tenantId || null]
         );
-        return this.findById(id);
+        return this.findById(id, tenantId);
     },
 
-    async updateById(id, updates) {
+    async updateById(id, updates, tenantId) {
         const fieldMap = {
             status:               'status',
             currentOrderId:       'current_order_id',
@@ -73,39 +77,48 @@ const Table = {
         };
         const updateKeys = [];
         const updateValues = [];
-
         for (const [key, val] of Object.entries(updates)) {
-            const col = fieldMap[key] || key;
-            updateKeys.push(`\`${col}\` = ?`);
-            updateValues.push(val === undefined ? null : val);
+            if (fieldMap[key]) {
+                const col = fieldMap[key];
+                updateKeys.push(`\`${col}\` = ?`);
+                updateValues.push(val === undefined ? null : val);
+            }
         }
-
-        if (updateKeys.length === 0) return this.findById(id);
-
+        if (updateKeys.length === 0) return this.findById(id, tenantId);
+        const whereClause = tenantId ? 'WHERE id = ? AND tenant_id = ?' : 'WHERE id = ?';
         updateValues.push(id);
-        await mysql.query(`UPDATE tables SET ${updateKeys.join(', ')} WHERE id = ?`, updateValues);
-        return this.findById(id);
+        if (tenantId) updateValues.push(tenantId);
+        await mysql.query(`UPDATE tables SET ${updateKeys.join(', ')} ${whereClause}`, updateValues);
+        return this.findById(id, tenantId);
     },
 
-    async atomicReserve(id, lockedBy) {
+    async atomicReserve(id, lockedBy, tenantId) {
         try {
-            const [rows] = await mysql.query('SELECT * FROM tables WHERE id = ? AND status = "available" LIMIT 1', [id]);
+            const query = tenantId 
+                ? 'SELECT * FROM tables WHERE id = ? AND tenant_id = ? AND status = "available" LIMIT 1'
+                : 'SELECT * FROM tables WHERE id = ? AND status = "available" LIMIT 1';
+            const params = tenantId ? [id, tenantId] : [id];
+            const [rows] = await mysql.query(query, params);
             if (!rows.length) return null;
-
             const mySqlDate = toSqlDate();
-            await mysql.query(
-                'UPDATE tables SET status = "reserved", locked_by = ?, reserved_at = ? WHERE id = ?',
-                [lockedBy, mySqlDate, id]
-            );
-            return this.findById(id);
+            const updateQuery = tenantId
+                ? 'UPDATE tables SET status = "reserved", locked_by = ?, reserved_at = ? WHERE id = ? AND tenant_id = ?'
+                : 'UPDATE tables SET status = "reserved", locked_by = ?, reserved_at = ? WHERE id = ?';
+            const updateParams = tenantId ? [lockedBy, mySqlDate, id, tenantId] : [lockedBy, mySqlDate, id];
+            await mysql.query(updateQuery, updateParams);
+            return this.findById(id, tenantId);
         } catch (error) {
             console.error('[Table.atomicReserve] Error:', error.message);
             return null;
         }
     },
 
-    async deleteById(id) {
-        await mysql.query('DELETE FROM tables WHERE id = ?', [id]);
+    async deleteById(id, tenantId) {
+        if (tenantId) {
+            await mysql.query('DELETE FROM tables WHERE id = ? AND tenant_id = ?', [id, tenantId]);
+        } else {
+            await mysql.query('DELETE FROM tables WHERE id = ?', [id]);
+        }
     },
 
     async findExpiredReservations(cutoff) {

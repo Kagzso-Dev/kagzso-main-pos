@@ -26,10 +26,12 @@ const createMenuItem = async (req, res) => {
     try {
         const item = await MenuItem.create({
             name: name.trim(), description, price, category, image,
-            isVeg, availability: availability !== false, variants,
+            isVeg, availability: availability !== false, 
+            isActive: req.body.isActive !== false,
+            variants,
             tenantId: req.tenantId,
         });
-        invalidateCache('menu');
+        invalidateCache('menu', req.tenantId);
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('menu-updated', { action: 'create', item });
         res.status(201).json(item);
     } catch (error) {
@@ -47,7 +49,7 @@ const updateMenuItem = async (req, res) => {
             return res.status(404).json({ message: 'Item not found' });
         }
         const updated = await MenuItem.updateById(req.params.id, req.body, req.tenantId);
-        invalidateCache('menu');
+        invalidateCache('menu', req.tenantId);
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('menu-updated', { action: 'update', item: updated });
         res.json(updated);
     } catch (error) {
@@ -65,7 +67,7 @@ const deleteMenuItem = async (req, res) => {
             return res.status(404).json({ message: 'Item not found' });
         }
         await MenuItem.deleteById(req.params.id, req.tenantId);
-        invalidateCache('menu');
+        invalidateCache('menu', req.tenantId);
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('menu-updated', { action: 'delete', id: req.params.id });
         res.json({ message: 'Item removed' });
     } catch (error) {

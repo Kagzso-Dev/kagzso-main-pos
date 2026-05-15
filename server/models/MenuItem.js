@@ -9,10 +9,11 @@ const fmt = (row, catDoc = null) => {
         description:  row.description,
         price:        parseFloat(row.price),
         category:     catDoc
-            ? { _id: catDoc.id, name: catDoc.name, color: catDoc.color, status: catDoc.status }
+            ? { _id: catDoc.id, name: catDoc.name, color: catDoc.color, status: catDoc.status, isActive: catDoc.is_active === 1 }
             : row.category_id,
         image:        row.image,
         availability: row.availability === 1,
+        isActive:     row.is_active === 1,
         isVeg:        row.is_veg === 1,
         tenantId:     row.tenant_id || null,
         variants:     row.variants ? (typeof row.variants === 'string' ? JSON.parse(row.variants) : row.variants) : [],
@@ -37,17 +38,24 @@ const MenuItem = {
     },
 
     async findAvailable(tenantId) {
-        const [itemsResp] = tenantId
-            ? await mysql.query('SELECT * FROM menu_items WHERE availability = 1 AND tenant_id = ? ORDER BY name ASC', [tenantId])
-            : await mysql.query('SELECT * FROM menu_items WHERE availability = 1 ORDER BY name ASC');
+        const query = `
+            SELECT m.*, c.name as cat_name, c.color as cat_color, c.status as cat_status, c.is_active as cat_is_active
+            FROM menu_items m
+            JOIN categories c ON m.category_id = c.id
+            WHERE m.is_active = 1 
+              AND c.is_active = 1
+              ${tenantId ? 'AND m.tenant_id = ? AND c.tenant_id = ?' : ''}
+            ORDER BY m.name ASC
+        `;
+        const [rows] = tenantId ? await mysql.query(query, [tenantId, tenantId]) : await mysql.query(query);
 
-        const [catsResp] = tenantId
-            ? await mysql.query('SELECT * FROM categories WHERE tenant_id = ?', [tenantId])
-            : await mysql.query('SELECT * FROM categories');
-
-        const catMap = {};
-        catsResp.forEach(c => catMap[c.id] = c);
-        return itemsResp.map(item => fmt(item, catMap[item.category_id]));
+        return rows.map(row => fmt(row, {
+            id: row.category_id,
+            name: row.cat_name,
+            color: row.cat_color,
+            status: row.cat_status,
+            is_active: row.cat_is_active
+        }));
     },
 
     async findById(id, tenantId) {
@@ -69,11 +77,11 @@ const MenuItem = {
         }
     },
 
-    async create({ name, description, price, category, image, isVeg, availability, variants, tenantId }) {
+    async create({ name, description, price, category, image, isVeg, availability, isActive, variants, tenantId }) {
         const id = crypto.randomUUID();
         await mysql.query(
-            'INSERT INTO menu_items (id, name, description, price, category_id, image, availability, is_veg, variants, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [id, name, description || null, parseFloat(price), category, image || null, availability !== false ? 1 : 0, isVeg !== false ? 1 : 0, variants?.length ? JSON.stringify(variants) : null, tenantId || null]
+            'INSERT INTO menu_items (id, name, description, price, category_id, image, availability, is_active, is_veg, variants, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, name, description || null, parseFloat(price), category, image || null, availability !== false ? 1 : 0, isActive !== false ? 1 : 0, isVeg !== false ? 1 : 0, variants?.length ? JSON.stringify(variants) : null, tenantId || null]
         );
         return this.findById(id);
     },
@@ -86,6 +94,7 @@ const MenuItem = {
             category:     'category_id',
             image:        'image',
             availability: 'availability',
+            isActive:     'is_active',
             isVeg:        'is_veg',
             variants:     'variants',
         };
@@ -99,7 +108,7 @@ const MenuItem = {
                     updateValues.push(parseFloat(val));
                 } else if (key === 'variants' && val !== undefined) {
                     updateValues.push(val?.length ? JSON.stringify(val) : null);
-                } else if (key === 'availability' || key === 'isVeg') {
+                } else if (key === 'availability' || key === 'isVeg' || key === 'isActive') {
                     updateValues.push(val ? 1 : 0);
                 } else {
                     updateValues.push(val);
@@ -124,6 +133,26 @@ const MenuItem = {
         } else {
             await mysql.query('DELETE FROM menu_items WHERE id = ?', [id]);
         }
+    },
+
+    async validateBatch(ids, tenantId) {
+        if (!ids || ids.length === 0) return [];
+        const query = `
+            SELECT m.id, m.name, m.is_active, c.is_active as cat_is_active
+            FROM menu_items m
+            JOIN categories c ON m.category_id = c.id
+            WHERE m.id IN (?) 
+              ${tenantId ? 'AND m.tenant_id = ? AND c.tenant_id = ?' : ''}
+        `;
+        const [rows] = tenantId 
+            ? await mysql.query(query, [ids, tenantId, tenantId])
+            : await mysql.query(query, [ids]);
+        
+        return rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            isActive: r.is_active === 1 && r.cat_is_active === 1
+        }));
     },
 };
 

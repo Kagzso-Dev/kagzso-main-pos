@@ -59,9 +59,13 @@ const loadItems = async (orderId) => {
 };
 
 const Order = {
-    async findById(id) {
+    async findById(id, tenantId) {
         try {
-            const [orders] = await mysql.query('SELECT * FROM orders WHERE id = ? LIMIT 1', [id]);
+            const query = tenantId 
+                ? 'SELECT * FROM orders WHERE id = ? AND tenant_id = ? LIMIT 1'
+                : 'SELECT * FROM orders WHERE id = ? LIMIT 1';
+            const params = tenantId ? [id, tenantId] : [id];
+            const [orders] = await mysql.query(query, params);
             const order = orders[0];
             if (!order) return null;
 

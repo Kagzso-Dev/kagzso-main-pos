@@ -83,8 +83,13 @@ const FoodItem = memo(({
                         aspectRatio="aspect-square"
                     >
                         {item.availability === false && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                <span className="text-white text-[8px] font-black uppercase tracking-tight">Off</span>
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                                <span className="text-white text-[8px] font-black uppercase tracking-tight">Stock Off</span>
+                            </div>
+                        )}
+                        {isAdmin && item.isActive === false && (
+                            <div className="absolute inset-0 bg-indigo-900/60 flex items-center justify-center z-20">
+                                <span className="text-white text-[8px] font-black uppercase tracking-tight">POS Hidden</span>
                             </div>
                         )}
                     </OptimizedImage>
@@ -186,6 +191,11 @@ const FoodItem = memo(({
                         <div className={`w-1.5 h-1.5 rounded-full ${isVeg ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                         <span className="text-[8px] font-black text-white/90 tracking-tighter uppercase">{isVeg ? 'Veg' : 'Non'}</span>
                     </div>
+                    {isAdmin && item.isActive === false && (
+                        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-600/80 backdrop-blur-md border border-indigo-400/30">
+                            <span className="text-[7px] font-black text-white tracking-tighter uppercase">Hidden from POS</span>
+                        </div>
+                    )}
                 </div>
 
                 {item.variants?.length > 0 && !isAdmin && (
@@ -195,8 +205,13 @@ const FoodItem = memo(({
                 )}
 
                 {item.availability === false && (
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px] flex items-center justify-center z-20 text-center px-4">
-                        <span className="text-white text-[10px] font-black uppercase tracking-widest bg-red-600 px-3 py-1 rounded-lg shadow-lg">Not Available</span>
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px] flex flex-col items-center justify-center z-20 text-center px-4">
+                        <span className="text-white text-[10px] font-black uppercase tracking-widest bg-red-600 px-3 py-1 rounded-lg shadow-lg">Out of Stock</span>
+                    </div>
+                )}
+                {isAdmin && item.isActive === false && (
+                    <div className={`absolute inset-0 bg-indigo-900/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-center px-4 ${item.availability === false ? 'z-30' : 'z-20'}`}>
+                        <span className="text-white text-[10px] font-black uppercase tracking-widest bg-indigo-600 px-3 py-1 rounded-lg shadow-lg">Hidden from POS</span>
                     </div>
                 )}
             </div>

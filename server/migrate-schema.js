@@ -170,6 +170,19 @@ async function migrate() {
             }
         }
 
+        // 7. Visibility Logic (is_active)
+        console.log('Checking categories and menu_items for is_active...');
+        const [catIsActive] = await mysql.query('SHOW COLUMNS FROM categories LIKE "is_active"');
+        if (catIsActive.length === 0) {
+            console.log('Adding is_active to categories...');
+            await mysql.query('ALTER TABLE categories ADD COLUMN is_active BOOLEAN DEFAULT 1');
+        }
+        const [menuIsActive] = await mysql.query('SHOW COLUMNS FROM menu_items LIKE "is_active"');
+        if (menuIsActive.length === 0) {
+            console.log('Adding is_active to menu_items...');
+            await mysql.query('ALTER TABLE menu_items ADD COLUMN is_active BOOLEAN DEFAULT 1');
+        }
+
         console.log('--- MIGRATION SUCCESSFUL ---');
     } catch (err) {
         console.error('--- MIGRATION FAILED ---');

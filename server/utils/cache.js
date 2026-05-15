@@ -141,16 +141,17 @@ const cacheMiddleware = (ttlSeconds = 30, prefix = '') => {
     };
 };
 
-// ── Manual Cache Invalidation ────────────────────────────────────────────────
 /**
  * Invalidate cached entries matching a pattern.
  * Call after mutations (create/update/delete) to keep cache fresh.
  * @param {string} pattern - Partial key match (e.g., 'analytics', 'orders')
+ * @param {string} [tenantId] - Optional tenantId to narrow down invalidation
  */
-const invalidateCache = (pattern) => {
-    const count = cache.invalidate(pattern);
+const invalidateCache = (pattern, tenantId) => {
+    const fullPattern = tenantId ? `${pattern}:${tenantId}` : pattern;
+    const count = cache.invalidate(fullPattern);
     if (count > 0) {
-        logger.debug(`Cache invalidated: ${count} entries matching "${pattern}"`);
+        logger.debug(`Cache invalidated: ${count} entries matching "${fullPattern}"`);
     }
 };
 

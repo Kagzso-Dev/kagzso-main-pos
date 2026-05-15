@@ -11,7 +11,8 @@ const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
-    const [formData, setFormData] = useState({ name: '', description: '', color: '#3b82f6', status: 'active', image: '' });
+    const [formData, setFormData] = useState({ name: '', description: '', color: '#3b82f6', isActive: true, image: '' });
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, category: null });
     const [formError, setFormError] = useState('');
     const [imageUploading, setImageUploading] = useState(false);
     const imageFileRef = useRef(null);
@@ -118,18 +119,33 @@ const AdminCategories = () => {
     };
 
     const handleToggleStatus = async (cat) => {
-        const newStatus = cat.status === 'active' ? 'inactive' : 'active';
+        const newActive = !cat.isActive;
+
+        // If disabling, show confirmation modal
+        if (!newActive) {
+            setConfirmModal({ isOpen: true, category: cat });
+            return;
+        }
+
+        // If enabling, just do it
+        await executeToggleStatus(cat, true);
+    };
+
+    const executeToggleStatus = async (cat, newActive) => {
         try {
             if (!navigator.onLine) {
-                const action = { type: 'category', method: 'PUT', endpoint: `/api/categories/${cat._id}`, data: { status: newStatus } };
+                const action = { type: 'category', method: 'PUT', endpoint: `/api/categories/${cat._id}`, data: { isActive: newActive } };
                 await queueAction(action);
-                setCategories(prev => prev.map(c => c._id === cat._id ? { ...c, status: newStatus } : c));
+                setCategories(prev => prev.map(c => c._id === cat._id ? { ...c, isActive: newActive } : c));
                 alert('Status will be updated when online.');
                 return;
             }
-            await api.put(`/api/categories/${cat._id}`, { status: newStatus }, {
+            await api.put(`/api/categories/${cat._id}`, { isActive: newActive }, {
                 headers: { Authorization: `Bearer ${user.token}` },
             });
+            // Update local state (socket will also handle this, but for immediate feedback)
+            setCategories(prev => prev.map(c => c._id === cat._id ? { ...c, isActive: newActive } : c));
+            setConfirmModal({ isOpen: false, category: null });
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to update status');
         }
@@ -182,12 +198,12 @@ const AdminCategories = () => {
                 name: category.name,
                 description: category.description || '',
                 color: category.color || '#3b82f6',
-                status: category.status || 'active',
+                isActive: category.isActive !== false,
                 image: category.image || '',
             });
         } else {
             setEditingCategory(null);
-            setFormData({ name: '', description: '', color: '#3b82f6', status: 'active', image: '' });
+            setFormData({ name: '', description: '', color: '#3b82f6', isActive: true, image: '' });
         }
         setIsModalOpen(true);
     };
@@ -198,8 +214,8 @@ const AdminCategories = () => {
         setFormError('');
     };
 
-    const active = categories.filter(c => c.status === 'active');
-    const inactive = categories.filter(c => c.status === 'inactive');
+    const active = categories.filter(c => c.isActive);
+    const inactive = categories.filter(c => !c.isActive);
 
     return (
         <div className="space-y-6">
@@ -239,7 +255,7 @@ const AdminCategories = () => {
                             <div
                                 key={cat._id}
                                 onClick={() => openModal(cat)}
-                                className={`flex items-center justify-between p-4 bg-[var(--theme-bg-card)] rounded-xl border border-[var(--theme-border)] hover:border-blue-500/50 transition-all cursor-pointer ${isInactive ? 'opacity-60' : ''}`}
+                                className={`flex items-center justify-between p-4 bg-[var(--theme-bg-card)] rounded-xl border border-[var(--theme-border)] hover:border-blue-500/50 transition-all cursor-pointer ${!cat.isActive ? 'opacity-60 bg-gray-500/5' : ''}`}
                             >
                                 <div className="flex items-center gap-4 min-w-0">
                                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: cat.color || '#3b82f6' }}>
@@ -252,10 +268,10 @@ const AdminCategories = () => {
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <button
-                                        onClick={() => handleToggleStatus(cat)}
-                                        className={`px-2 py-0.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-widest border transition-all whitespace-nowrap ${cat.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}
+                                        onClick={(e) => { e.stopPropagation(); handleToggleStatus(cat); }}
+                                        className={`px-2 py-0.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-widest border transition-all whitespace-nowrap ${cat.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}
                                     >
-                                        {cat.status}
+                                        {cat.isActive ? 'Active' : 'Inactive'}
                                     </button>
                                     <div className="flex gap-1">
                                         <button onClick={() => openModal(cat)} className="p-2 text-[var(--theme-text-muted)] hover:text-blue-400"><Edit2 size={16} /></button>
@@ -271,7 +287,7 @@ const AdminCategories = () => {
                             <div
                                 key={cat._id}
                                 onClick={() => openModal(cat)}
-                                className={`group relative bg-[var(--theme-bg-card)] rounded-xl border border-[var(--theme-border)] hover:border-blue-500/50 p-4 transition-all flex flex-col gap-2 cursor-pointer ${isInactive ? 'opacity-60' : ''}`}
+                                className={`group relative bg-[var(--theme-bg-card)] rounded-xl border border-[var(--theme-border)] hover:border-blue-500/50 p-4 transition-all flex flex-col gap-2 cursor-pointer ${!cat.isActive ? 'opacity-60 bg-gray-500/5' : ''}`}
                             >
                                 <div className="flex justify-between items-start">
                                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-sm" style={{ backgroundColor: cat.color || '#3b82f6' }}>
@@ -285,9 +301,9 @@ const AdminCategories = () => {
                                 <h3 className="font-bold text-[var(--theme-text-main)] text-sm truncate leading-tight">{cat.name}</h3>
                                 <div className="flex justify-between items-center mt-1">
                                     <button
-                                        onClick={() => handleToggleStatus(cat)}
-                                        className={`w-2 h-2 rounded-full ${cat.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`}
-                                        title={cat.status}
+                                        onClick={(e) => { e.stopPropagation(); handleToggleStatus(cat); }}
+                                        className={`w-2 h-2 rounded-full ${cat.isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`}
+                                        title={cat.isActive ? 'Active' : 'Inactive'}
                                     />
                                     <span className="text-[10px] font-mono opacity-20">#{cat._id.slice(-4).toUpperCase()}</span>
                                 </div>
@@ -300,7 +316,7 @@ const AdminCategories = () => {
                         <div
                             key={cat._id}
                             onClick={() => openModal(cat)}
-                            className={`group relative bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] hover:border-blue-500/50 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden cursor-pointer ${isInactive ? 'opacity-60' : ''}`}
+                            className={`group relative bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] hover:border-blue-500/50 hover:shadow-2xl transition-all duration-300 flex flex-col h-full overflow-hidden cursor-pointer ${!cat.isActive ? 'opacity-60 grayscale-[0.5] bg-gray-500/5' : ''}`}
                         >
                             {/* Color Accent Bar */}
                             <div className="h-2 w-full" style={{ backgroundColor: cat.color || '#3b82f6' }} />
@@ -337,16 +353,16 @@ const AdminCategories = () => {
                                 <div className="mt-8 pt-4 border-t border-[var(--theme-border)] flex items-center justify-between">
                                     {/* Status Badge - Pill Style */}
                                     <button
-                                        onClick={() => handleToggleStatus(cat)}
+                                        onClick={(e) => { e.stopPropagation(); handleToggleStatus(cat); }}
                                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm whitespace-nowrap ${
-                                            cat.status === 'active'
+                                            cat.isActive
                                                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                                                : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                                : 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
                                         }`}
-                                        title={cat.status === 'active' ? 'Click to deactivate' : 'Click to activate'}
+                                        title={cat.isActive ? 'Click to deactivate' : 'Click to activate'}
                                     >
-                                        <div className={`w-1 h-1 rounded-full ${cat.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                                        {cat.status}
+                                        <div className={`w-1 h-1 rounded-full ${cat.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                        {cat.isActive ? 'Active' : 'Inactive'}
                                     </button>
 
                                     <span className="text-[10px] text-[var(--theme-text-subtle)] font-bold font-mono opacity-50">
@@ -485,20 +501,20 @@ const AdminCategories = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-widest text-[var(--theme-text-muted)] mb-2.5 ml-1">Status</label>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-[var(--theme-text-muted)] mb-2.5 ml-1">Visibility</label>
                                     <div className="flex gap-2.5">
                                         <button
                                             type="button"
-                                            onClick={() => setFormData({ ...formData, status: 'active' })}
-                                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-1.5 ${formData.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}`}
+                                            onClick={() => setFormData({ ...formData, isActive: true })}
+                                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-1.5 ${formData.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}`}
                                         >
                                             <div className="w-1 h-1 rounded-full bg-current" />
                                             Active
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setFormData({ ...formData, status: 'inactive' })}
-                                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-1.5 ${formData.status === 'inactive' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}`}
+                                            onClick={() => setFormData({ ...formData, isActive: false })}
+                                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-1.5 ${!formData.isActive ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-[var(--theme-bg-dark)] text-[var(--theme-text-muted)] border-[var(--theme-border)]'}`}
                                         >
                                             <div className="w-1 h-1 rounded-full bg-current" />
                                             Inactive

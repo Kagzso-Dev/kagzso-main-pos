@@ -36,6 +36,7 @@ const useMenuData = () => {
 
     const [menuItems, setMenuItems] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [version, setVersion] = useState(0);
     const [loading, setLoading] = useState(!isCacheFresh);
 
     const loadFromIndexedDB = async () => {
@@ -115,7 +116,7 @@ const useMenuData = () => {
         };
 
         init();
-    }, [isCacheFresh]);
+    }, [isCacheFresh, version]);
 
     useEffect(() => {
         if (!socket) return;
@@ -134,10 +135,23 @@ const useMenuData = () => {
                 const processed = applyDefaultImages([item])[0];
                 setMenuItems(prev => {
                     let next;
-                    if (!item.availability) {
+                    // If hidden from POS, remove it. Otherwise update/add.
+                    if (item.isActive === false) {
                         next = prev.filter(i => i._id !== item._id);
                     } else {
-                        next = prev.map(i => (i._id === item._id ? processed : i));
+                        // Check if its category is still active
+                        const catId = item.category?._id || item.category;
+                        const cat = _cache.categories?.find(c => c._id === catId);
+                        if (cat && cat.isActive === false) {
+                            next = prev.filter(i => i._id !== item._id);
+                        } else {
+                            const exists = prev.find(i => i._id === item._id);
+                            if (exists) {
+                                next = prev.map(i => (i._id === item._id ? processed : i));
+                            } else {
+                                next = [...prev, processed];
+                            }
+                        }
                     }
                     _cache.items = next;
                     saveMenus(next);
@@ -164,11 +178,27 @@ const useMenuData = () => {
                 });
             } else if (action === 'update' && category) {
                 setCategories(prev => {
+                    const oldCat = prev.find(c => c._id === category._id);
                     const next = prev.map(c =>
                         c._id === category._id ? category : c
                     );
                     _cache.categories = next;
                     saveCategories(next);
+
+                    // CASCADE: If category becomes inactive, remove its items from menu
+                    if (category.isActive === false) {
+                        setMenuItems(prevItems => {
+                            const filtered = prevItems.filter(i => (i.category?._id || i.category) !== category._id);
+                            _cache.items = filtered;
+                            saveMenus(filtered);
+                            return filtered;
+                        });
+                    } else if (oldCat && oldCat.isActive === false && category.isActive === true) {
+                        // RE-ACTIVATION: If category was inactive and is now active, refetch all to get its items back
+                        _cache.fetchedAt = 0;
+                        setVersion(v => v + 1);
+                    }
+                    
                     return next;
                 });
             } else if (action === 'delete' && id) {

@@ -47,7 +47,7 @@ const handleRazorpayWebhook = async (req, res) => {
                 paymentStatus: 'paid',
                 orderStatus:   'completed',
                 paymentAt:     toSqlDate(),
-            });
+            }, order.tenantId);
 
             const payment = await Payment.create({
                 orderId:        order._id,
@@ -67,10 +67,10 @@ const handleRazorpayWebhook = async (req, res) => {
                 metadata:    JSON.stringify({ gateway: 'razorpay', event }),
             });
 
-            invalidateCache('dashboard');
-            invalidateCache('analytics');
+            invalidateCache('dashboard', order.tenantId);
+            invalidateCache('analytics', order.tenantId);
 
-            const updatedOrder = await Order.findById(orderId);
+            const updatedOrder = await Order.findById(orderId, order.tenantId);
             const io = req.app.get('io');
             if (io && order.tenantId) {
                 const room = `${order.tenantId}:restaurant_main`;

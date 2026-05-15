@@ -62,7 +62,7 @@ const createTable = async (req, res) => {
 const updateTable = async (req, res) => {
     const { status } = req.body;
     try {
-        const table = await Table.findById(req.params.id);
+        const table = await Table.findById(req.params.id, req.tenantId);
         if (!table) {
             return res.status(404).json({ message: 'Table not found' });
         }
@@ -87,7 +87,7 @@ const updateTable = async (req, res) => {
             }
         }
 
-        const updated = await Table.updateById(req.params.id, updates);
+        const updated = await Table.updateById(req.params.id, updates, req.tenantId);
                 Table.clearMapCache();
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id,
@@ -103,9 +103,9 @@ const updateTable = async (req, res) => {
 // @desc    Reserve a table
 const reserveTable = async (req, res) => {
     try {
-        const table = await Table.atomicReserve(req.params.id, req.user._id);
+        const table = await Table.atomicReserve(req.params.id, req.user._id, req.tenantId);
         if (!table) {
-            const existing = await Table.findById(req.params.id);
+            const existing = await Table.findById(req.params.id, req.tenantId);
             if (!existing) {
                 return res.status(404).json({ message: 'Table not found' });
             }
@@ -128,7 +128,7 @@ const reserveTable = async (req, res) => {
 // @desc    Release a reserved table
 const releaseTable = async (req, res) => {
     try {
-        const table = await Table.findById(req.params.id);
+        const table = await Table.findById(req.params.id, req.tenantId);
         if (!table) {
             return res.status(404).json({ message: 'Table not found' });
         }
@@ -143,7 +143,7 @@ const releaseTable = async (req, res) => {
             reservedAt: null,
             reservationExpiresAt: null,
             currentOrderId: null,
-        });
+        }, req.tenantId);
                 Table.clearMapCache();
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id, status: 'available',
@@ -157,7 +157,7 @@ const releaseTable = async (req, res) => {
 // @desc    Mark table as cleaned
 const markTableClean = async (req, res) => {
     try {
-        const table = await Table.findById(req.params.id);
+        const table = await Table.findById(req.params.id, req.tenantId);
         if (!table) {
             return res.status(404).json({ message: 'Table not found' });
         }
@@ -172,7 +172,7 @@ const markTableClean = async (req, res) => {
             reservedAt: null,
             reservationExpiresAt: null,
             currentOrderId: null,
-        });
+        }, req.tenantId);
                 Table.clearMapCache();
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id, status: 'available',
@@ -186,7 +186,7 @@ const markTableClean = async (req, res) => {
 // @desc    Force reset table to available
 const forceResetTable = async (req, res) => {
     try {
-        const table = await Table.findById(req.params.id);
+        const table = await Table.findById(req.params.id, req.tenantId);
         if (!table) {
             return res.status(404).json({ message: 'Table not found' });
         }
@@ -196,7 +196,7 @@ const forceResetTable = async (req, res) => {
             reservedAt: null,
             reservationExpiresAt: null,
             currentOrderId: null,
-        });
+        }, req.tenantId);
                 Table.clearMapCache();
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
             tableId: updated._id, status: 'available',
@@ -210,7 +210,7 @@ const forceResetTable = async (req, res) => {
 // @desc    Delete table
 const deleteTable = async (req, res) => {
     try {
-        const table = await Table.findById(req.params.id);
+        const table = await Table.findById(req.params.id, req.tenantId);
         if (!table) {
             return res.status(404).json({ message: 'Table not found' });
         }
@@ -219,7 +219,7 @@ const deleteTable = async (req, res) => {
                 message: `Cannot delete table while status is "${table.status}". Reset it first.`,
             });
         }
-        await Table.deleteById(req.params.id);
+        await Table.deleteById(req.params.id, req.tenantId);
                 Table.clearMapCache();
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', { action: 'delete', id: req.params.id });
         res.json({ message: 'Table removed' });

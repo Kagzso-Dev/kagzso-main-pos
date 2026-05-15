@@ -3,6 +3,7 @@ const Table        = require('../models/Table');
 const Payment      = require('../models/Payment');
 const PaymentAudit = require('../models/PaymentAudit');
 const Setting      = require('../models/Setting');
+const MenuItem     = require('../models/MenuItem');
 const { createAndEmitNotification } = require('./notificationController');
 const { invalidateCache }           = require('../utils/cache');
 const { updateDailyAnalytics }      = require('../utils/analytics');
@@ -95,6 +96,19 @@ const createOrder = async (req, res) => {
     }
 
     try {
+        // --- VISIBILITY VALIDATION ---
+        const itemIds = items.map(i => i.menuItemId).filter(Boolean);
+        if (itemIds.length > 0) {
+            const validated = await MenuItem.validateBatch(itemIds, req.tenantId);
+            const inactive = validated.filter(v => !v.isActive);
+            if (inactive.length > 0) {
+                return res.status(400).json({ 
+                    message: `Some items are currently unavailable for POS: ${inactive.map(i => i.name).join(', ')}`,
+                    code: 'INACTIVE_ITEMS_ORDERED'
+                });
+            }
+        }
+
         // Check settings from DB to allow/disable order types
         const settings = await Setting.get(req.tenantId);
         
@@ -107,7 +121,7 @@ const createOrder = async (req, res) => {
 
         // Validate table availability before creating order
         if (orderType === 'dine-in' && tableId) {
-            const table = await Table.findById(tableId);
+            const table = await Table.findById(tableId, req.tenantId);
             if (!table) {
                 return res.status(404).json({ message: 'Table not found' });
             }
@@ -146,8 +160,8 @@ const createOrder = async (req, res) => {
                 status: 'occupied',
                 currentOrderId: createdOrder._id,
                 reservedAt: null,
-            });
-            const table = await Table.findById(tableId);
+            }, req.tenantId);
+            const table = await Table.findById(tableId, req.tenantId);
             req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: table._id,
                 status: 'occupied',
@@ -168,8 +182,8 @@ const createOrder = async (req, res) => {
             createdBy: req.userId,
         });
 
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
         res.status(201).json(createdOrder);
     } catch (error) {
@@ -188,7 +202,7 @@ const createOrder = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     const { status } = req.body;
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findById(req.params.id, req.tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
@@ -262,7 +276,7 @@ const updateOrderStatus = async (req, res) => {
             order.orderType === 'dine-in' &&
             order.tableId) {
             const tid = rawTableId(order.tableId);
-            await Table.updateById(tid, { status: 'cleaning', currentOrderId: null });
+            await Table.updateById(tid, { status: 'cleaning', currentOrderId: null }, req.tenantId);
             req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'cleaning', currentOrderId: null, lockedBy: null
             });
@@ -283,8 +297,8 @@ const updateOrderStatus = async (req, res) => {
             });
         }
 
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
         res.json(updatedOrder);
     } catch (error) {
@@ -303,7 +317,7 @@ const updateItemStatus = async (req, res) => {
     const { status } = req.body;
     const { id, itemId } = req.params;
     try {
-        const order = await Order.findById(id);
+        const order = await Order.findById(id, req.tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
@@ -349,8 +363,8 @@ const updateItemStatus = async (req, res) => {
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('itemUpdated', updatedOrder);
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
         res.json(updatedOrder);
     } catch (error) {
@@ -368,7 +382,7 @@ const updateItemStatus = async (req, res) => {
 const processPayment = async (req, res) => {
     const { paymentMethod, amountPaid } = req.body;
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findById(req.params.id, req.tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
@@ -415,7 +429,7 @@ const processPayment = async (req, res) => {
 
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
-            await Table.updateById(tid, { status: 'cleaning', currentOrderId: null });
+            await Table.updateById(tid, { status: 'cleaning', currentOrderId: null }, req.tenantId);
             req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'cleaning', currentOrderId: null, lockedBy: null
             });
@@ -445,8 +459,8 @@ const processPayment = async (req, res) => {
             metadata:        { change, orderNumber: order.orderNumber, via: 'quick-payment' },
         }).catch(e => console.error('[orderController] audit log failed:', e.message));
 
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
 
         res.json({ success: true, message: 'Payment successful & token closed', order: updatedOrder });
@@ -465,7 +479,7 @@ const processPayment = async (req, res) => {
 const cancelOrder = async (req, res) => {
     const { reason } = req.body;
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findById(req.params.id, req.tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
@@ -501,7 +515,7 @@ const cancelOrder = async (req, res) => {
 
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
-            await Table.updateById(tid, { status: 'available', currentOrderId: null });
+            await Table.updateById(tid, { status: 'available', currentOrderId: null }, req.tenantId);
             req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'available', currentOrderId: null, lockedBy: null
             });
@@ -510,8 +524,8 @@ const cancelOrder = async (req, res) => {
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('orderCancelled', updatedOrder);
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
         res.json(updatedOrder);
     } catch (error) {
@@ -531,7 +545,7 @@ const cancelOrderItem = async (req, res) => {
     const { reason } = req.body;
 
     try {
-        const order = await Order.findById(orderId);
+        const order = await Order.findById(orderId, req.tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
@@ -620,7 +634,7 @@ const cancelOrderItem = async (req, res) => {
 
         if (nonCancelledItems.length === 0 && order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
-            await Table.updateById(tid, { status: 'available', currentOrderId: null });
+            await Table.updateById(tid, { status: 'available', currentOrderId: null }, req.tenantId);
             req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('table-updated', {
                 tableId: tid, status: 'available', currentOrderId: null, lockedBy: null
             });
@@ -628,8 +642,8 @@ const cancelOrderItem = async (req, res) => {
 
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('itemUpdated', updatedOrder);
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
         res.json(updatedOrder);
     } catch (error) {
@@ -643,7 +657,7 @@ const cancelOrderItem = async (req, res) => {
 
 const getOrderById = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findById(req.params.id, req.tenantId);
         if (!order) return res.status(404).json({ message: 'Order not found' });
         res.json(order);
     } catch (error) {
@@ -692,7 +706,20 @@ const addOrderItems = async (req, res) => {
     }
 
     try {
-        const order = await Order.findById(id);
+        // --- VISIBILITY VALIDATION ---
+        const itemIds = items.map(i => i.menuItemId).filter(Boolean);
+        if (itemIds.length > 0) {
+            const validated = await MenuItem.validateBatch(itemIds, req.tenantId);
+            const inactive = validated.filter(v => !v.isActive);
+            if (inactive.length > 0) {
+                return res.status(400).json({ 
+                    message: `Some items are currently unavailable for POS: ${inactive.map(i => i.name).join(', ')}`,
+                    code: 'INACTIVE_ITEMS_ORDERED'
+                });
+            }
+        }
+
+        const order = await Order.findById(id, req.tenantId);
         if (!order) return res.status(404).json({ message: 'Order not found' });
         
         if (['completed', 'cancelled'].includes(order.orderStatus)) {
@@ -714,8 +741,8 @@ const addOrderItems = async (req, res) => {
             createdBy: req.userId,
         });
 
-        invalidateCache('dashboard');
-        invalidateCache('analytics');
+        invalidateCache('dashboard', req.tenantId);
+        invalidateCache('analytics', req.tenantId);
         updateDailyAnalytics();
         res.json(updatedOrder);
     } catch (error) {

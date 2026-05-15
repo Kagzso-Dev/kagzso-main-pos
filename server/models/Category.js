@@ -7,6 +7,7 @@ const fmt = (row) => row ? {
     description: row.description,
     color:       row.color,
     status:      row.status,
+    isActive:    row.is_active === 1,
     image:       row.image || null,
     tenantId:    row.tenant_id || null,
     createdAt:   row.created_at,
@@ -23,8 +24,8 @@ const Category = {
 
     async findActive(tenantId) {
         const [rows] = tenantId
-            ? await mysql.query('SELECT * FROM categories WHERE status = "active" AND tenant_id = ? ORDER BY name ASC', [tenantId])
-            : await mysql.query('SELECT * FROM categories WHERE status = "active" ORDER BY name ASC');
+            ? await mysql.query('SELECT * FROM categories WHERE is_active = 1 AND tenant_id = ? ORDER BY name ASC', [tenantId])
+            : await mysql.query('SELECT * FROM categories WHERE is_active = 1 ORDER BY name ASC');
         return rows.map(fmt);
     },
 
@@ -39,24 +40,32 @@ const Category = {
         }
     },
 
-    async create({ name, description, color, image, tenantId }) {
+    async create({ name, description, color, image, tenantId, isActive }) {
         const id = crypto.randomUUID();
         await mysql.query(
-            'INSERT INTO categories (id, name, description, color, image, status, tenant_id) VALUES (?, ?, ?, ?, ?, "active", ?)',
-            [id, name, description || null, color || '#f97316', image || null, tenantId || null]
+            'INSERT INTO categories (id, name, description, color, image, status, is_active, tenant_id) VALUES (?, ?, ?, ?, ?, "active", ?, ?)',
+            [id, name, description || null, color || '#f97316', image || null, isActive !== false ? 1 : 0, tenantId || null]
         );
         return this.findById(id);
     },
 
     async updateById(id, updates, tenantId) {
-        const allowed = ['name', 'description', 'color', 'status', 'image'];
+        const allowed = ['name', 'description', 'color', 'status', 'image', 'isActive'];
+        const fieldMap = {
+            name: 'name',
+            description: 'description',
+            color: 'color',
+            status: 'status',
+            image: 'image',
+            isActive: 'is_active'
+        };
         const updateKeys = [];
         const updateValues = [];
 
         for (const [key, val] of Object.entries(updates)) {
             if (allowed.includes(key)) {
-                updateKeys.push(`\`${key}\` = ?`);
-                updateValues.push(val);
+                updateKeys.push(`\`${fieldMap[key]}\` = ?`);
+                updateValues.push(key === 'isActive' ? (val ? 1 : 0) : val);
             }
         }
 
