@@ -128,9 +128,9 @@ const Tenant = {
     async getStats(id) {
         const [[counts]] = await mysql.query(`
             SELECT
-                COUNT(*)                                        AS total_orders,
-                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_orders,
-                SUM(CASE WHEN status = 'pending'   THEN 1 ELSE 0 END) AS pending_orders,
+                COUNT(*)                                                         AS total_orders,
+                SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END)     AS completed_orders,
+                SUM(CASE WHEN order_status = 'pending'   THEN 1 ELSE 0 END)     AS pending_orders,
                 SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) AS total_revenue
             FROM \`orders\`
             WHERE tenant_id = ?
