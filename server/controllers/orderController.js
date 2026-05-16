@@ -51,8 +51,8 @@ const getOrders = async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const [orders, total] = await Promise.all([
-            Order.find(filter, { skip, limit: parseInt(limit) }),
-            Order.count(filter),
+            Order.find(filter, { skip, limit: parseInt(limit), tenantId: req.tenantId }),
+            Order.count(filter, req.tenantId),
         ]);
 
         // logger.debug(`[getOrders] MySQL returned ${orders.length} orders...`);
@@ -263,12 +263,12 @@ const updateOrderStatus = async (req, res) => {
             });
             
             await Promise.all(activeItems.map(item => {
-                return Order.updateItemStatus(order._id, item._id, itemStatus);
+                return Order.updateItemStatus(order._id, item._id, itemStatus, req.tenantId);
             }));
         }
 
         // 2. Perform the main order status update
-        const updatedOrder = await Order.updateById(req.params.id, updates);
+        const updatedOrder = await Order.updateById(req.params.id, updates, req.tenantId);
 
         // 3. Table lifecycle: completed + paid → cleaning
         if (status === 'completed' &&
@@ -322,7 +322,7 @@ const updateItemStatus = async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        const item = await Order.getItemById(id, itemId);
+        const item = await Order.getItemById(id, itemId, req.tenantId);
         if (!item) {
             return res.status(404).json({ message: 'Item not found' });
         }
@@ -330,7 +330,7 @@ const updateItemStatus = async (req, res) => {
             return res.status(400).json({ message: 'Cannot update status of a cancelled item' });
         }
 
-        const updatedOrder = await Order.updateItemStatus(id, itemId, status);
+        const updatedOrder = await Order.updateItemStatus(id, itemId, status, req.tenantId);
         
         // Dynamic Status Calculation (Min-Status Logic)
         const activeItems = updatedOrder.items.filter(i => i.status?.toUpperCase() !== 'CANCELLED');
@@ -355,7 +355,7 @@ const updateItemStatus = async (req, res) => {
                 orderStatus: newOrderStatus,
                 // When order becomes fully ready, clear the partial-ready flag
                 ...(newOrderStatus === 'ready' && { readyAt: toSqlDate(), isPartiallyReady: false }),
-            });
+            }, req.tenantId);
             req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', finalOrder);
             return res.json(finalOrder);
         }
@@ -425,7 +425,7 @@ const processPayment = async (req, res) => {
             paymentAt:     toSqlDate(),
             paidAt:        toSqlDate(),
             completedAt:   order.completedAt || toSqlDate(),
-        });
+        }, req.tenantId);
 
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
@@ -511,7 +511,7 @@ const cancelOrder = async (req, res) => {
             kotStatus: 'Closed',
             cancelledBy: req.role.toUpperCase(),
             cancelReason: reason || 'No reason provided',
-        });
+        }, req.tenantId);
 
         if (order.orderType === 'dine-in' && order.tableId) {
             const tid = rawTableId(order.tableId);
@@ -550,7 +550,7 @@ const cancelOrderItem = async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        const item = await Order.getItemById(orderId, itemId);
+        const item = await Order.getItemById(orderId, itemId, req.tenantId);
         if (!item) {
             return res.status(404).json({ message: 'Item not found' });
         }
@@ -581,7 +581,7 @@ const cancelOrderItem = async (req, res) => {
         let updatedOrder = await Order.cancelItem(orderId, itemId, {
             cancelledBy: req.role.toUpperCase(),
             cancelReason: reason || 'Item cancelled',
-        });
+        }, req.tenantId);
 
         // Dynamic Aggregate Status Calculation
         const nonCancelledItems = updatedOrder.items.filter(i => i.status?.toUpperCase() !== 'CANCELLED');
@@ -628,7 +628,7 @@ const cancelOrderItem = async (req, res) => {
             ...(newOrderStatus === 'ready' && !order.readyAt && { readyAt: toSqlDate() })
         };
 
-        updatedOrder = await Order.updateById(orderId, orderUpdates);
+        updatedOrder = await Order.updateById(orderId, orderUpdates, req.tenantId);
 
 
 
@@ -726,7 +726,7 @@ const addOrderItems = async (req, res) => {
             return res.status(400).json({ message: `Cannot add items to ${order.orderStatus} order` });
         }
 
-        const updatedOrder = await Order.addItems(id, items, { totalAmount, sgst, cgst, finalAmount });
+        const updatedOrder = await Order.addItems(id, items, { totalAmount, sgst, cgst, finalAmount }, req.tenantId);
 
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 

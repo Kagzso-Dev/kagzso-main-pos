@@ -187,36 +187,55 @@ const Order = {
             }
         }
 
-        if (updateKeys.length === 0) return this.findById(id);
+        if (updateKeys.length === 0) return this.findById(id, tenantId);
         
         updateValues.push(id);
-        const query = `UPDATE orders SET ${updateKeys.join(', ')} WHERE id = ?`;
+        const whereClause = tenantId ? 'WHERE id = ? AND tenant_id = ?' : 'WHERE id = ?';
+        if (tenantId) updateValues.push(tenantId);
+
+        const query = `UPDATE orders SET ${updateKeys.join(', ')} ${whereClause}`;
         await mysql.query(query, updateValues);
-        return this.findById(id);
+        return this.findById(id, tenantId);
     },
 
-    async atomicPaymentStatusUpdate(id, fromStatus, toStatus) {
-        const query = 'UPDATE orders SET payment_status = ? WHERE id = ? AND payment_status = ?';
-        const [result] = await mysql.query(query, [toStatus, id, fromStatus]);
+    async atomicPaymentStatusUpdate(id, fromStatus, toStatus, tenantId) {
+        const query = tenantId 
+            ? 'UPDATE orders SET payment_status = ? WHERE id = ? AND payment_status = ? AND tenant_id = ?'
+            : 'UPDATE orders SET payment_status = ? WHERE id = ? AND payment_status = ?';
+        const params = tenantId ? [toStatus, id, fromStatus, tenantId] : [toStatus, id, fromStatus];
+        const [result] = await mysql.query(query, params);
         if (result.affectedRows === 0) return null;
-        return this.findById(id);
+        return this.findById(id, tenantId);
     },
 
-    async updateItemStatus(orderId, itemId, status) {
-        await mysql.query('UPDATE order_items SET status = ? WHERE id = ?', [status, itemId]);
-        return this.findById(orderId);
+    async updateItemStatus(orderId, itemId, status, tenantId) {
+        // Validate ownership
+        const order = await this.findById(orderId, tenantId);
+        if (!order) throw new Error('Order not found or unauthorized');
+
+        await mysql.query('UPDATE order_items SET status = ? WHERE id = ? AND order_id = ?', [status, itemId, orderId]);
+        return this.findById(orderId, tenantId);
     },
 
-    async cancelItem(orderId, itemId, { cancelledBy, cancelReason }) {
+    async cancelItem(orderId, itemId, { cancelledBy, cancelReason }, tenantId) {
+        // Validate ownership
+        const order = await this.findById(orderId, tenantId);
+        if (!order) throw new Error('Order not found or unauthorized');
+
         await mysql.query(
-            'UPDATE order_items SET status = "CANCELLED", cancelled_by = ?, cancel_reason = ?, cancelled_at = ? WHERE id = ?',
-            [cancelledBy, cancelReason, new Date().toISOString().slice(0, 19).replace('T', ' '), itemId]
+            'UPDATE order_items SET status = "CANCELLED", cancelled_by = ?, cancel_reason = ?, cancelled_at = ? WHERE id = ? AND order_id = ?',
+            [cancelledBy, cancelReason, new Date().toISOString().slice(0, 19).replace('T', ' '), itemId, orderId]
         );
-        return this.findById(orderId);
+        return this.findById(orderId, tenantId);
     },
 
-    async addItems(orderId, items, { totalAmount, sgst, cgst, finalAmount }) {
-        const [orders] = await mysql.query('SELECT * FROM orders WHERE id = ? LIMIT 1', [orderId]);
+    async addItems(orderId, items, { totalAmount, sgst, cgst, finalAmount }, tenantId) {
+        const query = tenantId 
+            ? 'SELECT * FROM orders WHERE id = ? AND tenant_id = ? LIMIT 1'
+            : 'SELECT * FROM orders WHERE id = ? LIMIT 1';
+        const params = tenantId ? [orderId, tenantId] : [orderId];
+        const [orders] = await mysql.query(query, params);
+        
         const orderInfo = orders[0];
         if (!orderInfo || ['completed', 'cancelled'].includes(orderInfo.order_status)) {
             throw new Error(`Cannot add items to ${orderInfo?.order_status || 'missing'} order`);
@@ -236,21 +255,14 @@ const Order = {
         // Recalculate totals - use settings from database for tax rates
         const [allRows] = await mysql.query('SELECT * FROM order_items WHERE order_id = ? AND status != "CANCELLED"', [orderId]);
         const subtotalSum = allRows.reduce((sum, i) => sum + (parseFloat(i.price) * parseInt(i.quantity)), 0);
-        const existingSubtotal = parseFloat(orderInfo.total_amount) || 0;
-        const existingDiscount = parseFloat(orderInfo.discount) || 0;
         
-        // Get tax rates from settings
-        const [settingsRows] = await mysql.query('SELECT sgst, cgst FROM settings LIMIT 1');
-        const settingsSgstRate = parseFloat(settingsRows[0]?.sgst || 0) / 100;
-        const settingsCgstRate = parseFloat(settingsRows[0]?.cgst || 0) / 100;
-        
-        // Use existing order's rate if valid (>0), otherwise use settings rate from admin
-        const existingSgst = parseFloat(orderInfo.sgst) || 0;
-        const existingCgst = parseFloat(orderInfo.cgst) || 0;
-        const existingSgstRate = existingSubtotal > 0 && existingSgst > 0 ? existingSgst / existingSubtotal : 0;
-        const existingCgstRate = existingSubtotal > 0 && existingCgst > 0 ? existingCgst / existingSubtotal : 0;
-        const sgstRate = settingsSgstRate;
-        const cgstRate = settingsCgstRate;
+        // Get tax rates from settings for this tenant
+        const [settingsRows] = tenantId 
+            ? await mysql.query('SELECT sgst, cgst FROM settings WHERE tenant_id = ? LIMIT 1', [tenantId])
+            : await mysql.query('SELECT sgst, cgst FROM settings LIMIT 1');
+            
+        const sgstRate = parseFloat(settingsRows[0]?.sgst || 0) / 100;
+        const cgstRate = parseFloat(settingsRows[0]?.cgst || 0) / 100;
         
         const discValue = parseFloat(orderInfo.discount) || 0;
         const discountedSubtotal = Math.max(0, subtotalSum - discValue);
@@ -259,18 +271,23 @@ const Order = {
         const newTotalCgst = parseFloat((discountedSubtotal * cgstRate).toFixed(2));
         const newFinal = parseFloat((discountedSubtotal + newTotalSgst + newTotalCgst).toFixed(2));
 
-        await mysql.query(
-            'UPDATE orders SET total_amount = ?, sgst = ?, cgst = ?, final_amount = ?, kot_status = "Open", order_status = "pending" WHERE id = ?',
-            [subtotalSum, newTotalSgst, newTotalCgst, newFinal, orderId]
-        );
+        const updateQuery = tenantId 
+            ? 'UPDATE orders SET total_amount = ?, sgst = ?, cgst = ?, final_amount = ?, kot_status = "Open", order_status = "pending" WHERE id = ? AND tenant_id = ?'
+            : 'UPDATE orders SET total_amount = ?, sgst = ?, cgst = ?, final_amount = ?, kot_status = "Open", order_status = "pending" WHERE id = ?';
+        
+        const updateParams = tenantId 
+            ? [subtotalSum, newTotalSgst, newTotalCgst, newFinal, orderId, tenantId]
+            : [subtotalSum, newTotalSgst, newTotalCgst, newFinal, orderId];
 
-        return this.findById(orderId);
+        await mysql.query(updateQuery, updateParams);
+        return this.findById(orderId, tenantId);
     },
-    async getItemById(orderId, itemId) {
-        const [rows] = await mysql.query(
-            'SELECT * FROM order_items WHERE order_id = ? AND id = ? LIMIT 1',
-            [orderId, itemId]
-        );
+    async getItemById(orderId, itemId, tenantId) {
+        const query = tenantId 
+            ? 'SELECT oi.* FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE oi.order_id = ? AND oi.id = ? AND o.tenant_id = ? LIMIT 1'
+            : 'SELECT * FROM order_items WHERE order_id = ? AND id = ? LIMIT 1';
+        const params = tenantId ? [orderId, itemId, tenantId] : [orderId, itemId];
+        const [rows] = await mysql.query(query, params);
         if (!rows[0]) return null;
         return fmtItem(rows[0]);
     },

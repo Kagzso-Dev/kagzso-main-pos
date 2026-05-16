@@ -58,6 +58,7 @@ const createTables = async () => {
             status VARCHAR(50) DEFAULT 'active',
             tenant_id INT,
             image TEXT,
+            is_active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (tenant_id) REFERENCES restaurants(id) ON DELETE CASCADE
@@ -73,6 +74,7 @@ const createTables = async () => {
             availability BOOLEAN DEFAULT 1,
             is_veg BOOLEAN DEFAULT 0,
             variants JSON,
+            is_active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
@@ -329,7 +331,7 @@ const importData = async () => {
         for (const c of categoriesData) {
             const cid = crypto.randomUUID();
             await mysql.query(
-                'INSERT INTO categories (id, name, description, image, color, status, tenant_id) VALUES (?, ?, ?, ?, ?, "active", ?)',
+                'INSERT INTO categories (id, name, description, image, color, status, is_active, tenant_id) VALUES (?, ?, ?, ?, ?, "active", 1, ?)',
                 [cid, c.name, c.description, c.image, c.color, tenantId]
             );
             catMap[c.name] = cid;
@@ -413,7 +415,7 @@ const importData = async () => {
             const price = item.price || (item.variants ? item.variants[0].price : 0);
 
             await mysql.query(
-                'INSERT INTO menu_items (id, name, price, category_id, image, is_veg, variants, availability, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
+                'INSERT INTO menu_items (id, name, price, category_id, image, is_veg, variants, availability, is_active, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?)',
                 [mid, item.name, parseFloat(price), catMap[item.cat], item.img, item.veg, variantsJson, tenantId]
             );
         }
