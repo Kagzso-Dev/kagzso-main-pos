@@ -18,14 +18,14 @@ const StatCard = ({ title, value, icon: Icon, color, sub }) => {
         purple:  'bg-purple-500/10  text-purple-500',
     };
     return (
-        <div className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
+        <div className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-4 sm:p-5 flex items-start gap-3 sm:gap-4 overflow-hidden">
             <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${colors[color] || colors.blue}`}>
-                <Icon size={20} />
+                <Icon size={20} className="sm:w-5 sm:h-5 w-4 h-4" />
             </div>
-            <div className="min-w-0">
-                <p className="text-xs text-[var(--theme-text-muted)] font-medium uppercase tracking-wide leading-tight">{title}</p>
-                <p className="text-xl sm:text-2xl font-bold text-[var(--theme-text-main)] mt-0.5">{value}</p>
-                {sub && <p className="text-xs text-[var(--theme-text-muted)] mt-1">{sub}</p>}
+            <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] font-medium uppercase tracking-wide leading-tight truncate">{title}</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-[var(--theme-text-main)] mt-0.5 truncate">{value}</p>
+                {sub && <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] mt-1 truncate">{sub}</p>}
             </div>
         </div>
     );
@@ -33,22 +33,22 @@ const StatCard = ({ title, value, icon: Icon, color, sub }) => {
 
 /* ── Restaurant Card (mobile) ───────────────────────────────────────────── */
 const RestaurantCard = ({ r, onClick }) => (
-    <div onClick={onClick} className="bg-[var(--theme-bg-card)] rounded-xl border border-[var(--theme-border)] p-4 flex items-center gap-3 cursor-pointer hover:bg-[var(--theme-bg-hover)] active:scale-[0.99] transition-all">
-        <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-sm flex-shrink-0">
+    <div onClick={onClick} className="bg-[var(--theme-bg-card)] rounded-xl border border-[var(--theme-border)] p-3 sm:p-4 flex items-center gap-3 cursor-pointer hover:bg-[var(--theme-bg-hover)] active:scale-[0.99] transition-all">
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-xs sm:text-sm flex-shrink-0">
             {r.name.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-            <p className="font-medium text-[var(--theme-text-main)] truncate">{r.name}</p>
-            <p className="text-xs text-[var(--theme-text-muted)] font-mono truncate">{r.slug}</p>
+            <p className="font-medium text-sm sm:text-base text-[var(--theme-text-main)] truncate">{r.name}</p>
+            <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] font-mono truncate">{r.slug}</p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <span className={`inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full ${
                 r.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
             }`}>
-                {r.isActive ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                {r.isActive ? <CheckCircle2 size={10} className="sm:w-3 sm:h-3" /> : <XCircle size={10} className="sm:w-3 sm:h-3" />}
                 {r.isActive ? 'Active' : 'Off'}
             </span>
-            <ChevronRight size={15} className="text-[var(--theme-text-subtle)]" />
+            <ChevronRight size={15} className="text-[var(--theme-text-subtle)] sm:w-4 sm:h-4" />
         </div>
     </div>
 );
@@ -56,21 +56,21 @@ const RestaurantCard = ({ r, onClick }) => (
 /* ── Restaurant Row (desktop table) ─────────────────────────────────────── */
 const RestaurantRow = ({ r, onClick }) => (
     <tr onClick={onClick} className="border-b border-[var(--theme-border)] hover:bg-[var(--theme-bg-hover)] cursor-pointer transition-colors">
-        <td className="px-4 py-3 font-medium text-[var(--theme-text-main)]">{r.name}</td>
-        <td className="px-4 py-3 text-[var(--theme-text-muted)] text-sm font-mono hidden md:table-cell">{r.slug}</td>
-        <td className="px-4 py-3">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+        <td className="px-3 sm:px-4 py-3 font-medium text-[var(--theme-text-main)] truncate max-w-[120px] sm:max-w-[150px]">{r.name}</td>
+        <td className="px-3 sm:px-4 py-3 text-[var(--theme-text-muted)] text-xs sm:text-sm font-mono hidden md:table-cell truncate max-w-[120px]">{r.slug}</td>
+        <td className="px-3 sm:px-4 py-3">
+            <span className={`inline-flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${
                 r.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
             }`}>
-                {r.isActive ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
+                {r.isActive ? <CheckCircle2 size={11} className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <XCircle size={11} className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
                 {r.isActive ? 'Active' : 'Inactive'}
             </span>
         </td>
-        <td className="px-4 py-3 text-[var(--theme-text-muted)] text-sm capitalize hidden sm:table-cell">{r.plan}</td>
-        <td className="px-4 py-3 text-[var(--theme-text-muted)] text-sm text-right hidden sm:table-cell">{r.orderCount}</td>
-        <td className="px-4 py-3 text-[var(--theme-text-muted)] text-sm text-right hidden sm:table-cell">{r.userCount}</td>
-        <td className="px-4 py-3 text-right">
-            <ChevronRight size={16} className="text-[var(--theme-text-subtle)] ml-auto" />
+        <td className="px-3 sm:px-4 py-3 text-[var(--theme-text-muted)] text-xs sm:text-sm capitalize hidden sm:table-cell">{r.plan}</td>
+        <td className="px-3 sm:px-4 py-3 text-[var(--theme-text-muted)] text-xs sm:text-sm text-right hidden sm:table-cell">{r.orderCount}</td>
+        <td className="px-3 sm:px-4 py-3 text-[var(--theme-text-muted)] text-xs sm:text-sm text-right hidden sm:table-cell">{r.userCount}</td>
+        <td className="px-3 sm:px-4 py-3 text-right">
+            <ChevronRight size={16} className="text-[var(--theme-text-subtle)] ml-auto w-4 h-4" />
         </td>
     </tr>
 );
@@ -106,52 +106,52 @@ export default function SuperAdminDashboard() {
     const fmtCur = (n) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0)}`;
 
     return (
-        <div className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
+        <div className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)] w-full">
             {/* ── Top bar ── */}
-            <header className="sticky top-0 z-50 bg-[var(--theme-topbar-bg)] backdrop-blur border-b border-[var(--theme-border)] px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
+            <header className="sticky top-0 z-50 bg-[var(--theme-topbar-bg)] backdrop-blur border-b border-[var(--theme-border)] px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-3">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                        <Activity size={16} className="text-purple-400" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <Activity size={16} className="text-purple-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
-                    <div className="min-w-0">
-                        <span className="font-semibold text-[var(--theme-text-main)]">Super Admin</span>
-                        <span className="text-xs text-[var(--theme-text-muted)] ml-1.5 hidden sm:inline">System Dashboard</span>
+                    <div className="min-w-0 flex flex-col justify-center">
+                        <span className="font-semibold text-[var(--theme-text-main)] text-sm sm:text-base truncate">Super Admin</span>
+                        <span className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] truncate hidden sm:inline">System Dashboard</span>
                     </div>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
                     <button
                         onClick={load}
-                        className="p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] transition-colors"
+                        className="p-1.5 sm:p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] transition-colors"
                         title="Refresh"
                     >
-                        <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                        <RefreshCw size={16} className={`w-4 h-4 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                     <ThemeSwitcher isNav />
-                    <span className="text-sm text-[var(--theme-text-muted)] hidden sm:block">{user?.username}</span>
+                    <span className="text-xs sm:text-sm text-[var(--theme-text-muted)] hidden sm:block max-w-[80px] md:max-w-[120px] truncate">{user?.username}</span>
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 px-2 sm:px-3 py-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                        className="flex items-center gap-1.5 text-xs sm:text-sm text-red-400 hover:text-red-300 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-red-500/10 transition-colors"
                     >
-                        <LogOut size={15} />
+                        <LogOut size={15} className="w-4 h-4" />
                         <span className="hidden sm:block">Logout</span>
                     </button>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+            <main className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-5 sm:space-y-8">
                 {/* ── System Stats ── */}
                 <section>
-                    <h2 className="text-xs sm:text-sm font-semibold text-[var(--theme-text-muted)] uppercase tracking-wider mb-3 sm:mb-4">
+                    <h2 className="text-xs sm:text-sm font-semibold text-[var(--theme-text-muted)] uppercase tracking-wider mb-2 sm:mb-4">
                         System Overview
                     </h2>
                     {loading ? (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                             {[...Array(4)].map((_, i) => (
                                 <div key={i} className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-4 sm:p-5 h-20 sm:h-24 animate-pulse" />
                             ))}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                             <StatCard title="Restaurants" value={fmt(stats?.restaurants?.total)} sub={`${fmt(stats?.restaurants?.active)} active`} icon={Building2} color="purple" />
                             <StatCard title="Total Staff"  value={fmt(stats?.staff)}    icon={Users}        color="blue" />
                             <StatCard title="Orders"       value={fmt(stats?.orders)}   icon={ShoppingBag}  color="orange" />

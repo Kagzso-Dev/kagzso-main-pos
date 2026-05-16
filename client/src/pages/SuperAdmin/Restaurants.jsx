@@ -331,28 +331,28 @@ const StaffRow = ({ s, restaurantId, roleColor, onUpdate }) => {
     const openPassword = () => { setPwOpen(o => !o); setPwErr(''); setPw(''); setUnOpen(false); };
 
     return (
-        <div className={`rounded-xl border ${roleColor[s.role] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+        <div className={`rounded-xl border ${roleColor[s.role] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'} overflow-hidden`}>
             {/* Main row */}
-            <div className="flex items-center justify-between px-3 py-2.5 gap-2 min-w-0">
+            <div className="flex items-center justify-between px-3 py-2.5 gap-2 min-w-0 flex-wrap sm:flex-nowrap">
                 <div className="flex items-center gap-2 shrink-0">
                     <User size={12} />
-                    <span className="text-xs font-semibold capitalize">{s.role}</span>
+                    <span className="text-[10px] sm:text-xs font-semibold capitalize">{s.role}</span>
                 </div>
-                <div className="flex items-center gap-0.5 font-mono text-xs min-w-0">
-                    <span className="font-medium">
+                <div className="flex items-center gap-0.5 font-mono text-[10px] sm:text-xs min-w-0 flex-1 justify-end">
+                    <span className="font-medium truncate max-w-[80px] sm:max-w-none">
                         {showUn ? displayUn : '••••••••'}
                     </span>
                     <button onClick={() => setShowUn(v => !v)} title={showUn ? 'Hide username' : 'Show username'}
-                        className="p-1 rounded hover:bg-black/10 transition-colors">
+                        className="p-1 rounded hover:bg-black/10 transition-colors shrink-0">
                         {showUn ? <EyeOff size={11} /> : <Eye size={11} />}
                     </button>
-                    {showUn && <CopyBtn text={displayUn} />}
+                    {showUn && <div className="shrink-0"><CopyBtn text={displayUn} /></div>}
                     <button onClick={openUsername} title="Edit username"
-                        className="p-1 rounded hover:bg-black/10 transition-colors">
+                        className="p-1 rounded hover:bg-black/10 transition-colors shrink-0">
                         {unSaved ? <Check size={11} className="text-emerald-400" /> : <Pencil size={11} />}
                     </button>
                     <button onClick={openPassword} title="Reset password"
-                        className="p-1 rounded hover:bg-black/10 transition-colors">
+                        className="p-1 rounded hover:bg-black/10 transition-colors shrink-0">
                         {pwSaved ? <Check size={11} className="text-emerald-400" /> : <KeyRound size={11} />}
                     </button>
                 </div>
@@ -360,19 +360,19 @@ const StaffRow = ({ s, restaurantId, roleColor, onUpdate }) => {
 
             {/* Password display */}
             {displayPw && (
-                <div className="flex items-center gap-1.5 px-3 pb-2 font-mono text-xs opacity-80">
-                    <span className="text-[10px] opacity-60">pw:</span>
-                    <span>{showPass ? displayPw : '••••••••'}</span>
-                    <button onClick={() => setShowPass(v => !v)} className="p-0.5 rounded hover:bg-black/10" title={showPass ? 'Hide password' : 'Show password'}>
+                <div className="flex items-center gap-1.5 px-3 pb-2 font-mono text-[10px] sm:text-xs opacity-80 min-w-0">
+                    <span className="text-[9px] sm:text-[10px] opacity-60 shrink-0">pw:</span>
+                    <span className="truncate flex-1 max-w-[100px] sm:max-w-none">{showPass ? displayPw : '••••••••'}</span>
+                    <button onClick={() => setShowPass(v => !v)} className="p-0.5 rounded hover:bg-black/10 shrink-0" title={showPass ? 'Hide password' : 'Show password'}>
                         {showPass ? <EyeOff size={10} /> : <Eye size={10} />}
                     </button>
-                    <CopyBtn text={displayPw} />
+                    <div className="shrink-0"><CopyBtn text={displayPw} /></div>
                 </div>
             )}
 
             {/* Inline username edit */}
             {unOpen && (
-                <div className="px-3 pb-2.5 space-y-1.5">
+                <div className="px-3 pb-2.5 space-y-1.5 w-full">
                     <div className="flex gap-1.5">
                         <input
                             type="text"
@@ -381,20 +381,20 @@ const StaffRow = ({ s, restaurantId, roleColor, onUpdate }) => {
                             onKeyDown={(e) => e.key === 'Enter' && saveUsername()}
                             placeholder="New username"
                             autoFocus
-                            className="flex-1 min-w-0 bg-black/20 border border-current/20 rounded-lg px-2.5 py-1.5 text-xs placeholder-current/40 focus:outline-none focus:ring-1 focus:ring-current/40 font-mono"
+                            className="flex-1 min-w-0 bg-black/20 border border-current/20 rounded-lg px-2 py-1.5 sm:px-2.5 text-[10px] sm:text-xs placeholder-current/40 focus:outline-none focus:ring-1 focus:ring-current/40 font-mono"
                         />
                         <button onClick={saveUsername} disabled={unSaving || !newUn.trim()}
-                            className="shrink-0 px-2.5 py-1.5 rounded-lg bg-black/20 hover:bg-black/30 text-xs font-semibold disabled:opacity-40 transition-colors">
+                            className="shrink-0 px-2 sm:px-2.5 py-1.5 rounded-lg bg-black/20 hover:bg-black/30 text-[10px] sm:text-xs font-semibold disabled:opacity-40 transition-colors">
                             {unSaving ? '…' : 'Save'}
                         </button>
                     </div>
-                    {unErr && <p className="text-xs text-red-400">{unErr}</p>}
+                    {unErr && <p className="text-[10px] sm:text-xs text-red-400 truncate">{unErr}</p>}
                 </div>
             )}
 
             {/* Inline password reset */}
             {pwOpen && (
-                <div className="px-3 pb-2.5 space-y-1.5">
+                <div className="px-3 pb-2.5 space-y-1.5 w-full">
                     <div className="flex gap-1.5">
                         <input
                             type="text"
@@ -403,14 +403,14 @@ const StaffRow = ({ s, restaurantId, roleColor, onUpdate }) => {
                             onKeyDown={(e) => e.key === 'Enter' && savePassword()}
                             placeholder="New password"
                             autoFocus
-                            className="flex-1 min-w-0 bg-black/20 border border-current/20 rounded-lg px-2.5 py-1.5 text-xs placeholder-current/40 focus:outline-none focus:ring-1 focus:ring-current/40 font-mono"
+                            className="flex-1 min-w-0 bg-black/20 border border-current/20 rounded-lg px-2 py-1.5 sm:px-2.5 text-[10px] sm:text-xs placeholder-current/40 focus:outline-none focus:ring-1 focus:ring-current/40 font-mono"
                         />
                         <button onClick={savePassword} disabled={pwSaving || !pw.trim()}
-                            className="shrink-0 px-2.5 py-1.5 rounded-lg bg-black/20 hover:bg-black/30 text-xs font-semibold disabled:opacity-40 transition-colors">
+                            className="shrink-0 px-2 sm:px-2.5 py-1.5 rounded-lg bg-black/20 hover:bg-black/30 text-[10px] sm:text-xs font-semibold disabled:opacity-40 transition-colors">
                             {pwSaving ? '…' : 'Save'}
                         </button>
                     </div>
-                    {pwErr && <p className="text-xs text-red-400">{pwErr}</p>}
+                    {pwErr && <p className="text-[10px] sm:text-xs text-red-400 truncate">{pwErr}</p>}
                 </div>
             )}
         </div>
@@ -815,36 +815,38 @@ export default function Restaurants() {
                                             ? 'border-purple-400 ring-1 ring-purple-400/30'
                                             : 'border-[var(--theme-border)] hover:bg-[var(--theme-bg-hover)]'
                                     }`}>
-                                    <div className="flex items-center gap-3 p-3.5">
-                                        <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-sm flex-shrink-0">
-                                            {r.name.charAt(0).toUpperCase()}
+                                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 p-3.5">
+                                        <div className="flex items-center gap-3 flex-1 min-w-[150px]">
+                                            <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-sm flex-shrink-0">
+                                                {r.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-sm sm:text-base text-[var(--theme-text-main)] truncate">{r.name}</p>
+                                                <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] font-mono truncate">{r.slug}</p>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-[var(--theme-text-main)] truncate">{r.name}</p>
-                                            <p className="text-xs text-[var(--theme-text-muted)] font-mono truncate">{r.slug}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 flex-shrink-0">
-                                            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t border-[var(--theme-border)] sm:border-0">
+                                            <span className={`inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full ${
                                                 r.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
                                             }`}>
-                                                {r.isActive ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                                                {r.isActive ? <CheckCircle2 size={10} className="sm:w-3 sm:h-3" /> : <XCircle size={10} className="sm:w-3 sm:h-3" />}
                                                 {r.isActive ? 'Active' : 'Off'}
                                             </span>
-                                            <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
+                                            <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 sm:gap-1.5">
                                                 <button onClick={() => setEditTarget(r)}
                                                     className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-500/10 transition-colors">
-                                                    <Pencil size={14} />
+                                                    <Pencil size={14} className="sm:w-4 sm:h-4" />
                                                 </button>
                                                 {r._id !== 1 && (
                                                     <button onClick={() => setConfirm({ type: 'toggle', restaurant: r })}
                                                         className={`p-1.5 rounded-lg transition-colors ${r.isActive ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-bg-hover)]'}`}>
-                                                        {r.isActive ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                                                        {r.isActive ? <ToggleRight size={16} className="sm:w-[18px] sm:h-[18px]" /> : <ToggleLeft size={16} className="sm:w-[18px] sm:h-[18px]" />}
                                                     </button>
                                                 )}
                                                 {r._id !== 1 && (
                                                     <button onClick={() => setConfirm({ type: 'delete', restaurant: r })}
                                                         className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
-                                                        <Trash2 size={14} />
+                                                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
                                                     </button>
                                                 )}
                                             </div>

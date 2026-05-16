@@ -16,14 +16,14 @@ const StatCard = ({ title, value, icon: Icon, color, sub }) => {
         purple:  'bg-purple-500/10  text-purple-500',
     };
     return (
-        <div className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-5 flex items-start gap-4">
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${colors[color] || colors.blue}`}>
-                <Icon size={20} />
+        <div className="bg-[var(--theme-bg-card)] rounded-2xl border border-[var(--theme-border)] p-4 sm:p-5 flex items-start gap-3 sm:gap-4 overflow-hidden">
+            <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${colors[color] || colors.blue}`}>
+                <Icon size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-                <p className="text-xs text-[var(--theme-text-muted)] font-medium uppercase tracking-wide">{title}</p>
-                <p className="text-2xl font-bold text-[var(--theme-text-main)] mt-0.5">{value}</p>
-                {sub && <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">{sub}</p>}
+            <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] font-medium uppercase tracking-wide truncate">{title}</p>
+                <p className="text-lg sm:text-2xl font-bold text-[var(--theme-text-main)] mt-0.5 truncate">{value}</p>
+                {sub && <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] mt-0.5 truncate">{sub}</p>}
             </div>
         </div>
     );
@@ -290,18 +290,18 @@ export default function RestaurantDetail() {
     const isPrimary = restaurant._id === 1;
 
     return (
-        <div className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)]">
+        <div className="h-screen overflow-y-auto bg-[var(--theme-bg-deep)] text-[var(--theme-text-main)] w-full">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-[var(--theme-topbar-bg)] backdrop-blur border-b border-[var(--theme-border)] px-4 sm:px-6 h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
-                <button onClick={() => navigate('/superadmin/restaurants')} className="p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex-shrink-0">
-                    <ArrowLeft size={16} />
+            <header className="sticky top-0 z-50 bg-[var(--theme-topbar-bg)] backdrop-blur border-b border-[var(--theme-border)] px-3 sm:px-6 h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
+                <button onClick={() => navigate('/superadmin/restaurants')} className="p-1.5 sm:p-2 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex-shrink-0">
+                    <ArrowLeft size={16} className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-sm flex-shrink-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-xs sm:text-sm flex-shrink-0">
                     {restaurant.name.charAt(0)}
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h1 className="font-semibold truncate">{restaurant.name}</h1>
-                    <p className="text-xs text-[var(--theme-text-muted)] font-mono truncate hidden sm:block">{restaurant.slug}</p>
+                    <h1 className="font-semibold text-sm sm:text-base truncate">{restaurant.name}</h1>
+                    <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)] font-mono truncate hidden sm:block">{restaurant.slug}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     {!isPrimary && (
@@ -327,7 +327,7 @@ export default function RestaurantDetail() {
                 </div>
             </header>
 
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+            <main className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-5 sm:space-y-8">
                 {/* Status badges */}
                 <div className="flex flex-wrap items-center gap-2">
                     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${
