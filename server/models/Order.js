@@ -153,7 +153,7 @@ const Order = {
         return this.findById(orderId);
     },
 
-    async updateById(id, updates) {
+    async updateById(id, updates, tenantId) {
         const fieldMap = {
             orderNumber: 'order_number',
             orderStatus: 'order_status',
