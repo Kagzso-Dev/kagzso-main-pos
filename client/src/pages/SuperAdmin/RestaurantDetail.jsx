@@ -317,13 +317,16 @@ export default function RestaurantDetail() {
                             <span className="hidden sm:block">{restaurant.isActive ? 'Deactivate' : 'Activate'}</span>
                         </button>
                     )}
-                    <button
-                        onClick={() => setModal('setup')}
-                        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-sm font-medium bg-[var(--theme-bg-card)] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)] hover:border-[var(--primary)] transition-colors"
-                    >
-                        <Settings size={14} />
-                        <span className="hidden sm:block">Quick Setup</span>
-                    </button>
+                    {/* Quick Setup — hidden from UI */}
+                    <div className="hidden">
+                        <button
+                            onClick={() => setModal('setup')}
+                            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-sm font-medium bg-[var(--theme-bg-card)] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)] hover:border-[var(--primary)] transition-colors"
+                        >
+                            <Settings size={14} />
+                            <span className="hidden sm:block">Quick Setup</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 

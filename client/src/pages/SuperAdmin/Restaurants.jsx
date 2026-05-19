@@ -531,7 +531,7 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                     <div>
                         <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3">Order Statuses</p>
                         <div className="space-y-1.5">
-                            {ORDER_STATUSES.map(({ key, label, cls }) => (
+                            {ORDER_STATUSES.filter(({ key }) => !['ready', 'payment', 'completed', 'cancelled'].includes(key)).map(({ key, label, cls }) => (
                                 <div key={key} className="flex items-center justify-between px-3 py-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-deep)]">
                                     <span className={`text-xs font-medium ${cls}`}>{label}</span>
                                     <button
@@ -782,10 +782,10 @@ export default function Restaurants() {
             </header>
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
-                {/* Revenue Summary */}
-                {!loading && restaurants.length > 0 && (
+                {/* Revenue Summary - Hidden from UI */}
+                {/* {!loading && restaurants.length > 0 && (
                     <RevenueCards restaurants={restaurants} />
-                )}
+                )} */}
 
                 {/* Search */}
                 <div className="relative">

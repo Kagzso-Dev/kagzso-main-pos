@@ -1,6 +1,7 @@
 const jwt    = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User   = require('../models/User');
+const mysql  = require('../config/mysql');
 
 const generateToken = ({ userId, role, tenantId }) =>
     jwt.sign({ userId, role, tenantId: tenantId || null }, process.env.JWT_SECRET, {
@@ -63,6 +64,17 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Check if tenant is active (skip for superadmin)
+        if (user.role !== 'superadmin' && user.tenantId) {
+            const [tenants] = await mysql.query('SELECT is_active FROM restaurants WHERE id = ? LIMIT 1', [user.tenantId]);
+            if (tenants.length === 0 || tenants[0].is_active !== 1) {
+                return res.status(403).json({
+                    message: 'This restaurant has been deactivated. Please contact the Kagzso team.',
+                    deactivated: true
+                });
+            }
+        }
+
         res.json({
             _id:      user._id,
             username: user.username,
@@ -75,6 +87,7 @@ const loginUser = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // @desc    Get current logged-in user
 // @route   GET /api/auth/me

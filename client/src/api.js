@@ -73,5 +73,17 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// Response interceptor (Handle tenant deactivation / 403 logouts)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 403 && error.response?.data?.deactivated) {
+            sessionStorage.removeItem("user");
+            window.location.href = `/login?error=${encodeURIComponent(error.response.data.message)}`;
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;
 export { baseURL };

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const mysql = require('../config/mysql');
 
 /**
  * protect - Verifies JWT and attaches decoded payload to req.
@@ -34,6 +35,17 @@ const protect = async (req, res, next) => {
                 role:     decoded.role,
                 tenantId: req.tenantId,
             };
+
+            // Check if tenant is active (skip for superadmin)
+            if (req.role !== 'superadmin' && req.tenantId) {
+                const [tenants] = await mysql.query('SELECT is_active FROM restaurants WHERE id = ? LIMIT 1', [req.tenantId]);
+                if (tenants.length === 0 || tenants[0].is_active !== 1) {
+                    return res.status(403).json({
+                        message: 'This restaurant has been deactivated. Please contact the Kagzso team.',
+                        deactivated: true
+                    });
+                }
+            }
 
             next();
         } catch (error) {

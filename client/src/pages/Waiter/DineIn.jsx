@@ -316,7 +316,7 @@ const DineIn = () => {
                         <TableGrid
                             allowedStatuses={['available']}
                             filterByAllowedStatuses={false}
-                            showCleanAction={false}
+                            showCleanAction={true}
                             onSelectTable={async (table) => {
                                 try {
                                     // Reserve the table immediately in the DB to block others

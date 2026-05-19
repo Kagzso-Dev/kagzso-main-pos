@@ -814,7 +814,7 @@ const WaiterDashboard = () => {
             )}
 
             {/* ── Flex split: cards left + panel right ────────────────────────── */}
-            <div className="flex gap-0 relative h-[calc(100vh-70px)] overflow-hidden">
+            <div className="flex gap-0 relative flex-1 min-h-0 overflow-hidden">
 
                 {/* ── Left panel (Order Grid) ────────────────────────────────── */}
                 <div

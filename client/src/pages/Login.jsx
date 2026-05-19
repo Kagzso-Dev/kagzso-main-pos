@@ -29,6 +29,18 @@ const Login = () => {
     const { user, login, loading, settings, serverStatus } = useContext(AuthContext);
     const navigate = useNavigate();
 
+    // Read query parameter error if present (e.g. from redirect)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const errParam = params.get('error');
+        if (errParam) {
+            setError(errParam);
+            setHeroVisible(false);
+            sessionStorage.setItem('loginView', 'form');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, []);
+
     // If user is already logged in, redirect to their dashboard
     useEffect(() => {
         if (!loading && user) {

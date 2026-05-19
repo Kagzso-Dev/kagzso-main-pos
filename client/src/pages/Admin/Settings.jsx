@@ -303,46 +303,49 @@ const Settings = () => {
                 <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">Manage restaurant configuration</p>
             </div>
 
-            <Card>
-                <SectionHeader icon={Shield} title="Order Types" color="orange" />
-                <div className="p-5 space-y-4">
-                    <div className="flex items-center justify-between py-2 border-b border-[var(--theme-border)]">
-                        <div>
-                            <p className="text-sm font-semibold text-[var(--theme-text-main)]">Dine-In Orders</p>
-                            <p className="text-xs text-[var(--theme-text-muted)]">Table-based dine-in orders</p>
+            {/* Order Types — hidden from UI */}
+            <div className="hidden">
+                <Card>
+                    <SectionHeader icon={Shield} title="Order Types" color="orange" />
+                    <div className="p-5 space-y-4">
+                        <div className="flex items-center justify-between py-2 border-b border-[var(--theme-border)]">
+                            <div>
+                                <p className="text-sm font-semibold text-[var(--theme-text-main)]">Dine-In Orders</p>
+                                <p className="text-xs text-[var(--theme-text-muted)]">Table-based dine-in orders</p>
+                            </div>
+                            <button type="button" onClick={() => setGeneralConfig(p => ({ ...p, dineInEnabled: !p.dineInEnabled }))}>
+                                {generalConfig.dineInEnabled ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-400" />}
+                            </button>
                         </div>
-                        <button type="button" onClick={() => setGeneralConfig(p => ({ ...p, dineInEnabled: !p.dineInEnabled }))}>
-                            {generalConfig.dineInEnabled ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-400" />}
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-[var(--theme-border)]">
-                        <div>
-                            <p className="text-sm font-semibold text-[var(--theme-text-main)]">Takeaway Orders</p>
-                            <p className="text-xs text-[var(--theme-text-muted)]">Token-based takeaway orders</p>
+                        <div className="flex items-center justify-between py-2 border-b border-[var(--theme-border)]">
+                            <div>
+                                <p className="text-sm font-semibold text-[var(--theme-text-main)]">Takeaway Orders</p>
+                                <p className="text-xs text-[var(--theme-text-muted)]">Token-based takeaway orders</p>
+                            </div>
+                            <button type="button" onClick={() => setGeneralConfig(p => ({ ...p, takeawayEnabled: !p.takeawayEnabled }))}>
+                                {generalConfig.takeawayEnabled ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-400" />}
+                            </button>
                         </div>
-                        <button type="button" onClick={() => setGeneralConfig(p => ({ ...p, takeawayEnabled: !p.takeawayEnabled }))}>
-                            {generalConfig.takeawayEnabled ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-400" />}
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                        <div>
-                            <p className="text-sm font-semibold text-[var(--theme-text-main)]">Table Map</p>
-                            <p className="text-xs text-[var(--theme-text-muted)]">Show table layout in waiter</p>
+                        <div className="flex items-center justify-between py-2">
+                            <div>
+                                <p className="text-sm font-semibold text-[var(--theme-text-main)]">Table Map</p>
+                                <p className="text-xs text-[var(--theme-text-muted)]">Show table layout in waiter</p>
+                            </div>
+                            <button type="button" onClick={() => setGeneralConfig(p => ({ ...p, tableMapEnabled: !p.tableMapEnabled }))}>
+                                {generalConfig.tableMapEnabled ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-400" />}
+                            </button>
                         </div>
-                        <button type="button" onClick={() => setGeneralConfig(p => ({ ...p, tableMapEnabled: !p.tableMapEnabled }))}>
-                            {generalConfig.tableMapEnabled ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-400" />}
-                        </button>
+                        <div className="pt-3 border-t border-[var(--theme-border)] flex items-center gap-3">
+                            <button type="button" onClick={e => saveConfig(e, 'features')} disabled={loading}
+                                className="h-10 px-6 bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-orange-600/20 disabled:opacity-50 flex items-center gap-2">
+                                {loading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                                Save Features
+                            </button>
+                            <Notice msg={msgs['features']} />
+                        </div>
                     </div>
-                    <div className="pt-3 border-t border-[var(--theme-border)] flex items-center gap-3">
-                        <button type="button" onClick={e => saveConfig(e, 'features')} disabled={loading}
-                            className="h-10 px-6 bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-orange-600/20 disabled:opacity-50 flex items-center gap-2">
-                            {loading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                            Save Features
-                        </button>
-                        <Notice msg={msgs['features']} />
-                    </div>
-                </div>
-            </Card>
+                </Card>
+            </div>
 
             {/* Business Info */}
             <Card>
