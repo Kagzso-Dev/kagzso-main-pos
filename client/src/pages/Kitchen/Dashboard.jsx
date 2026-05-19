@@ -386,6 +386,11 @@ const KitchenDashboard = () => {
     const { user, socket, settings, formatOrderNumber } = useContext(AuthContext);
     const announcedOrders = useRef(new Set());
     const isFirstLoad = useRef(true);
+    const ordersRef = useRef([]);
+
+    useEffect(() => {
+        ordersRef.current = orders;
+    }, [orders]);
 
     // ── Voice Announcement & Audio Logic ───────────────────────────────────
     const playBell = useCallback(() => {
@@ -522,9 +527,13 @@ const KitchenDashboard = () => {
                 cleanupRefs.bell = playBell();
             });
             socket.on('order-updated', (order) => {
-                const prevOrder = (orders || []).find(o => o._id === order._id);
-                const hasNewItems = (order.items || []).some(i => i.isNewlyAdded && i.status?.toUpperCase() === 'PENDING');
-                if (hasNewItems) {
+                const prevOrder = ordersRef.current.find(o => o._id === order._id);
+                const newPendingItemIds = (order.items || []).filter(i => i.isNewlyAdded && i.status?.toUpperCase() === 'PENDING').map(i => i._id);
+                const prevPendingItemIds = prevOrder ? (prevOrder.items || []).filter(i => i.isNewlyAdded && i.status?.toUpperCase() === 'PENDING').map(i => i._id) : [];
+                
+                const hasActuallyNewItems = newPendingItemIds.some(id => !prevPendingItemIds.includes(id));
+
+                if (hasActuallyNewItems) {
                     if (cleanupRefs.bell) cleanupRefs.bell();
                     cleanupRefs.bell = playBell();
                 }
@@ -533,8 +542,13 @@ const KitchenDashboard = () => {
             socket.on('order-completed', onUpdateOrder);
             socket.on('orderCancelled', onCancelled);
             socket.on('itemUpdated', (order) => {
-                const hasNewItems = (order.items || []).some(i => i.isNewlyAdded && i.status?.toUpperCase() === 'PENDING');
-                if (hasNewItems) {
+                const prevOrder = ordersRef.current.find(o => o._id === order._id);
+                const newPendingItemIds = (order.items || []).filter(i => i.isNewlyAdded && i.status?.toUpperCase() === 'PENDING').map(i => i._id);
+                const prevPendingItemIds = prevOrder ? (prevOrder.items || []).filter(i => i.isNewlyAdded && i.status?.toUpperCase() === 'PENDING').map(i => i._id) : [];
+                
+                const hasActuallyNewItems = newPendingItemIds.some(id => !prevPendingItemIds.includes(id));
+
+                if (hasActuallyNewItems) {
                     if (cleanupRefs.bell) cleanupRefs.bell();
                     cleanupRefs.bell = playBell();
                 }
