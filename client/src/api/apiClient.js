@@ -22,9 +22,10 @@ const QUEUEABLE_METHODS = ['POST', 'PUT', 'DELETE'];
 api.interceptors.request.use(
     (config) => {
         try {
-            const user = JSON.parse(sessionStorage.getItem("user"));
-            if (user?.token) {
-                config.headers.Authorization = `Bearer ${user.token}`;
+            const user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
+            const token = localStorage.getItem("token") || user?.token;
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
             }
             // Stamp tenant header so both protected AND public routes (including
             // the login endpoint itself) can resolve the correct restaurant.
@@ -34,7 +35,7 @@ api.interceptors.request.use(
                 config.headers['X-Tenant-Id'] = tenantId;
             }
         } catch (error) {
-            console.error("SessionStorage error:", error);
+            console.error("Session/LocalStorage error:", error);
         }
 
         if (!navigator.onLine) {
@@ -63,7 +64,11 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Token expired or invalid — clear session and redirect to login
-            try { sessionStorage.removeItem("user"); } catch { /* ignore */ }
+            try { 
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                sessionStorage.removeItem("user"); 
+            } catch { /* ignore */ }
             if (!window.location.pathname.includes("/login")) {
                 window.location.href = "/login";
             }

@@ -13,7 +13,7 @@ const getDashboardPath = (role) => {
         case 'kitchen': return '/kitchen';
         case 'cashier': return '/cashier';
         case 'waiter': return '/waiter';
-        default: return '/';
+        default: return '/unauthorized';
     }
 };
 
@@ -44,7 +44,10 @@ const Login = () => {
     // If user is already logged in, redirect to their dashboard
     useEffect(() => {
         if (!loading && user) {
-            navigate(getDashboardPath(user.role), { replace: true });
+            const dashboardPath = getDashboardPath(user.role);
+            if (dashboardPath && window.location.pathname !== dashboardPath) {
+                navigate(dashboardPath, { replace: true });
+            }
         }
     }, [user, loading, navigate]);
 
@@ -61,6 +64,8 @@ const Login = () => {
         e.preventDefault();
         try {
             const userData = await login(username, password);
+            // Ensure token is saved BEFORE redirect
+            localStorage.setItem('token', userData.token);
             navigate(getDashboardPath(userData.role), { replace: true });
         } catch (err) {
             console.error(err);

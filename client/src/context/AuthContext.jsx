@@ -23,8 +23,8 @@ export const AuthProvider = ({ children }) => {
     // First try sessionStorage, then localStorage (for offline)
     const [user, setUser] = useState(() => {
         try {
-            // Try sessionStorage first (online session)
-            let raw = sessionStorage.getItem('user');
+            // Check localStorage first (persisted auth), then fallback to sessionStorage
+            let raw = localStorage.getItem('user') || sessionStorage.getItem('user');
             if (raw) {
                 const u = JSON.parse(raw);
                 if (u?.token) return u;
@@ -201,9 +201,12 @@ export const AuthProvider = ({ children }) => {
             const res = await api.post('/auth/login', { username, password });
             const userData = res.data;
 
-            setUser(userData);
+            // Save credentials to localStorage BEFORE state update or redirect
+            localStorage.setItem('token', userData.token);
+            localStorage.setItem('user', JSON.stringify(userData));
             sessionStorage.setItem('user', JSON.stringify(userData));
 
+            setUser(userData);
 
             initSocket(userData.role, userData.token);
             fetchSettings();
@@ -219,7 +222,10 @@ export const AuthProvider = ({ children }) => {
 
     // ── Logout ────────────────────────────────────────────────────────────────
     const logout = () => {
+        // Clear state and storage synchronously
         setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         sessionStorage.removeItem('user');
 
         if (socketRef.current) {

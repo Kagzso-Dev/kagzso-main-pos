@@ -20,7 +20,7 @@ const getDashboardPath = (role) => {
         case 'kitchen': return '/kitchen';
         case 'cashier': return '/cashier';
         case 'waiter': return '/waiter';
-        default: return '/login';
+        default: return '/unauthorized';
     }
 };
 

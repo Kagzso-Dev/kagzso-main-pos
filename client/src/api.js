@@ -48,11 +48,12 @@ api.interceptors.request.use(
         }
 
         try {
-            const user = JSON.parse(sessionStorage.getItem("user"));
+            const user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
+            const token = localStorage.getItem("token") || user?.token;
 
             // Add JWT token
-            if (user?.token) {
-                config.headers.Authorization = `Bearer ${user.token}`;
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
             }
 
             // Stamp tenant header so both protected AND public routes (including
@@ -65,7 +66,7 @@ api.interceptors.request.use(
                 config.headers['X-Tenant-Id'] = tenantId;
             }
         } catch (error) {
-            console.error("LocalStorage error:", error);
+            console.error("Auth token retrieval error:", error);
         }
 
         return config;
@@ -73,11 +74,20 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor (Handle tenant deactivation / 403 logouts)
+// Response interceptor (Handle tenant deactivation / 403 logouts & 401 token expiry)
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 403 && error.response?.data?.deactivated) {
+        if (error.response?.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            sessionStorage.removeItem("user");
+            if (!window.location.pathname.includes("/login")) {
+                window.location.href = `/login?error=${encodeURIComponent('Session expired. Please log in again.')}`;
+            }
+        } else if (error.response?.status === 403 && error.response?.data?.deactivated) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
             sessionStorage.removeItem("user");
             window.location.href = `/login?error=${encodeURIComponent(error.response.data.message)}`;
         }
