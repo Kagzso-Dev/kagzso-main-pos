@@ -1,0 +1,95 @@
+import axios from "axios";
+
+// ─── Dynamic API Configuration for Multi-Device Dev ────────────────
+const getBaseURL = () => {
+    // 1. Explicit environment override always wins (set via .env.production or CI)
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+
+    const hostname = window.location.hostname;
+
+    // 2. Two-domain architecture: frontend at pos.kagzso.com calls backend at db.pos.kagzso.com.
+    //    Must be an absolute URL because they are different origins.
+    if (hostname === 'pos.kagzso.com' || hostname === 'food.kagzso.com') {
+        return "https://db.pos.kagzso.com/api";
+    }
+
+    // 3. Production build on any other unknown host — point to the production backend.
+    if (import.meta.env.MODE !== 'development') {
+        return "https://db.pos.kagzso.com/api";
+    }
+
+    // 4. Dev: LAN IP (mobile/tablet testing on the same network)
+    const isIP = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(hostname);
+    if (isIP) {
+        return `http://${hostname}:5005/api`;
+    }
+
+    // 5. Dev: localhost
+    return "http://localhost:5005/api";
+};
+
+const baseURL = getBaseURL().replace(/\/+$/, "");
+
+// Create axios instance
+const api = axios.create({
+    baseURL,
+    withCredentials: true,
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
+
+// Request interceptor (Token + Tenant)
+api.interceptors.request.use(
+    (config) => {
+        // Fix duplicate /api/api in URL paths globally
+        if (config.url && config.url.startsWith('/api/')) {
+            config.url = config.url.replace(/^\/api\//, '/');
+        }
+
+        // For FormData uploads, remove the default JSON Content-Type so axios
+        // can set multipart/form-data with the correct boundary automatically.
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+
+        try {
+            const user = JSON.parse(sessionStorage.getItem("user"));
+
+            // Add JWT token
+            if (user?.token) {
+                config.headers.Authorization = `Bearer ${user.token}`;
+            }
+
+            // Stamp tenant header so both protected AND public routes (including
+            // the login endpoint itself) can resolve the correct restaurant.
+            // Priority: logged-in user's tenantId → VITE_TENANT_ID env variable.
+            // In production each tenant gets their own frontend build with their
+            // own VITE_TENANT_ID, so this never leaks across tenants.
+            const tenantId = user?.tenantId ?? import.meta.env.VITE_TENANT_ID;
+            if (tenantId) {
+                config.headers['X-Tenant-Id'] = tenantId;
+            }
+        } catch (error) {
+            console.error("LocalStorage error:", error);
+        }
+
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Response interceptor (Handle tenant deactivation / 403 logouts)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 403 && error.response?.data?.deactivated) {
+            sessionStorage.removeItem("user");
+            window.location.href = `/login?error=${encodeURIComponent(error.response.data.message)}`;
+        }
+        return Promise.reject(error);
+    }
+);
+
+export default api;
+export { baseURL };
