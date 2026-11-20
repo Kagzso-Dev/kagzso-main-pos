@@ -5,7 +5,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const excelUpload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
     fileFilter: (_req, file, cb) => {
         const ok = /\.(xlsx|xls)$/i.test(file.originalname);
         cb(null, ok);
@@ -52,6 +52,7 @@ const {
     updateBackupSchedule,
     runBackupNow,
     exportTenantData,
+    validateMenuUpload,
     bulkUploadMenu,
     restoreTenantData,
     exportSchema,
@@ -78,6 +79,7 @@ router.get('/restaurants/:id/backup-schedule',           getBackupSchedule);
 router.patch('/restaurants/:id/backup-schedule',         updateBackupSchedule);
 router.post('/restaurants/:id/backup/run-now',           runBackupNow);
 router.get('/restaurants/:id/export',                    exportTenantData);
+router.post('/restaurants/:id/menu/validate-upload',     excelUpload.single('file'), validateMenuUpload);
 router.post('/restaurants/:id/menu/bulk-upload',         excelUpload.single('file'), bulkUploadMenu);
 router.post('/restaurants/:id/restore',                  excelUpload.single('file'), restoreTenantData);
 router.get('/restaurants/:id/staff',            getTenantStaff);

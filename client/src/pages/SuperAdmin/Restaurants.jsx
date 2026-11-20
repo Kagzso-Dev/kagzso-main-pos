@@ -5,7 +5,8 @@ import {
     Building2, Plus, Search, ChevronRight, CheckCircle2,
     XCircle, RefreshCw, ArrowLeft, ToggleLeft, ToggleRight,
     Trash2, X, Copy, Check, KeyRound, User, Pencil, Eye, EyeOff,
-    Sun, Moon, Monitor, IndianRupee, TrendingUp, Database, Clock, FileUp
+    Sun, Moon, Monitor, IndianRupee, TrendingUp, Database, Clock, FileUp,
+    AlertCircle, CheckSquare, Square, Info
 } from 'lucide-react';
 
 /* ── Copy Button ─────────────────────────────────────────────────────────── */
@@ -28,8 +29,8 @@ const CopyBtn = ({ text }) => {
 /* ── Credentials Modal (after restaurant creation) ───────────────────────── */
 const CredentialsModal = ({ restaurant, staff, onClose }) => {
     const roleColor = {
-        admin:   'bg-purple-500/10 text-purple-400 border-purple-500/20',
-        waiter:  'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        waiter: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
         kitchen: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
         cashier: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     };
@@ -175,9 +176,9 @@ const CreateModal = ({ onClose, onCreate }) => {
 
 /* ── Edit Modal ───────────────────────────────────────────────────────────── */
 const EditModal = ({ restaurant, onClose, onSave }) => {
-    const [form, setForm]     = useState({ name: restaurant.name, slug: restaurant.slug, plan: restaurant.plan });
+    const [form, setForm] = useState({ name: restaurant.name, slug: restaurant.slug, plan: restaurant.plan });
     const [loading, setLoading] = useState(false);
-    const [error, setError]   = useState('');
+    const [error, setError] = useState('');
 
     const slugify = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
@@ -275,23 +276,23 @@ const ConfirmModal = ({ title, message, confirmLabel, confirmClass, onConfirm, o
 /* ── Staff Row (username + password inline editing) ──────────────────────── */
 const StaffRow = ({ s, restaurantId, roleColor, onUpdate }) => {
     const [displayUn, setDisplayUn] = useState(s.username);
-    const [showUn, setShowUn]       = useState(false);
+    const [showUn, setShowUn] = useState(false);
     const [displayPw, setDisplayPw] = useState(s.plainPassword || '');
-    const [showPass, setShowPass]   = useState(false);
+    const [showPass, setShowPass] = useState(false);
 
     // username edit state
-    const [unOpen, setUnOpen]     = useState(false);
-    const [newUn, setNewUn]       = useState('');
+    const [unOpen, setUnOpen] = useState(false);
+    const [newUn, setNewUn] = useState('');
     const [unSaving, setUnSaving] = useState(false);
-    const [unSaved, setUnSaved]   = useState(false);
-    const [unErr, setUnErr]       = useState('');
+    const [unSaved, setUnSaved] = useState(false);
+    const [unErr, setUnErr] = useState('');
 
     // password reset state
-    const [pwOpen, setPwOpen]     = useState(false);
-    const [pw, setPw]             = useState('');
+    const [pwOpen, setPwOpen] = useState(false);
+    const [pw, setPw] = useState('');
     const [pwSaving, setPwSaving] = useState(false);
-    const [pwSaved, setPwSaved]   = useState(false);
-    const [pwErr, setPwErr]       = useState('');
+    const [pwSaved, setPwSaved] = useState(false);
+    const [pwErr, setPwErr] = useState('');
 
     const saveUsername = async () => {
         if (!newUn.trim()) return;
@@ -418,11 +419,11 @@ const StaffRow = ({ s, restaurantId, roleColor, onUpdate }) => {
 };
 
 const ORDER_STATUSES = [
-    { key: 'pending',   label: 'Pending',   cls: 'text-amber-400' },
-    { key: 'accepted',  label: 'Accepted',  cls: 'text-purple-400' },
+    { key: 'pending', label: 'Pending', cls: 'text-amber-400' },
+    { key: 'accepted', label: 'Accepted', cls: 'text-purple-400' },
     { key: 'preparing', label: 'Preparing', cls: 'text-orange-400' },
-    { key: 'ready',     label: 'Ready',     cls: 'text-emerald-400' },
-    { key: 'payment',   label: 'Payment',   cls: 'text-blue-400' },
+    { key: 'ready', label: 'Ready', cls: 'text-emerald-400' },
+    { key: 'payment', label: 'Payment', cls: 'text-blue-400' },
     { key: 'completed', label: 'Completed', cls: 'text-gray-400' },
     { key: 'cancelled', label: 'Cancelled', cls: 'text-red-400' },
 ];
@@ -445,14 +446,15 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
     const [backupDirty, setBackupDirty] = useState(false);
     const [backupSaving, setBackupSaving] = useState(false);
     const [backupRunning, setBackupRunning] = useState(false);
-    const [uploadStatus, setUploadStatus]   = useState(null); // null | 'uploading' | {ok, msg}
+    const [uploadStatus, setUploadStatus] = useState(null); // null | 'validating' | 'uploading' | {ok, msg, invalidRows}
+    const [duplicateModal, setDuplicateModal] = useState(null); // null | { file, data, skipSet }
     const [restoreStatus, setRestoreStatus] = useState(null); // null | 'uploading' | {ok, msg}
-    const fileInputRef    = useRef(null);
+    const fileInputRef = useRef(null);
     const restoreInputRef = useRef(null);
 
     const roleColor = {
-        admin:   'bg-purple-500/10 text-purple-400 border-purple-500/20',
-        waiter:  'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        waiter: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
         kitchen: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
         cashier: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     };
@@ -474,7 +476,7 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
             .then(({ data }) => {
                 setOrderStatuses({ ...DEFAULT_STATUSES, ...data.orderStatusesConfig });
                 setFeatureSettings({
-                    dineInEnabled:   data.dineInEnabled !== false,
+                    dineInEnabled: data.dineInEnabled !== false,
                     takeawayEnabled: data.takeawayEnabled !== false,
                     tableMapEnabled: data.tableMapEnabled !== false,
                     kotPrintEnabled: data.kotPrintEnabled !== false,
@@ -487,340 +489,410 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
 
         api.get(`/superadmin/restaurants/${restaurant._id}/backup-schedule`)
             .then(({ data }) => { setBackupSchedule(data); setBackupDirty(false); })
-            .catch(() => {});
+            .catch(() => { });
     }, [restaurant?._id]);
 
-    const handleMenuUpload = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        e.target.value = '';
-        setUploadStatus('uploading');
-        try {
-            const form = new FormData();
-            form.append('file', file);
-            const { data } = await api.post(
-                `/superadmin/restaurants/${restaurant._id}/menu/bulk-upload`,
-                form
-            );
-            setUploadStatus({ ok: true, msg: `${data.inserted} items added${data.newCategories ? `, ${data.newCategories} new categories` : ''}` });
-        } catch (err) {
-            setUploadStatus({ ok: false, msg: err.response?.data?.message || 'Upload failed' });
-        } finally {
-            setTimeout(() => setUploadStatus(null), 4000);
-        }
-    };
+        const executeBulkImport = async (file, skipDuplicatesList = []) => {
+            setUploadStatus('uploading');
+            try {
+                const form = new FormData();
+                form.append('file', file);
+                if (skipDuplicatesList && skipDuplicatesList.length > 0) {
+                    form.append('skipDuplicates', JSON.stringify(skipDuplicatesList));
+                }
+                const { data } = await api.post(
+                    `/superadmin/restaurants/${restaurant._id}/menu/bulk-upload`,
+                    form
+                );
+                const addedText = `${data.inserted || 0} added`;
+                const skippedText = data.skipped ? `, ${data.skipped} skipped` : '';
+                const invalidText = data.invalidCount ? `, ${data.invalidCount} invalid` : '';
+                const catText = data.newCategories ? `, ${data.newCategories} new categories` : '';
 
-    const handleRestore = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        e.target.value = '';
-        setRestoreStatus('uploading');
-        try {
-            const form = new FormData();
-            form.append('file', file);
-            const { data } = await api.post(
-                `/superadmin/restaurants/${restaurant._id}/restore`,
-                form
-            );
-            const r = data.restored;
-            setRestoreStatus({
-                ok: true,
-                msg: `Restored: ${r.orders} orders, ${r.menuItems} menu items, ${r.categories} categories, ${r.staff} staff`,
-            });
-        } catch (err) {
-            setRestoreStatus({ ok: false, msg: err.response?.data?.message || 'Restore failed' });
-        } finally {
-            setTimeout(() => setRestoreStatus(null), 6000);
-        }
-    };
+                setUploadStatus({
+                    ok: true,
+                    msg: `${addedText}${skippedText}${invalidText}${catText}`,
+                    invalidRows: data.invalidRows || [],
+                });
+            } catch (err) {
+                setUploadStatus({ ok: false, msg: err.response?.data?.message || 'Upload failed' });
+            } finally {
+                setTimeout(() => setUploadStatus(null), 8000);
+            }
+        };
 
-    const runBackupNow = async () => {
-        setBackupRunning(true);
-        try {
-            await api.post(`/superadmin/restaurants/${restaurant._id}/backup/run-now`);
-        } catch { /* silent */ }
-        finally { setTimeout(() => setBackupRunning(false), 3000); }
-    };
+        const handleMenuUpload = async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            e.target.value = '';
 
-    const saveBackupSchedule = async () => {
-        setBackupSaving(true);
-        try {
-            const { data } = await api.patch(`/superadmin/restaurants/${restaurant._id}/backup-schedule`, backupSchedule);
-            setBackupSchedule(data);
-            setBackupDirty(false);
-        } catch { /* silent — user can retry */ }
-        finally { setBackupSaving(false); }
-    };
+            // Validate file type
+            const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+            if (!isExcel) {
+                setUploadStatus({ ok: false, msg: 'Only Excel files (.xlsx, .xls) are allowed' });
+                setTimeout(() => setUploadStatus(null), 4000);
+                return;
+            }
 
-    const toggleStatus = async (key) => {
-        const enabled = !orderStatuses[key];
-        setOrderStatuses(prev => ({ ...prev, [key]: enabled }));
-        setStatusSaving(key);
-        try {
-            const { data } = await api.patch(`/superadmin/restaurants/${restaurant._id}/order-statuses`, { key, enabled });
-            setOrderStatuses({ ...DEFAULT_STATUSES, ...data.orderStatusesConfig });
-        } catch {
-            setOrderStatuses(prev => ({ ...prev, [key]: !enabled }));
-        } finally {
-            setStatusSaving(null);
-        }
-    };
+            // Validate file size (max 5 MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setUploadStatus({ ok: false, msg: 'File size exceeds 5 MB limit' });
+                setTimeout(() => setUploadStatus(null), 4000);
+                return;
+            }
 
-    const toggleFeature = async (key) => {
-        const enabled = !featureSettings[key];
-        setFeatureSettings(prev => ({ ...prev, [key]: enabled }));
-        setFeatureSaving(key);
-        try {
-            const { data } = await api.patch(`/superadmin/restaurants/${restaurant._id}/feature-settings`, { key, enabled });
-            setFeatureSettings({ dineInEnabled: data.dineInEnabled, takeawayEnabled: data.takeawayEnabled, tableMapEnabled: data.tableMapEnabled, kotPrintEnabled: data.kotPrintEnabled !== false });
-        } catch {
-            setFeatureSettings(prev => ({ ...prev, [key]: !enabled }));
-        } finally {
-            setFeatureSaving(null);
-        }
-    };
+            setUploadStatus('validating');
+            try {
+                const form = new FormData();
+                form.append('file', file);
+                const { data } = await api.post(
+                    `/superadmin/restaurants/${restaurant._id}/menu/validate-upload`,
+                    form
+                );
 
-    return (
-        <>
-            {/* Backdrop */}
-            <div className="fixed inset-0 z-30 bg-black/30" onClick={onClose} />
+                if (data.hasDuplicates && data.duplicates?.length > 0) {
+                    // Pre-check all duplicates to be skipped by default
+                    const initialSkipSet = new Set(data.duplicates.map(d => d.name));
+                    setDuplicateModal({
+                        file,
+                        data,
+                        skipSet: initialSkipSet,
+                    });
+                    setUploadStatus(null);
+                } else {
+                    // No duplicates, proceed directly to bulk upload
+                    await executeBulkImport(file, []);
+                }
+            } catch (err) {
+                setUploadStatus({
+                    ok: false,
+                    msg: err.response?.data?.message || 'Failed to validate menu Excel file',
+                    invalidRows: err.response?.data?.invalidRows || [],
+                });
+                setTimeout(() => setUploadStatus(null), 6000);
+            }
+        };
 
-            {/* Slide-in panel — full width on mobile, 320px on sm+ */}
-            <aside className="fixed top-0 right-0 z-40 h-full w-full sm:w-80 bg-[var(--theme-bg-card)] border-l border-[var(--theme-border)] shadow-2xl flex flex-col">
+        const handleRestore = async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            e.target.value = '';
+            setRestoreStatus('uploading');
+            try {
+                const form = new FormData();
+                form.append('file', file);
+                const { data } = await api.post(
+                    `/superadmin/restaurants/${restaurant._id}/restore`,
+                    form
+                );
+                const r = data.restored;
+                setRestoreStatus({
+                    ok: true,
+                    msg: `Restored: ${r.orders} orders, ${r.menuItems} menu items, ${r.categories} categories, ${r.staff} staff`,
+                });
+            } catch (err) {
+                setRestoreStatus({ ok: false, msg: err.response?.data?.message || 'Restore failed' });
+            } finally {
+                setTimeout(() => setRestoreStatus(null), 6000);
+            }
+        };
 
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--theme-border)] shrink-0">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 font-bold text-sm shrink-0">
-                            {restaurant.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-sm font-semibold text-[var(--theme-text-main)] truncate">{restaurant.name}</p>
-                            <p className="text-xs text-[var(--theme-text-muted)] font-mono truncate">{restaurant.slug}</p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} title="Hide panel"
-                        className="p-1.5 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] shrink-0 ml-2">
-                        <X size={15} />
-                    </button>
-                </div>
+        const runBackupNow = async () => {
+            setBackupRunning(true);
+            try {
+                await api.post(`/superadmin/restaurants/${restaurant._id}/backup/run-now`);
+            } catch { /* silent */ }
+            finally { setTimeout(() => setBackupRunning(false), 3000); }
+        };
 
-                {/* Scrollable body */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        const saveBackupSchedule = async () => {
+            setBackupSaving(true);
+            try {
+                const { data } = await api.patch(`/superadmin/restaurants/${restaurant._id}/backup-schedule`, backupSchedule);
+                setBackupSchedule(data);
+                setBackupDirty(false);
+            } catch { /* silent — user can retry */ }
+            finally { setBackupSaving(false); }
+        };
 
-                    {/* Info */}
-                    <div className="rounded-xl border border-[var(--theme-border)] overflow-hidden divide-y divide-[var(--theme-border)]">
-                        <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
-                            <span className="text-xs text-[var(--theme-text-muted)]">Status</span>
-                            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${restaurant.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                {restaurant.isActive ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
-                                {restaurant.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
-                            <span className="text-xs text-[var(--theme-text-muted)]">Plan</span>
-                            <span className="text-xs font-semibold text-[var(--theme-text-main)] capitalize">{restaurant.plan}</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
-                            <span className="text-xs text-[var(--theme-text-muted)]">Revenue</span>
-                            <span className="text-xs font-semibold text-emerald-400">{fmtINR(restaurant.revenue ?? 0)}</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
-                            <span className="text-xs text-[var(--theme-text-muted)]">Orders</span>
-                            <span className="text-xs font-semibold text-[var(--theme-text-main)]">{restaurant.orderCount ?? 0}</span>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
-                            <span className="text-xs text-[var(--theme-text-muted)]">Staff</span>
-                            <span className="text-xs font-semibold text-[var(--theme-text-main)]">{restaurant.userCount ?? 0}</span>
-                        </div>
-                    </div>
+        const toggleStatus = async (key) => {
+            const enabled = !orderStatuses[key];
+            setOrderStatuses(prev => ({ ...prev, [key]: enabled }));
+            setStatusSaving(key);
+            try {
+                const { data } = await api.patch(`/superadmin/restaurants/${restaurant._id}/order-statuses`, { key, enabled });
+                setOrderStatuses({ ...DEFAULT_STATUSES, ...data.orderStatusesConfig });
+            } catch {
+                setOrderStatuses(prev => ({ ...prev, [key]: !enabled }));
+            } finally {
+                setStatusSaving(null);
+            }
+        };
 
-                    {/* Order Status Toggles */}
-                    <div>
-                        <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3">Order Statuses</p>
-                        <div className="space-y-1.5">
-                            {ORDER_STATUSES.filter(({ key }) => !['ready', 'payment', 'completed', 'cancelled'].includes(key)).map(({ key, label, cls }) => (
-                                <div key={key} className="flex items-center justify-between px-3 py-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-deep)]">
-                                    <span className={`text-xs font-medium ${cls}`}>{label}</span>
-                                    <button
-                                        onClick={() => toggleStatus(key)}
-                                        disabled={statusSaving === key}
-                                        className="transition-colors disabled:opacity-40"
-                                        title={orderStatuses[key] ? 'Disable' : 'Enable'}
-                                    >
-                                        {orderStatuses[key]
-                                            ? <ToggleRight size={22} className="text-emerald-400" />
-                                            : <ToggleLeft size={22} className="text-[var(--theme-text-muted)]" />
-                                        }
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+        const toggleFeature = async (key) => {
+            const enabled = !featureSettings[key];
+            setFeatureSettings(prev => ({ ...prev, [key]: enabled }));
+            setFeatureSaving(key);
+            try {
+                const { data } = await api.patch(`/superadmin/restaurants/${restaurant._id}/feature-settings`, { key, enabled });
+                setFeatureSettings({ dineInEnabled: data.dineInEnabled, takeawayEnabled: data.takeawayEnabled, tableMapEnabled: data.tableMapEnabled, kotPrintEnabled: data.kotPrintEnabled !== false });
+            } catch {
+                setFeatureSettings(prev => ({ ...prev, [key]: !enabled }));
+            } finally {
+                setFeatureSaving(null);
+            }
+        };
 
-                    {/* Order Type & Feature Toggles */}
-                    <div>
-                        <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3">Order Types</p>
-                        <div className="space-y-1.5">
-                            {[
-                                { key: 'dineInEnabled',   label: 'Dine-In',   cls: 'text-blue-400' },
-                                { key: 'takeawayEnabled', label: 'Takeaway',  cls: 'text-orange-400' },
-                                { key: 'tableMapEnabled', label: 'Table Map', cls: 'text-purple-400' },
-                            ].map(({ key, label, cls }) => (
-                                <div key={key} className="flex items-center justify-between px-3 py-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-deep)]">
-                                    <span className={`text-xs font-medium ${cls}`}>{label}</span>
-                                    <button
-                                        onClick={() => toggleFeature(key)}
-                                        disabled={featureSaving === key}
-                                        className="transition-colors disabled:opacity-40"
-                                        title={featureSettings[key] ? 'Disable' : 'Enable'}
-                                    >
-                                        {featureSettings[key]
-                                            ? <ToggleRight size={22} className="text-emerald-400" />
-                                            : <ToggleLeft  size={22} className="text-[var(--theme-text-muted)]" />
-                                        }
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+        return (
+            <>
+                {/* Backdrop */}
+                <div className="fixed inset-0 z-30 bg-black/30" onClick={onClose} />
 
-                    {/* Backup Schedule */}
-                    <div>
-                        <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                            <Database size={11} /> Backup Schedule
-                        </p>
-                        <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-deep)] overflow-hidden divide-y divide-[var(--theme-border)]">
-                            {/* Enable toggle */}
-                            <div className="flex items-center justify-between px-3 py-2.5">
-                                <span className="text-xs font-medium text-cyan-400">Auto Backup</span>
-                                <button
-                                    onClick={() => { setBackupSchedule(p => ({ ...p, backupEnabled: !p.backupEnabled })); setBackupDirty(true); }}
-                                    className="transition-colors"
-                                    title={backupSchedule.backupEnabled ? 'Disable backup' : 'Enable backup'}
-                                >
-                                    {backupSchedule.backupEnabled
-                                        ? <ToggleRight size={22} className="text-emerald-400" />
-                                        : <ToggleLeft  size={22} className="text-[var(--theme-text-muted)]" />}
-                                </button>
+                {/* Slide-in panel — full width on mobile, 320px on sm+ */}
+                <aside className="fixed top-0 right-0 z-40 h-full w-full sm:w-80 bg-[var(--theme-bg-card)] border-l border-[var(--theme-border)] shadow-2xl flex flex-col">
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--theme-border)] shrink-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400 font-bold text-sm shrink-0">
+                                {restaurant.name.charAt(0).toUpperCase()}
                             </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-[var(--theme-text-main)] truncate">{restaurant.name}</p>
+                                <p className="text-xs text-[var(--theme-text-muted)] font-mono truncate">{restaurant.slug}</p>
+                            </div>
+                        </div>
+                        <button onClick={onClose} title="Hide panel"
+                            className="p-1.5 rounded-lg hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] shrink-0 ml-2">
+                            <X size={15} />
+                        </button>
+                    </div>
 
-                            {backupSchedule.backupEnabled && (
-                                <>
-                                    {/* Frequency */}
-                                    <div className="px-3 py-2.5">
-                                        <p className="text-[10px] text-[var(--theme-text-muted)] mb-2">Frequency</p>
-                                        <div className="grid grid-cols-2 gap-1">
-                                            {['hourly', 'daily', 'weekly', 'monthly', 'yearly'].map(f => (
-                                                <button key={f}
-                                                    onClick={() => { setBackupSchedule(p => ({ ...p, frequency: f })); setBackupDirty(true); }}
-                                                    className={`px-2 py-1.5 rounded-lg text-[10px] font-semibold capitalize transition-colors border ${
-                                                        backupSchedule.frequency === f
-                                                            ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                                                            : 'bg-[var(--theme-bg-card)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-bg-hover)]'
-                                                    }`}>
-                                                    {f}
-                                                </button>
-                                            ))}
-                                        </div>
+                    {/* Scrollable body */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-5">
+
+                        {/* Info */}
+                        <div className="rounded-xl border border-[var(--theme-border)] overflow-hidden divide-y divide-[var(--theme-border)]">
+                            <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
+                                <span className="text-xs text-[var(--theme-text-muted)]">Status</span>
+                                <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${restaurant.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                    {restaurant.isActive ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                                    {restaurant.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
+                                <span className="text-xs text-[var(--theme-text-muted)]">Plan</span>
+                                <span className="text-xs font-semibold text-[var(--theme-text-main)] capitalize">{restaurant.plan}</span>
+                            </div>
+                            <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
+                                <span className="text-xs text-[var(--theme-text-muted)]">Revenue</span>
+                                <span className="text-xs font-semibold text-emerald-400">{fmtINR(restaurant.revenue ?? 0)}</span>
+                            </div>
+                            <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
+                                <span className="text-xs text-[var(--theme-text-muted)]">Orders</span>
+                                <span className="text-xs font-semibold text-[var(--theme-text-main)]">{restaurant.orderCount ?? 0}</span>
+                            </div>
+                            <div className="flex items-center justify-between px-4 py-3 bg-[var(--theme-bg-deep)]">
+                                <span className="text-xs text-[var(--theme-text-muted)]">Staff</span>
+                                <span className="text-xs font-semibold text-[var(--theme-text-main)]">{restaurant.userCount ?? 0}</span>
+                            </div>
+                        </div>
+
+                        {/* Order Status Toggles */}
+                        <div>
+                            <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3">Order Statuses</p>
+                            <div className="space-y-1.5">
+                                {ORDER_STATUSES.filter(({ key }) => !['ready', 'payment', 'completed', 'cancelled'].includes(key)).map(({ key, label, cls }) => (
+                                    <div key={key} className="flex items-center justify-between px-3 py-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-deep)]">
+                                        <span className={`text-xs font-medium ${cls}`}>{label}</span>
+                                        <button
+                                            onClick={() => toggleStatus(key)}
+                                            disabled={statusSaving === key}
+                                            className="transition-colors disabled:opacity-40"
+                                            title={orderStatuses[key] ? 'Disable' : 'Enable'}
+                                        >
+                                            {orderStatuses[key]
+                                                ? <ToggleRight size={22} className="text-emerald-400" />
+                                                : <ToggleLeft size={22} className="text-[var(--theme-text-muted)]" />
+                                            }
+                                        </button>
                                     </div>
-
-                                    {/* Time picker — not shown for hourly */}
-                                    {backupSchedule.frequency !== 'hourly' && (
-                                        <div className="px-3 py-2.5">
-                                            <p className="text-[10px] text-[var(--theme-text-muted)] mb-2 flex items-center gap-1"><Clock size={10} /> Run at</p>
-                                            <input
-                                                type="time"
-                                                value={backupSchedule.time || '02:00'}
-                                                onChange={(e) => { setBackupSchedule(p => ({ ...p, time: e.target.value })); setBackupDirty(true); }}
-                                                className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-border)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--theme-text-main)] focus:outline-none focus:border-cyan-500"
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Last backup timestamp */}
-                                    {backupSchedule.lastBackupAt && (
-                                        <div className="px-3 py-2 text-[10px] text-[var(--theme-text-muted)]">
-                                            Last backup: {new Date(backupSchedule.lastBackupAt).toLocaleString()}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {/* Run backup now */}
-                            <div className="px-3 py-2.5 flex gap-2">
-                                <button
-                                    onClick={runBackupNow}
-                                    disabled={backupRunning}
-                                    className="flex-1 px-3 py-2 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-semibold border border-indigo-500/20 disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5">
-                                    <Database size={11} className={backupRunning ? 'animate-pulse' : ''} />
-                                    {backupRunning ? 'Running…' : 'Run Now'}
-                                </button>
-
-                                {/* Save button — only shown when there are unsaved changes */}
-                                {backupDirty && (
-                                    <button
-                                        onClick={saveBackupSchedule}
-                                        disabled={backupSaving}
-                                        className="flex-1 px-3 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold border border-cyan-500/20 disabled:opacity-40 transition-colors">
-                                        {backupSaving ? 'Saving…' : 'Save Schedule'}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Staff logins — click key icon to set password */}
-                    <div>
-                        <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-1">Staff Logins</p>
-                        <p className="text-xs text-[var(--theme-text-subtle)] mb-3">
-                            <Pencil size={10} className="inline mr-0.5" /> edit username &nbsp;·&nbsp;
-                            <KeyRound size={10} className="inline mr-0.5" /> reset password
-                        </p>
-                        {staffLoading ? (
-                            <div className="flex justify-center py-6">
-                                <RefreshCw size={16} className="animate-spin text-[var(--theme-text-muted)]" />
-                            </div>
-                        ) : staff.length === 0 ? (
-                            <p className="text-xs text-[var(--theme-text-subtle)] text-center py-4">No staff found</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {staff.map((s) => (
-                                    <StaffRow key={s._id} s={s} restaurantId={restaurant._id} roleColor={roleColor}
-                                        onUpdate={(u) => setStaff(prev => prev.map(m => m._id === u._id ? { ...m, ...u } : m))} />
                                 ))}
                             </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Footer actions */}
-                <div className="shrink-0 px-5 py-4 border-t border-[var(--theme-border)] space-y-2">
-
-                    {/* Hidden file inputs */}
-                    <input ref={fileInputRef}    type="file" accept=".xlsx,.xls" className="hidden" onChange={handleMenuUpload} />
-                    <input ref={restoreInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleRestore} />
-
-                    {/* Upload Menu Excel */}
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadStatus === 'uploading'}
-                        className="w-full flex items-center justify-center gap-2 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-colors disabled:opacity-50">
-                        <FileUp size={13} />
-                        {uploadStatus === 'uploading' ? 'Uploading…' : 'Upload Menu (Excel)'}
-                    </button>
-
-                    {/* Upload result feedback */}
-                    {uploadStatus && uploadStatus !== 'uploading' && (
-                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border ${
-                            uploadStatus.ok
-                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                : 'bg-red-500/10 border-red-500/20 text-red-400'
-                        }`}>
-                            {uploadStatus.ok ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                            {uploadStatus.msg}
                         </div>
-                    )}
+
+                        {/* Order Type & Feature Toggles */}
+                        <div>
+                            <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3">Order Types</p>
+                            <div className="space-y-1.5">
+                                {[
+                                    { key: 'dineInEnabled', label: 'Dine-In', cls: 'text-blue-400' },
+                                    { key: 'takeawayEnabled', label: 'Takeaway', cls: 'text-orange-400' },
+                                    { key: 'tableMapEnabled', label: 'Table Map', cls: 'text-purple-400' },
+                                ].map(({ key, label, cls }) => (
+                                    <div key={key} className="flex items-center justify-between px-3 py-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-deep)]">
+                                        <span className={`text-xs font-medium ${cls}`}>{label}</span>
+                                        <button
+                                            onClick={() => toggleFeature(key)}
+                                            disabled={featureSaving === key}
+                                            className="transition-colors disabled:opacity-40"
+                                            title={featureSettings[key] ? 'Disable' : 'Enable'}
+                                        >
+                                            {featureSettings[key]
+                                                ? <ToggleRight size={22} className="text-emerald-400" />
+                                                : <ToggleLeft size={22} className="text-[var(--theme-text-muted)]" />
+                                            }
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Backup Schedule */}
+                        <div>
+                            <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                                <Database size={11} /> Backup Schedule
+                            </p>
+                            <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-deep)] overflow-hidden divide-y divide-[var(--theme-border)]">
+                                {/* Enable toggle */}
+                                <div className="flex items-center justify-between px-3 py-2.5">
+                                    <span className="text-xs font-medium text-cyan-400">Auto Backup</span>
+                                    <button
+                                        onClick={() => { setBackupSchedule(p => ({ ...p, backupEnabled: !p.backupEnabled })); setBackupDirty(true); }}
+                                        className="transition-colors"
+                                        title={backupSchedule.backupEnabled ? 'Disable backup' : 'Enable backup'}
+                                    >
+                                        {backupSchedule.backupEnabled
+                                            ? <ToggleRight size={22} className="text-emerald-400" />
+                                            : <ToggleLeft size={22} className="text-[var(--theme-text-muted)]" />}
+                                    </button>
+                                </div>
+
+                                {backupSchedule.backupEnabled && (
+                                    <>
+                                        {/* Frequency */}
+                                        <div className="px-3 py-2.5">
+                                            <p className="text-[10px] text-[var(--theme-text-muted)] mb-2">Frequency</p>
+                                            <div className="grid grid-cols-2 gap-1">
+                                                {['hourly', 'daily', 'weekly', 'monthly', 'yearly'].map(f => (
+                                                    <button key={f}
+                                                        onClick={() => { setBackupSchedule(p => ({ ...p, frequency: f })); setBackupDirty(true); }}
+                                                        className={`px-2 py-1.5 rounded-lg text-[10px] font-semibold capitalize transition-colors border ${backupSchedule.frequency === f
+                                                                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                                                                : 'bg-[var(--theme-bg-card)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-bg-hover)]'
+                                                            }`}>
+                                                        {f}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Time picker — not shown for hourly */}
+                                        {backupSchedule.frequency !== 'hourly' && (
+                                            <div className="px-3 py-2.5">
+                                                <p className="text-[10px] text-[var(--theme-text-muted)] mb-2 flex items-center gap-1"><Clock size={10} /> Run at</p>
+                                                <input
+                                                    type="time"
+                                                    value={backupSchedule.time || '02:00'}
+                                                    onChange={(e) => { setBackupSchedule(p => ({ ...p, time: e.target.value })); setBackupDirty(true); }}
+                                                    className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-border)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--theme-text-main)] focus:outline-none focus:border-cyan-500"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Last backup timestamp */}
+                                        {backupSchedule.lastBackupAt && (
+                                            <div className="px-3 py-2 text-[10px] text-[var(--theme-text-muted)]">
+                                                Last backup: {new Date(backupSchedule.lastBackupAt).toLocaleString()}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Run backup now */}
+                                <div className="px-3 py-2.5 flex gap-2">
+                                    <button
+                                        onClick={runBackupNow}
+                                        disabled={backupRunning}
+                                        className="flex-1 px-3 py-2 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-semibold border border-indigo-500/20 disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5">
+                                        <Database size={11} className={backupRunning ? 'animate-pulse' : ''} />
+                                        {backupRunning ? 'Running…' : 'Run Now'}
+                                    </button>
+
+                                    {/* Save button — only shown when there are unsaved changes */}
+                                    {backupDirty && (
+                                        <button
+                                            onClick={saveBackupSchedule}
+                                            disabled={backupSaving}
+                                            className="flex-1 px-3 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold border border-cyan-500/20 disabled:opacity-40 transition-colors">
+                                            {backupSaving ? 'Saving…' : 'Save Schedule'}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Staff logins — click key icon to set password */}
+                        <div>
+                            <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-1">Staff Logins</p>
+                            <p className="text-xs text-[var(--theme-text-subtle)] mb-3">
+                                <Pencil size={10} className="inline mr-0.5" /> edit username &nbsp;·&nbsp;
+                                <KeyRound size={10} className="inline mr-0.5" /> reset password
+                            </p>
+                            {staffLoading ? (
+                                <div className="flex justify-center py-6">
+                                    <RefreshCw size={16} className="animate-spin text-[var(--theme-text-muted)]" />
+                                </div>
+                            ) : staff.length === 0 ? (
+                                <p className="text-xs text-[var(--theme-text-subtle)] text-center py-4">No staff found</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {staff.map((s) => (
+                                        <StaffRow key={s._id} s={s} restaurantId={restaurant._id} roleColor={roleColor}
+                                            onUpdate={(u) => setStaff(prev => prev.map(m => m._id === u._id ? { ...m, ...u } : m))} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Footer actions */}
+                    <div className="shrink-0 px-5 py-4 border-t border-[var(--theme-border)] space-y-2">
+
+                        {/* Hidden file inputs */}
+                        <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleMenuUpload} />
+                        <input ref={restoreInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleRestore} />
+
+                        {/* Upload Menu Excel */}
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadStatus === 'uploading' || uploadStatus === 'validating'}
+                            className="w-full flex items-center justify-center gap-2 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-colors disabled:opacity-50">
+                            <FileUp size={13} />
+                            {uploadStatus === 'validating' ? 'Checking duplicates…' : uploadStatus === 'uploading' ? 'Uploading…' : 'Upload Menu (Excel)'}
+                        </button>
+
+                        {/* Upload result feedback */}
+                                    <div className={`flex flex-col gap-1 p-2.5 rounded-lg text-xs font-medium border ${uploadStatus.ok
+                                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                            : 'bg-red-500/10 border-red-500/20 text-red-400'
+                                        }`}>
+                                        <div className="flex items-center gap-2">
+                                            {uploadStatus.ok ? <CheckCircle2 size={13} className="shrink-0" /> : <XCircle size={13} className="shrink-0" />}
+                                            <span>{uploadStatus.msg}</span>
+                                        </div>
+                                        {uploadStatus.invalidRows && uploadStatus.invalidRows.length > 0 && (
+                                            <div className="mt-1 pt-1 border-t border-black/10 dark:border-white/10 space-y-0.5 max-h-24 overflow-y-auto">
+                                                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--theme-text-muted)]">Invalid Rows:</p>
+                                                {uploadStatus.invalidRows.map((inv, i) => (
+                                                    <p key={i} className="text-[10px] opacity-80">
+                                                        Row {inv.row}: {inv.name ? `"${inv.name}" — ` : ''}{inv.reason}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                     {/* Restore from Backup Excel */}
                     <button
@@ -835,16 +907,16 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                     {restoreStatus && restoreStatus !== 'uploading' && (
                         <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border ${
                             restoreStatus.ok
-                                ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
-                                : 'bg-red-500/10 border-red-500/20 text-red-400'
-                        }`}>
+                                    ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
+                                    : 'bg-red-500/10 border-red-500/20 text-red-400'
+                                }`}>
                             {restoreStatus.ok ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                             {restoreStatus.msg}
                         </div>
                     )}
 
                     <button
-                        onClick={() => navigate(`/superadmin/restaurants/${restaurant._id}`)}
+                        onClick={() => navigate(`/ superadmin / restaurants / ${restaurant._id}`)}
                         className="w-full flex items-center justify-center gap-2 h-9 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold transition-colors">
                         <ChevronRight size={14} /> View Full Details
                     </button>
@@ -855,11 +927,10 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                     {restaurant._id !== 1 && (
                         <>
                             <button onClick={() => onToggle(restaurant)} disabled={actionLoading}
-                                className={`w-full flex items-center justify-center gap-2 h-9 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 ${
-                                    restaurant.isActive
+                                className={`w-full flex items-center justify-center gap-2 h-9 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 ${restaurant.isActive
                                         ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400'
                                         : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400'
-                                }`}>
+                                    }`}>
                                 {restaurant.isActive ? <ToggleLeft size={14} /> : <ToggleRight size={14} />}
                                 {restaurant.isActive ? 'Deactivate' : 'Activate'}
                             </button>
@@ -870,14 +941,168 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                         </>
                     )}
                 </div>
-            </aside>
+            </aside >
+
+                {/* ── Duplicate Items Confirmation Modal ──────────────────────── */ }
+        {
+            duplicateModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+                    <div className="relative w-full max-w-lg bg-[var(--theme-bg-card)] border border-[var(--theme-border)] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--theme-border)] shrink-0">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                                    <AlertCircle size={16} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-[var(--theme-text-main)]">Duplicate Items Found</h3>
+                                    <p className="text-[11px] text-[var(--theme-text-muted)]">
+                                        {duplicateModal.data.duplicates.length} item(s) already exist in "{restaurant.name}"
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setDuplicateModal(null)}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)] hover:bg-white/5 transition-colors">
+                                <X size={15} />
+                            </button>
+                        </div>
+
+                        {/* Instruction Bar */}
+                        <div className="px-5 py-2.5 bg-amber-500/5 border-b border-[var(--theme-border)] flex items-center justify-between text-xs">
+                            <span className="text-[11px] text-[var(--theme-text-muted)] flex items-center gap-1.5">
+                                <Info size={12} className="text-amber-400 shrink-0" />
+                                Ticked items will be skipped. Unticked items will be added.
+                            </span>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const allNames = new Set(duplicateModal.data.duplicates.map(d => d.name));
+                                        setDuplicateModal(prev => ({ ...prev, skipSet: allNames }));
+                                    }}
+                                    className="text-[10px] font-bold text-amber-400 hover:underline uppercase tracking-wider">
+                                    Skip All
+                                </button>
+                                <span className="text-[var(--theme-border)]">|</span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setDuplicateModal(prev => ({ ...prev, skipSet: new Set() }));
+                                    }}
+                                    className="text-[10px] font-bold text-blue-400 hover:underline uppercase tracking-wider">
+                                    Add All
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Duplicate Items List */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                            {duplicateModal.data.duplicates.map((dup, idx) => {
+                                const isSkipped = duplicateModal.skipSet.has(dup.name);
+                                return (
+                                    <div
+                                        key={idx}
+                                        onClick={() => {
+                                            setDuplicateModal(prev => {
+                                                const nextSet = new Set(prev.skipSet);
+                                                if (nextSet.has(dup.name)) {
+                                                    nextSet.delete(dup.name);
+                                                } else {
+                                                    nextSet.add(dup.name);
+                                                }
+                                                return { ...prev, skipSet: nextSet };
+                                            });
+                                        }}
+                                        className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${isSkipped
+                                                ? 'bg-amber-500/5 border-amber-500/20 text-[var(--theme-text-main)]'
+                                                : 'bg-blue-500/5 border-blue-500/20 text-[var(--theme-text-main)]'
+                                            }`}>
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="shrink-0 text-amber-400">
+                                                {isSkipped ? (
+                                                    <CheckSquare size={17} className="text-amber-400" />
+                                                ) : (
+                                                    <Square size={17} className="text-[var(--theme-text-muted)]" />
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold truncate">{dup.name}</span>
+                                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider border ${dup.isVeg
+                                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                                        }`}>
+                                                        {dup.isVeg ? 'Veg' : 'Non-Veg'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[var(--theme-text-muted)]">
+                                                    <span>{dup.category}</span>
+                                                    <span>•</span>
+                                                    <span className="font-semibold text-[var(--theme-text-main)]">₹{dup.price}</span>
+                                                    {dup.variants && dup.variants.length > 0 && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span className="text-[10px] text-blue-400">
+                                                                {dup.variants.map(v => `${v.name}:₹${v.price}`).join(', ')}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-[10px] font-bold uppercase tracking-wider pl-2">
+                                            {isSkipped ? (
+                                                <span className="text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">Skip</span>
+                                            ) : (
+                                                <span className="text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">Add anyway</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Footer Summary & Actions */}
+                        <div className="px-5 py-3 border-t border-[var(--theme-border)] bg-[var(--theme-bg-dark)]/50 shrink-0 flex items-center justify-between">
+                            <div className="text-[11px] text-[var(--theme-text-muted)]">
+                                <span>{duplicateModal.data.newCount || 0} new item(s)</span>
+                                <span> • </span>
+                                <span className="text-amber-400 font-semibold">{duplicateModal.skipSet.size} will skip</span>
+                                <span> • </span>
+                                <span className="text-blue-400 font-semibold">{duplicateModal.data.duplicates.length - duplicateModal.skipSet.size} will add</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setDuplicateModal(null)}
+                                    className="px-3 py-1.5 text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)] transition-colors">
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const file = duplicateModal.file;
+                                        const skipList = Array.from(duplicateModal.skipSet);
+                                        setDuplicateModal(null);
+                                        executeBulkImport(file, skipList);
+                                    }}
+                                    className="px-4 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 transition-all">
+                                    Confirm Import
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
         </>
     );
 };
 
 /* ── Theme Cycle Button (page-local only) ──────────────────────────────── */
-const PAGE_THEMES  = ['default', 'dark', 'light'];
-const THEME_ICONS  = { default: Monitor, dark: Moon, light: Sun };
+const PAGE_THEMES = ['default', 'dark', 'light'];
+const THEME_ICONS = { default: Monitor, dark: Moon, light: Sun };
 const THEME_LABELS = { default: 'Default', dark: 'Dark', light: 'Light' };
 
 const ThemeCycleBtn = ({ theme, onCycle }) => {
@@ -1077,11 +1302,10 @@ export default function Restaurants() {
                             ) : filtered.map((r) => (
                                 <div key={r._id}
                                     onClick={() => setSelectedRestaurant(prev => prev?._id === r._id ? null : r)}
-                                    className={`bg-[var(--theme-bg-card)] rounded-xl border transition-all cursor-pointer active:scale-[0.99] ${
-                                        selectedRestaurant?._id === r._id
+                                    className={`bg-[var(--theme-bg-card)] rounded-xl border transition-all cursor-pointer active:scale-[0.99] ${selectedRestaurant?._id === r._id
                                             ? 'border-purple-400 ring-1 ring-purple-400/30'
                                             : 'border-[var(--theme-border)] hover:bg-[var(--theme-bg-hover)]'
-                                    }`}>
+                                        }`}>
                                     <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 p-3.5">
                                         <div className="flex items-center gap-3 flex-1 min-w-[150px]">
                                             <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-sm flex-shrink-0">
@@ -1093,9 +1317,8 @@ export default function Restaurants() {
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t border-[var(--theme-border)] sm:border-0">
-                                            <span className={`inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                                r.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                                            }`}>
+                                            <span className={`inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full ${r.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                                                }`}>
                                                 {r.isActive ? <CheckCircle2 size={10} className="sm:w-3 sm:h-3" /> : <XCircle size={10} className="sm:w-3 sm:h-3" />}
                                                 {r.isActive ? 'Active' : 'Off'}
                                             </span>
@@ -1148,9 +1371,8 @@ export default function Restaurants() {
                                         ) : filtered.map((r) => (
                                             <tr key={r._id}
                                                 onClick={() => setSelectedRestaurant(prev => prev?._id === r._id ? null : r)}
-                                                className={`border-b border-[var(--theme-border)] hover:bg-[var(--theme-bg-hover)] transition-colors cursor-pointer ${
-                                                    selectedRestaurant?._id === r._id ? 'bg-purple-500/5 border-l-2 border-l-purple-400' : ''
-                                                }`}>
+                                                className={`border-b border-[var(--theme-border)] hover:bg-[var(--theme-bg-hover)] transition-colors cursor-pointer ${selectedRestaurant?._id === r._id ? 'bg-purple-500/5 border-l-2 border-l-purple-400' : ''
+                                                    }`}>
                                                 <td className="px-5 py-3">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-xs flex-shrink-0">
@@ -1163,9 +1385,8 @@ export default function Restaurants() {
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-3">
-                                                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                                                        r.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                                                    }`}>
+                                                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${r.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                                                        }`}>
                                                         {r.isActive ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
                                                         {r.isActive ? 'Active' : 'Inactive'}
                                                     </span>
@@ -1268,11 +1489,10 @@ export default function Restaurants() {
             )}
 
             {toast && (
-                <div className={`fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-xl border text-sm font-medium animate-fade-in ${
-                    toast.type === 'error'
+                <div className={`fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-xl border text-sm font-medium animate-fade-in ${toast.type === 'error'
                         ? 'bg-red-500/10 border-red-500/30 text-red-400'
                         : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                }`}>
+                    }`}>
                     {toast.type === 'error' ? <XCircle size={15} /> : <CheckCircle2 size={15} />}
                     {toast.message}
                 </div>

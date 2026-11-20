@@ -725,102 +725,339 @@ const runBackupNow = async (req, res) => {
 
 // ─── BULK MENU UPLOAD ───────────────────────────────────────────────────────
 
-// POST /api/superadmin/restaurants/:id/menu/bulk-upload
-const bulkUploadMenu = async (req, res) => {
+// ── Helper: parse and validate menu excel rows ───────────────────────────────
+const parseMenuExcelBuffer = async (buffer) => {
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buffer);
+    const ws = wb.worksheets[0];
+    if (!ws) throw new Error('No worksheet found in file');
+
+    // Read header row — normalize: trim, remove extra spaces, lower case
+    const headerMap = {};
+    ws.getRow(1).eachCell((cell, colNumber) => {
+        const val = String(cell.value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, '_');
+        if (val) headerMap[val] = colNumber;
+    });
+
+    // Helper to find column by aliases
+    const getColIdx = (...aliases) => {
+        for (const alias of aliases) {
+            const key = alias.toLowerCase().replace(/\s+/g, '_');
+            if (headerMap[key] !== undefined) return headerMap[key];
+        }
+        return -1;
+    };
+
+    const nameCol = getColIdx('name', 'item_name', 'item');
+    const catCol  = getColIdx('category', 'category_name', 'cat');
+    const priceCol = getColIdx('price', 'item_price', 'rate');
+
+    if (nameCol === -1 || catCol === -1 || priceCol === -1) {
+        throw new Error('Excel must have columns: name, category, price');
+    }
+
+    const descCol    = getColIdx('description', 'desc');
+    const imgCol     = getColIdx('image', 'img', 'image_url', 'photo');
+    const vegCol     = getColIdx('veg', 'is_veg', 'food_type', 'type');
+    const portionCol = getColIdx('portion_sizes', 'portion_size', 'portions', 'variants', 'sizes');
+    const availCol   = getColIdx('availability', 'stock');
+    const activeCol  = getColIdx('is_active', 'pos', 'active');
+
+    const validRows = [];
+    const invalidRows = [];
+
+    ws.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return;
+
+        const getCellVal = (colIdx) => {
+            if (colIdx === -1) return null;
+            const c = row.getCell(colIdx);
+            return c ? c.value : null;
+        };
+
+        const nameRaw     = getCellVal(nameCol);
+        const catRaw      = getCellVal(catCol);
+        const priceRaw    = getCellVal(priceCol);
+
+        const name = String(nameRaw || '').trim().replace(/\s+/g, ' ');
+        const category = String(catRaw || '').trim().replace(/\s+/g, ' ');
+        const parsedPrice = parseFloat(priceRaw);
+
+        // Validation for mandatory fields
+        if (!name) {
+            invalidRows.push({ row: rowNumber, name: nameRaw || '', reason: 'Item name is required' });
+            return;
+        }
+        if (!category) {
+            invalidRows.push({ row: rowNumber, name, reason: 'Category is required' });
+            return;
+        }
+        if (isNaN(parsedPrice) || parsedPrice <= 0) {
+            invalidRows.push({ row: rowNumber, name, reason: 'Price must be a valid positive number' });
+            return;
+        }
+
+        // Parse description
+        const descRaw = getCellVal(descCol);
+        const description = descRaw ? String(descRaw).trim() || null : null;
+
+        // Parse image URL: must start with http/https, else null
+        const imgRaw = getCellVal(imgCol);
+        let image = null;
+        if (imgRaw) {
+            const trimmedImg = String(imgRaw).trim();
+            if (/^https?:\/\//i.test(trimmedImg)) {
+                image = trimmedImg;
+            }
+        }
+
+        // Parse veg: "veg", "yes", "true", "1" -> 1; "non-veg", "no", "false", "0" -> 0
+        const vegRaw = getCellVal(vegCol);
+        let isVeg = 0;
+        if (vegRaw !== null && vegRaw !== undefined) {
+            const vStr = String(vegRaw).trim().toLowerCase();
+            if (['veg', 'yes', 'true', '1'].includes(vStr)) {
+                isVeg = 1;
+            } else if (['non-veg', 'nonveg', 'non_veg', 'no', 'false', '0'].includes(vStr)) {
+                isVeg = 0;
+            }
+        }
+
+        // Parse portion sizes: "Half:110|Full:180"
+        const portionRaw = getCellVal(portionCol);
+        let variants = [];
+        if (portionRaw) {
+            const pStr = String(portionRaw).trim();
+            const pairs = pStr.split('|');
+            for (const pair of pairs) {
+                const trimmedPair = pair.trim();
+                if (!trimmedPair) continue;
+                const colonIdx = trimmedPair.indexOf(':');
+                if (colonIdx > 0) {
+                    const vName = trimmedPair.substring(0, colonIdx).trim();
+                    const vPrice = parseFloat(trimmedPair.substring(colonIdx + 1).trim());
+                    if (vName && !isNaN(vPrice) && vPrice >= 0) {
+                        variants.push({ name: vName, price: vPrice });
+                    }
+                }
+            }
+        }
+
+        // Availability (Stock) & is_active (POS): default to ON (1)
+        const availRaw = getCellVal(availCol);
+        let availability = 1;
+        if (availRaw !== null && availRaw !== undefined) {
+            const aStr = String(availRaw).trim().toLowerCase();
+            if (['no', 'false', '0', 'inactive', 'off', 'out of stock'].includes(aStr)) {
+                availability = 0;
+            }
+        }
+
+        const activeRaw = getCellVal(activeCol);
+        let isActive = 1;
+        if (activeRaw !== null && activeRaw !== undefined) {
+            const actStr = String(activeRaw).trim().toLowerCase();
+            if (['no', 'false', '0', 'inactive', 'off', 'hidden'].includes(actStr)) {
+                isActive = 0;
+            }
+        }
+
+        validRows.push({
+            rowNumber,
+            name,
+            category,
+            price: parsedPrice,
+            description,
+            image,
+            isVeg,
+            variants,
+            availability,
+            isActive,
+        });
+    });
+
+    return { validRows, invalidRows };
+};
+
+// POST /api/superadmin/restaurants/:id/menu/validate-upload
+const validateMenuUpload = async (req, res) => {
     const tenantId = req.params.id;
     try {
         const restaurant = await Tenant.findById(tenantId);
         if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
         if (!req.file)   return res.status(400).json({ message: 'Excel file is required' });
 
-        // Parse uploaded Excel buffer
-        const wb = new ExcelJS.Workbook();
-        await wb.xlsx.load(req.file.buffer);
-        const ws = wb.worksheets[0];
-        if (!ws) return res.status(400).json({ message: 'No worksheet found in file' });
+        const { validRows, invalidRows } = await parseMenuExcelBuffer(req.file.buffer);
 
-        // Read header row — normalize to lowercase
-        const headers = [];
-        ws.getRow(1).eachCell((cell) => headers.push(String(cell.value || '').trim().toLowerCase()));
-
-        const col = (name) => headers.indexOf(name); // returns 0-based index
-        if (col('name') === -1 || col('category') === -1 || col('price') === -1) {
-            return res.status(400).json({ message: 'Excel must have columns: name, category, price' });
-        }
-
-        // Collect valid data rows
-        const rows = [];
-        ws.eachRow((row, rowNumber) => {
-            if (rowNumber === 1) return;
-            const get = (colName) => {
-                const idx = col(colName);
-                return idx === -1 ? null : row.getCell(idx + 1).value;
-            };
-            const name     = String(get('name') || '').trim();
-            const category = String(get('category') || '').trim();
-            const price    = parseFloat(get('price')) || 0;
-            if (!name || !category || price <= 0) return;
-
-            const availRaw = String(get('availability') || '').toLowerCase();
-            const vegRaw   = String(get('is_veg') || '').toLowerCase();
-
-            rows.push({
-                name,
-                category,
-                price,
-                description:  String(get('description') || '').trim() || null,
-                availability: !['no', 'false', '0', 'inactive'].includes(availRaw),
-                isVeg:        ['yes', 'true', '1', 'veg'].includes(vegRaw),
+        if (validRows.length === 0) {
+            return res.status(400).json({
+                message: 'No valid items found in file. Check required columns: name, category, price.',
+                invalidRows,
             });
-        });
-
-        if (rows.length === 0) {
-            return res.status(400).json({ message: 'No valid rows found. Check name, category, price columns.' });
         }
 
-        // Load existing categories for this tenant
-        const [existingCats] = await mysql.query(
-            'SELECT id, name FROM categories WHERE tenant_id = ?', [tenantId]
+        // Fetch existing menu item names for this tenant (case-insensitive deduplication)
+        const [existingItems] = await mysql.query(
+            'SELECT name, category_id, price FROM menu_items WHERE tenant_id = ?',
+            [tenantId]
+        );
+
+        const existingNamesSet = new Set(
+            existingItems.map(item => String(item.name || '').trim().toLowerCase().replace(/\s+/g, ' '))
+        );
+
+        const duplicates = [];
+        const newItems = [];
+        const seenInFile = new Set();
+
+        for (const row of validRows) {
+            const normalizedName = row.name.toLowerCase().replace(/\s+/g, ' ');
+            if (existingNamesSet.has(normalizedName) || seenInFile.has(normalizedName)) {
+                duplicates.push({
+                    name: row.name,
+                    category: row.category,
+                    price: row.price,
+                    isVeg: row.isVeg,
+                    variants: row.variants,
+                });
+            } else {
+                newItems.push(row);
+                seenInFile.add(normalizedName);
+            }
+        }
+
+        res.json({
+            valid: true,
+            hasDuplicates: duplicates.length > 0,
+            totalRows: validRows.length + invalidRows.length,
+            validCount: validRows.length,
+            newCount: newItems.length,
+            duplicateCount: duplicates.length,
+            duplicates,
+            invalidCount: invalidRows.length,
+            invalidRows,
+        });
+    } catch (error) {
+        console.error('[ValidateMenuUpload]', error);
+        res.status(400).json({ message: error.message || 'Failed to parse Excel file' });
+    }
+};
+
+// POST /api/superadmin/restaurants/:id/menu/bulk-upload
+const bulkUploadMenu = async (req, res) => {
+    const tenantId = req.params.id;
+    let connection = null;
+    try {
+        const restaurant = await Tenant.findById(tenantId);
+        if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
+        if (!req.file)   return res.status(400).json({ message: 'Excel file is required' });
+
+        // Parse Excel using shared helper
+        const { validRows, invalidRows } = await parseMenuExcelBuffer(req.file.buffer);
+
+        if (validRows.length === 0) {
+            return res.status(400).json({
+                message: 'No valid rows found. Check name, category, price columns.',
+                invalidRows,
+            });
+        }
+
+        // Parse skipDuplicates if provided
+        let skipNamesSet = new Set();
+        if (req.body.skipDuplicates) {
+            try {
+                const parsed = typeof req.body.skipDuplicates === 'string'
+                    ? JSON.parse(req.body.skipDuplicates)
+                    : req.body.skipDuplicates;
+                if (Array.isArray(parsed)) {
+                    parsed.forEach(n => skipNamesSet.add(String(n || '').trim().toLowerCase().replace(/\s+/g, ' ')));
+                }
+            } catch (e) {
+                // Ignore parse error, proceed without skip filter
+            }
+        }
+
+        // Filter rows: exclude items matching skipped duplicate names
+        const rowsToInsert = [];
+        let skippedDuplicates = 0;
+
+        for (const row of validRows) {
+            const normName = row.name.toLowerCase().replace(/\s+/g, ' ');
+            if (skipNamesSet.has(normName)) {
+                skippedDuplicates++;
+            } else {
+                rowsToInsert.push(row);
+            }
+        }
+
+        // Acquire dedicated connection for transaction
+        connection = await mysql.getConnection();
+        await connection.beginTransaction();
+
+        // Load existing categories for this tenant within transaction
+        const [existingCats] = await connection.query(
+            'SELECT id, name FROM categories WHERE tenant_id = ? FOR UPDATE', [tenantId]
         );
         const catMap = {};
         existingCats.forEach((c) => { catMap[c.name.toLowerCase()] = c.id; });
 
         // Auto-create missing categories
         const catColors = ['#f97316', '#3b82f6', '#ec4899', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
-        const uniqueCats = [...new Set(rows.map((r) => r.category))];
+        const uniqueCats = [...new Set(rowsToInsert.map((r) => r.category))];
         let newCats = 0;
         for (const catName of uniqueCats) {
-            if (!catMap[catName.toLowerCase()]) {
+            const normCat = catName.toLowerCase();
+            if (!catMap[normCat]) {
                 const catId = crypto.randomUUID();
                 const color = catColors[Object.keys(catMap).length % catColors.length];
-                await mysql.query(
+                await connection.query(
                     'INSERT INTO categories (id, name, color, status, is_active, tenant_id) VALUES (?, ?, ?, "active", 1, ?)',
                     [catId, catName, color, tenantId]
                 );
-                catMap[catName.toLowerCase()] = catId;
+                catMap[normCat] = catId;
                 newCats++;
             }
         }
 
         // Insert menu items
         let inserted = 0;
-        let skipped  = 0;
-        for (const row of rows) {
+        let skippedErrors = 0;
+        for (const row of rowsToInsert) {
             const categoryId = catMap[row.category.toLowerCase()];
-            if (!categoryId) { skipped++; continue; }
+            if (!categoryId) { skippedErrors++; continue; }
             try {
-                await mysql.query(
+                const variantsJson = row.variants && row.variants.length > 0 ? JSON.stringify(row.variants) : null;
+                await connection.query(
                     `INSERT INTO menu_items
-                     (id, name, description, price, category_id, availability, is_active, is_veg, tenant_id)
-                     VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`,
-                    [crypto.randomUUID(), row.name, row.description, row.price,
-                     categoryId, row.availability ? 1 : 0, row.isVeg ? 1 : 0, tenantId]
+                     (id, name, description, price, category_id, image, availability, is_active, is_veg, variants, tenant_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        crypto.randomUUID(),
+                        row.name,
+                        row.description,
+                        row.price,
+                        categoryId,
+                        row.image,
+                        row.availability ? 1 : 0,
+                        row.isActive ? 1 : 0,
+                        row.isVeg ? 1 : 0,
+                        variantsJson,
+                        tenantId
+                    ]
                 );
                 inserted++;
             } catch (err) {
-                skipped++;
+                console.error('[BulkUploadRowError]', err.message);
+                skippedErrors++;
             }
         }
+
+        await connection.commit();
+        connection.release();
+        connection = null;
 
         invalidateCache('menu', tenantId);
         invalidateCache('categories', tenantId);
@@ -830,14 +1067,24 @@ const bulkUploadMenu = async (req, res) => {
             io.to(`${tenantId}:restaurant_main`).emit('menu-updated', { action: 'bulk-upload' });
         }
 
+        const totalSkipped = skippedDuplicates + skippedErrors;
+
         res.json({
-            message: `Bulk upload complete — ${inserted} items added, ${skipped} skipped`,
+            message: `Bulk upload complete — ${inserted} items added, ${totalSkipped} skipped (${skippedDuplicates} duplicates, ${skippedErrors} errors)`,
             inserted,
-            skipped,
+            skipped: totalSkipped,
+            skippedDuplicates,
+            skippedErrors,
+            invalidCount: invalidRows.length,
+            invalidRows,
             newCategories: newCats,
-            total: rows.length,
+            total: validRows.length,
         });
     } catch (error) {
+        if (connection) {
+            try { await connection.rollback(); } catch (_) {}
+            connection.release();
+        }
         console.error('[BulkUpload]', error);
         res.status(500).json({ message: error.message });
     }
@@ -1286,6 +1533,7 @@ module.exports = {
     updateBackupSchedule,
     runBackupNow,
     exportTenantData,
+    validateMenuUpload,
     bulkUploadMenu,
     restoreTenantData,
     exportSchema,
