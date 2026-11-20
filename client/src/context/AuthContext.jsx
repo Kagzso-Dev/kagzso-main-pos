@@ -40,26 +40,41 @@ export const AuthProvider = ({ children }) => {
     const socketRef = useRef(null);
     const [socketConnected, setSocketConnected] = useState(false);
     const [serverStatus, setServerStatus] = useState('online');
-    const [settings, setSettings] = useState({
-        restaurantName: 'admin',
-        address: '',
-        currency: 'INR',
-        currencySymbol: '₹',
-        sgst: 0,
-        cgst: 0,
-        gstNumber: '',
-        dashboardView: 'all',
-        menuView: 'grid',
-        mobileMenuView: 'grid',
-        dineInEnabled: true,
-        takeawayEnabled: true,
-        tableMapEnabled: true,
-        waiterServiceEnabled: true,
-        enforceMenuView: false,
-        cashierOfferEnabled: false,
-        cashierOfferDiscount: 0,
-        cashierOfferLabel: '',
-        cashierQrUploadEnabled: true,
+    const [settings, setSettings] = useState(() => {
+        let cachedSoundConfig = {
+            kitchenEnabled: true,
+            kitchenVolume: 0.8,
+            kitchenSound: 'classic',
+            waiterEnabled: true,
+            waiterVolume: 0.6,
+            waiterSound: 'ting',
+        };
+        try {
+            const raw = localStorage.getItem('pos_sound_config');
+            if (raw) cachedSoundConfig = { ...cachedSoundConfig, ...JSON.parse(raw) };
+        } catch {}
+        return {
+            restaurantName: 'admin',
+            address: '',
+            currency: 'INR',
+            currencySymbol: '₹',
+            sgst: 0,
+            cgst: 0,
+            gstNumber: '',
+            dashboardView: 'all',
+            menuView: 'grid',
+            mobileMenuView: 'grid',
+            dineInEnabled: true,
+            takeawayEnabled: true,
+            tableMapEnabled: true,
+            waiterServiceEnabled: true,
+            enforceMenuView: false,
+            cashierOfferEnabled: false,
+            cashierOfferDiscount: 0,
+            cashierOfferLabel: '',
+            cashierQrUploadEnabled: true,
+            soundConfig: cachedSoundConfig,
+        };
     });
 
     // ── Socket init (joins restaurant-specific + role-specific rooms) ──────────
@@ -145,14 +160,17 @@ export const AuthProvider = ({ children }) => {
         const attempt = async () => {
             const res = await api.get('/settings', {
                 params: { refresh: 'true', _t: Date.now() },
-                headers: { 'x-refresh': 'true' },
             });
-            setSettings(res.data);
+            let mergedData = res.data;
             try {
-                if (res.data?.soundConfig) {
-                    localStorage.setItem('pos_sound_config', JSON.stringify(res.data.soundConfig));
-                }
+                const localRaw = localStorage.getItem('pos_sound_config');
+                const localSc = localRaw ? JSON.parse(localRaw) : {};
+                const serverSc = res.data?.soundConfig || {};
+                const mergedSc = { ...localSc, ...serverSc };
+                mergedData = { ...res.data, soundConfig: mergedSc };
+                localStorage.setItem('pos_sound_config', JSON.stringify(mergedSc));
             } catch { }
+            setSettings(mergedData);
             setServerStatus('online');
         };
         try {

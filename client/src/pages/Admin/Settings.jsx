@@ -182,7 +182,7 @@ const Settings = () => {
         cashierOfferDiscount: 0,
         cashierQrUploadEnabled: true,
         kotPrintEnabled: true,
-        soundConfig: { kitchenEnabled: true, kitchenVolume: 0.8, kitchenSound: 'temple', waiterEnabled: true, waiterVolume: 0.6, waiterSound: 'ting' },
+        soundConfig: { kitchenEnabled: true, kitchenVolume: 0.8, kitchenSound: 'chime', waiterEnabled: true, waiterVolume: 0.6, waiterSound: 'ting' },
     });
     const [passwordData, setPasswordData] = useState({ role: 'admin', newPassword: '', confirmPassword: '' });
     const [qrUrls, setQrUrls] = useState({ standardQrUrl: null, secondaryQrUrl: null });
@@ -228,11 +228,12 @@ const Settings = () => {
                 soundConfig: {
                     kitchenEnabled: true,
                     kitchenVolume: 0.8,
-                    kitchenSound: 'temple',
+                    kitchenSound: 'chime',
                     waiterEnabled: true,
                     waiterVolume: 0.6,
                     waiterSound: 'ting',
                     ...(settings.soundConfig || {}),
+                    ...(settings.soundConfig?.kitchenSound === 'temple' ? { kitchenSound: 'chime' } : {}),
                 },
             });
             if (settings._id) setInitialized(true);
@@ -272,6 +273,7 @@ const Settings = () => {
         if (navigator.onLine && user?.token) {
             try {
                 await api.put('/api/settings', { soundConfig: nextSoundConfig }, { headers: { Authorization: `Bearer ${user.token}` } });
+                await saveSetting('generalConfig', nextConfig);
                 if (fetchSettings) await fetchSettings();
             } catch {}
         }
@@ -622,7 +624,7 @@ const Settings = () => {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold text-[var(--theme-text-main)]">Kitchen Bell</p>
-                                    <p className="text-xs text-[var(--theme-text-muted)]">Temple bell plays on new orders — Kitchen page only</p>
+                                    <p className="text-xs text-[var(--theme-text-muted)]">Selected sound plays on new orders — Kitchen page only</p>
                                 </div>
                             </div>
                             <button type="button" onClick={() => setGeneralConfig(p => ({ ...p, soundConfig: { ...p.soundConfig, kitchenEnabled: !p.soundConfig.kitchenEnabled } }))}>
@@ -646,7 +648,7 @@ const Settings = () => {
                                     </span>
                                 </div>
                                 <select
-                                    value={generalConfig.soundConfig.kitchenSound || 'temple'}
+                                    value={generalConfig.soundConfig.kitchenSound && generalConfig.soundConfig.kitchenSound !== 'temple' ? generalConfig.soundConfig.kitchenSound : 'chime'}
                                     onChange={e => updateSoundField({ kitchenSound: e.target.value })}
                                     className={inputCls}
                                 >
@@ -656,7 +658,7 @@ const Settings = () => {
                                 </select>
                                 <button
                                     type="button"
-                                    onClick={() => playKitchenSound(generalConfig.soundConfig.kitchenSound || 'temple', generalConfig.soundConfig.kitchenVolume)}
+                                    onClick={() => playKitchenSound(generalConfig.soundConfig.kitchenSound && generalConfig.soundConfig.kitchenSound !== 'temple' ? generalConfig.soundConfig.kitchenSound : 'chime', generalConfig.soundConfig.kitchenVolume)}
                                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-500 text-xs font-semibold transition-all active:scale-95"
                                 >
                                     <Play size={12} />

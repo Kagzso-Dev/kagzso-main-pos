@@ -36,7 +36,7 @@ const fmt = (row) => row ? {
     soundConfig: {
         kitchenEnabled: true,
         kitchenVolume: 0.8,
-        kitchenSound: 'temple',
+        kitchenSound: 'chime',
         waiterEnabled: true,
         waiterVolume: 0.6,
         waiterSound: 'ting',

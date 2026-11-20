@@ -32,21 +32,14 @@ export const NotificationProvider = ({ children }) => {
     // ─── Sound alert (follows Admin Sound & Alert Settings) ──────────────────
     const playSound = useCallback((notification) => {
         try {
-            const sc = settingsRef.current?.soundConfig;
-            const role = user?.role;
-            if (role === 'kitchen' || notification?.roleTarget === 'kitchen') {
-                // Kitchen/Dashboard.jsx already plays playKitchenSound on new-order / order-updated
-                if (window.location.pathname.startsWith('/kitchen')) return;
-                if (sc?.kitchenEnabled !== false) {
-                    playKitchenSound(sc?.kitchenSound, sc?.kitchenVolume ?? 0.8);
-                }
+            // Order lifecycle sounds are played directly by Kitchen/Dashboard and Waiter/Dashboard
+            if (['NEW_ORDER', 'ORDER_UPDATED', 'ORDER_READY', 'PAYMENT_SUCCESS'].includes(notification?.type)) {
                 return;
             }
-            if (role === 'waiter' || notification?.roleTarget === 'waiter') {
-                // Waiter/Dashboard.jsx plays playWaiterSound after voice announcement on /waiter
-                if (window.location.pathname.startsWith('/waiter')) return;
-                if (sc?.waiterEnabled !== false) {
-                    playWaiterSound(sc?.waiterSound, sc?.waiterVolume ?? 0.6);
+            const sc = settingsRef.current?.soundConfig;
+            if (user?.role === 'kitchen') {
+                if (sc?.kitchenEnabled !== false) {
+                    playKitchenSound(sc?.kitchenSound, sc?.kitchenVolume ?? 0.8);
                 }
                 return;
             }

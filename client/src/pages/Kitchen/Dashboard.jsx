@@ -477,10 +477,11 @@ const KitchenDashboard = ({ readOnly = false }) => {
     }, [orders]);
 
     const playBell = useCallback(() => {
+        if (readOnly) return () => {};
         if (settingsRef.current?.soundConfig?.kitchenEnabled === false) return () => {};
         playKitchenSound(settingsRef.current?.soundConfig?.kitchenSound, settingsRef.current?.soundConfig?.kitchenVolume ?? 0.8);
         return () => {};
-    }, []);
+    }, [readOnly]);
 
     useEffect(() => {
         if (loading || !orders.length) return;
@@ -578,6 +579,7 @@ const KitchenDashboard = ({ readOnly = false }) => {
 
         if (socket) {
             const onNewOrder = (order) => {
+                if (knownOrderIds.current) knownOrderIds.current.add(order._id);
                 setOrders(prev => {
                     if (prev.find(o => o._id === order._id)) return prev;
                     return [order, ...prev];

@@ -99,15 +99,14 @@ export const playTempleBellSound = (times = 1, volume = 1) => {
 
 // ── Sound catalogs for Admin Settings ─────────────────────────────────────────
 export const KITCHEN_SOUNDS = [
-    { id: 'temple',  value: 'temple',  label: 'Temple Bell (Default)' },
-    { id: 'classic', value: 'classic', label: 'Classic Double Bell' },
     { id: 'chime',   value: 'chime',   label: 'Two-Tone Kitchen Chime' },
+    { id: 'classic', value: 'classic', label: 'Classic Double Bell' },
     { id: 'ding',    value: 'ding',    label: 'Service Counter Ding' },
     { id: 'buzzer',  value: 'buzzer',  label: 'Rapid Alert Beep' },
 ];
 
 export const WAITER_SOUNDS = [
-    { id: 'ting',        value: 'ting',        label: 'Classic Ting (Default)' },
+    { id: 'ting',        value: 'ting',        label: 'Classic Ting' },
     { id: 'double-ting', value: 'double-ting', label: 'Double Ting' },
     { id: 'chime',       value: 'chime',       label: 'Soft Two-Note Chime' },
     { id: 'bell',        value: 'bell',        label: 'Service Bell' },
@@ -115,9 +114,18 @@ export const WAITER_SOUNDS = [
 ];
 
 // ── Configurable Kitchen Sound Player ─────────────────────────────────────────
-export const playKitchenSound = (type = 'temple', volume = 0.8) => {
+export const playKitchenSound = (type, volume = 0.8) => {
+    let resolvedType = type;
+    if (!resolvedType || resolvedType === 'temple') {
+        try {
+            const cached = JSON.parse(localStorage.getItem('pos_sound_config') || 'null');
+            if (cached?.kitchenSound && cached.kitchenSound !== 'temple') {
+                resolvedType = cached.kitchenSound;
+            }
+        } catch {}
+    }
     const vol = Math.max(0, Math.min(1, volume ?? 0.8));
-    switch (type) {
+    switch (resolvedType) {
         case 'classic':
             playBellSound(2, vol);
             break;
@@ -198,17 +206,50 @@ export const playKitchenSound = (type = 'temple', volume = 0.8) => {
                 });
             } catch (e) {}
             break;
-        case 'temple':
         default:
-            playTempleBellSound(2, vol);
+            // Default to Two-Tone Kitchen Chime if no valid type is stored yet (never Temple Bell)
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const resume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
+                resume.then(() => {
+                    const notes = [
+                        { freq: 659.25, start: 0,    dur: 0.45 },
+                        { freq: 523.25, start: 0.35, dur: 0.75 },
+                        { freq: 659.25, start: 1.25, dur: 0.45 },
+                        { freq: 523.25, start: 1.60, dur: 0.75 },
+                    ];
+                    notes.forEach(({ freq, start, dur }) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.type = 'triangle';
+                        const t0 = ctx.currentTime + start;
+                        osc.frequency.setValueAtTime(freq, t0);
+                        gain.gain.setValueAtTime(0.0001, t0);
+                        gain.gain.linearRampToValueAtTime(0.75 * vol, t0 + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                        osc.start(t0);
+                        osc.stop(t0 + dur + 0.05);
+                    });
+                    setTimeout(() => ctx.close(), 2600);
+                });
+            } catch (e) {}
             break;
     }
 };
 
 // ── Configurable Waiter Sound Player ──────────────────────────────────────────
-export const playWaiterSound = (type = 'ting', volume = 0.6) => {
+export const playWaiterSound = (type, volume = 0.6) => {
+    let resolvedType = type;
+    if (!resolvedType) {
+        try {
+            const cached = JSON.parse(localStorage.getItem('pos_sound_config') || 'null');
+            if (cached?.waiterSound) resolvedType = cached.waiterSound;
+        } catch {}
+    }
     const vol = Math.max(0, Math.min(1, volume ?? 0.6));
-    switch (type) {
+    switch (resolvedType) {
         case 'double-ting':
             playTingSound(vol);
             setTimeout(() => playTingSound(vol), 180);

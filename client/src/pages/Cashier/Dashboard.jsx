@@ -8,6 +8,7 @@ const logoImg = '/logo.png';
 import PaymentModal from '../../components/PaymentModal';
 import CancelOrderModal from '../../components/CancelOrderModal';
 import StatusBadge from '../../components/StatusBadge';
+import { playWaiterSound } from '../../utils/bellSound';
 import { tokenColors } from '../../utils/tokenColors';
 import { printBill } from '../../components/BillPrint';
 import {
@@ -428,7 +429,9 @@ const CashierDashboard = () => {
             
             const msg = new SpeechSynthesisUtterance(`Payment ready, ${identifier}`);
             msg.onend = () => {
-                bellRef.current.play().catch(e => console.log('Audio play failed:', e));
+                if (settings?.soundConfig?.waiterEnabled !== false) {
+                    playWaiterSound(settings?.soundConfig?.waiterSound, settings?.soundConfig?.waiterVolume ?? 0.6);
+                }
             };
             window.speechSynthesis.speak(msg);
         });
