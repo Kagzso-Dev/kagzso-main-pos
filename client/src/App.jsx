@@ -24,6 +24,7 @@ const AdminAnalytics = lazy(() => import('./pages/Admin/Analytics'));
 const AdminNotifications = lazy(() => import('./pages/Admin/Notifications'));
 const KitchenDashboard = lazy(() => import('./pages/Kitchen/Dashboard'));
 const CashierDashboard = lazy(() => import('./pages/Cashier/Dashboard'));
+const CashierOrderView = lazy(() => import('./pages/Cashier/OrderView'));
 const WorkingProcess = lazy(() => import('./pages/Cashier/WorkingProcess'));
 const WaiterDashboard = lazy(() => import('./pages/Waiter/Dashboard'));
 const DineIn = lazy(() => import('./pages/Waiter/DineIn'));
@@ -130,8 +131,10 @@ function App() {
               {/* Cashier Routes */}
               <Route element={<CashierRoute />}>
                 <Route path="/cashier" element={<LiveGuard><CashierDashboard /></LiveGuard>} />
+                <Route path="/cashier/orders" element={<LiveGuard><CashierOrderView /></LiveGuard>} />
+                <Route path="/cashier/kitchen" element={<LiveGuard><KitchenDashboard /></LiveGuard>} />
                 <Route path="/cashier/working-process" element={<LiveGuard><WorkingProcess /></LiveGuard>} />
-                <Route path="/cashier/history" element={<LiveGuard><CashierDashboard /></LiveGuard>} />
+                <Route path="/cashier/history" element={<LiveGuard><CashierOrderView /></LiveGuard>} />
               </Route>
 
               {/* Waiter Routes */}

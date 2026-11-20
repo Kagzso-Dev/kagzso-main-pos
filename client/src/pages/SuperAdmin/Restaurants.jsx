@@ -872,27 +872,29 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                             {uploadStatus === 'validating' ? 'Checking duplicates…' : uploadStatus === 'uploading' ? 'Uploading…' : 'Upload Menu (Excel)'}
                         </button>
 
-                        {/* Upload result feedback */}
-                                    <div className={`flex flex-col gap-1 p-2.5 rounded-lg text-xs font-medium border ${uploadStatus.ok
-                                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                            : 'bg-red-500/10 border-red-500/20 text-red-400'
-                                        }`}>
-                                        <div className="flex items-center gap-2">
-                                            {uploadStatus.ok ? <CheckCircle2 size={13} className="shrink-0" /> : <XCircle size={13} className="shrink-0" />}
-                                            <span>{uploadStatus.msg}</span>
-                                        </div>
-                                        {uploadStatus.invalidRows && uploadStatus.invalidRows.length > 0 && (
-                                            <div className="mt-1 pt-1 border-t border-black/10 dark:border-white/10 space-y-0.5 max-h-24 overflow-y-auto">
-                                                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--theme-text-muted)]">Invalid Rows:</p>
-                                                {uploadStatus.invalidRows.map((inv, i) => (
-                                                    <p key={i} className="text-[10px] opacity-80">
-                                                        Row {inv.row}: {inv.name ? `"${inv.name}" — ` : ''}{inv.reason}
-                                                    </p>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                    {/* Upload result feedback */}
+                    {uploadStatus && uploadStatus !== 'uploading' && uploadStatus !== 'validating' && (
+                        <div className={`flex flex-col gap-1 p-2.5 rounded-lg text-xs font-medium border ${
+                            uploadStatus.ok
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                : 'bg-red-500/10 border-red-500/20 text-red-400'
+                        }`}>
+                            <div className="flex items-center gap-2">
+                                {uploadStatus.ok ? <CheckCircle2 size={13} className="shrink-0" /> : <XCircle size={13} className="shrink-0" />}
+                                <span>{uploadStatus.msg}</span>
+                            </div>
+                            {uploadStatus.invalidRows && uploadStatus.invalidRows.length > 0 && (
+                                <div className="mt-1 pt-1 border-t border-black/10 dark:border-white/10 space-y-0.5 max-h-24 overflow-y-auto">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--theme-text-muted)]">Invalid Rows:</p>
+                                    {uploadStatus.invalidRows.map((inv, i) => (
+                                        <p key={i} className="text-[10px] opacity-80">
+                                            Row {inv.row}: {inv.name ? `"${inv.name}" — ` : ''}{inv.reason}
+                                        </p>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Restore from Backup Excel */}
                     <button

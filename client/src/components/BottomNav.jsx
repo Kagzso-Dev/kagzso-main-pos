@@ -36,8 +36,8 @@ const BottomNav = memo(() => {
         ];
         if (user.role === 'cashier') return [
             { to: '/cashier', icon: Monitor, label: 'POS' },
-            { to: '/cashier/working-process', icon: ClipboardList, label: 'Orders' },
-            { to: '/waiter', icon: Grid, label: 'Tokens' },
+            { to: '/cashier/orders', icon: ClipboardList, label: 'Orders' },
+            { to: '/cashier/kitchen', icon: ChefHat, label: 'Kitchen' },
         ];
         if (user.role === 'waiter') return [
             { to: '/waiter', icon: LayoutDashboard, label: 'Dashboard' },

@@ -220,8 +220,8 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose, tenantTheme, se
                         {user.role === 'cashier' && (
                             <>
                                 <NavItem to="/cashier" icon={Monitor} label="Cashier Point" color="text-green-400" />
-                                <NavItem to="/waiter" icon={Armchair} label="Order View" color="text-yellow-400" />
-                                <NavItem to="/kitchen" icon={ChefHat} label="Kitchen View" color="text-orange-400" />
+                                <NavItem to="/cashier/orders" icon={Armchair} label="Order View" color="text-yellow-400" />
+                                <NavItem to="/cashier/kitchen" icon={ChefHat} label="Kitchen View" color="text-orange-400" />
                             </>
                         )}
 
