@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { LayoutDashboard, History, Loader2 } from 'lucide-react';
 
 const WaiterDashboard = lazy(() => import('../Waiter/Dashboard'));
-const OrderHistoryView = lazy(() => import('../../components/OrderHistoryView'));
+const CashierOrderHistory = lazy(() => import('./CashierOrderHistory'));
 
 /**
  * Cashier OrderView:
@@ -68,7 +68,7 @@ const OrderView = () => {
                     {activeTab === 'waiter' ? (
                         <WaiterDashboard />
                     ) : (
-                        <OrderHistoryView readOnly={false} allowCancel={false} />
+                        <CashierOrderHistory />
                     )}
                 </Suspense>
             </div>
