@@ -6,7 +6,7 @@ import { saveSetting } from '../../db/db';
 import {
     Save, Lock, CheckCircle2, AlertCircle,
     QrCode, Upload, Camera, Loader2, Eye, EyeOff,
-    LayoutGrid, Grid, List, Palette, Building2, Shield, Grid2X2,
+    LayoutGrid, Grid, List, Palette, Building2, Shield,
     Tag, ToggleLeft, ToggleRight, Printer, ChefHat, Volume2, BellRing, Play
 } from 'lucide-react';
 import { playTempleBellSound, playTingSound } from '../../utils/bellSound';
@@ -517,7 +517,7 @@ const Settings = () => {
                             { id: 'one', icon: List, label: 'Single' },
                             { id: 'two', icon: Grid, label: 'Dual' },
                             { id: 'all', icon: LayoutGrid, label: 'Standard' },
-                            { id: 'prod', icon: Grid2X2, label: 'Token Mode' },
+                            { id: 'prod', icon: LayoutGrid, label: 'Token Mode' },
                         ].map(opt => (
                             <button key={opt.id} type="button"
                                 onClick={() => setGeneralConfig({ ...generalConfig, dashboardView: opt.id })}
@@ -692,7 +692,7 @@ const Settings = () => {
                     <div className="grid grid-cols-3 gap-2 p-1.5 bg-[var(--theme-bg-dark)] border border-[var(--theme-border)] rounded-xl">
                         {[
                             { id: 'grid', icon: LayoutGrid, label: 'Standard' },
-                            { id: 'compact', icon: Grid2X2, label: 'Compact' },
+                            { id: 'compact', icon: LayoutGrid, label: 'Compact' },
                             { id: 'list', icon: List, label: 'List View' },
                         ].map(opt => (
                             <button key={opt.id} type="button"
@@ -730,7 +730,7 @@ const Settings = () => {
                         <div className="grid grid-cols-3 gap-2 p-1.5 bg-[var(--theme-bg-dark)] border border-[var(--theme-border)] rounded-xl">
                             {[
                                 { id: 'grid', icon: LayoutGrid, label: 'Standard' },
-                                { id: 'compact', icon: Grid2X2, label: 'Compact' },
+                                { id: 'compact', icon: LayoutGrid, label: 'Compact' },
                                 { id: 'list', icon: List, label: 'List View' },
                             ].map(opt => (
                                 <button key={opt.id} type="button"

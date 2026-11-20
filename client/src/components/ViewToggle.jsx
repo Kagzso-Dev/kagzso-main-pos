@@ -1,4 +1,4 @@
-import { LayoutGrid, List, Grid2X2 } from 'lucide-react';
+import { LayoutGrid, List } from 'lucide-react';
 
 /**
  * Enhanced ViewToggle
@@ -15,14 +15,14 @@ const ViewToggle = ({ viewMode, setViewMode }) => {
     return (
         <div className="relative flex items-center bg-[var(--theme-bg-dark)] p-1 rounded-2xl shadow-inner border border-[var(--theme-border)] flex-shrink-0 h-10 w-[100px] sm:w-[110px]">
             {/* Sliding Background */}
-            <div 
+            <div
                 className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-orange-500 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-md shadow-orange-500/30 active:scale-95"
-                style={{ 
+                style={{
                     left: `${(activeIdx * 50) + (activeIdx === 0 ? 3 : 1)}%`,
                     width: 'calc(50% - 6px)'
                 }}
             />
-            
+
             {modes.map(mode => {
                 const Icon = mode.icon;
                 const active = viewMode === mode.id;

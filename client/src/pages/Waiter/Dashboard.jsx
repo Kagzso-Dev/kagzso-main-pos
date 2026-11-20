@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api';
 import { queueAction } from '../../utils/syncEngine';
-import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, Grid2x2 } from 'lucide-react';
+import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, LayoutGrid } from 'lucide-react';
 import TableGrid from '../../components/TableGrid';
 import { printBill } from '../../components/BillPrint';
 import { playTingSound } from '../../utils/bellSound';
@@ -656,7 +656,7 @@ const WaiterDashboard = () => {
 
                             <button onClick={() => setIsProductionMode(!isProductionMode)} title={isProductionMode ? 'Detailed Grid view' : 'Token view'}
                                 className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${isProductionMode ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-[var(--theme-bg-dark)] border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)]'}`}>
-                                {isProductionMode ? <Grid2x2 size={16} strokeWidth={2.5} /> : <Grid size={16} strokeWidth={2.5} />}
+                                {isProductionMode ? <LayoutGrid size={16} strokeWidth={2.5} /> : <Grid size={16} strokeWidth={2.5} />}
                             </button>
 
                             {settings?.tableMapEnabled !== false && (
