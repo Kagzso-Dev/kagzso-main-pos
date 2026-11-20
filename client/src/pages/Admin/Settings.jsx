@@ -9,7 +9,7 @@ import {
     LayoutGrid, Grid, List, Palette, Building2, Shield,
     Tag, ToggleLeft, ToggleRight, Printer, ChefHat, Volume2, BellRing, Play
 } from 'lucide-react';
-import { playTempleBellSound, playTingSound } from '../../utils/bellSound';
+import { playKitchenSound, playWaiterSound, KITCHEN_SOUNDS, WAITER_SOUNDS } from '../../utils/bellSound';
 
 /* ── QR Upload Card ────────────────────────────────────────────────────────── */
 const QrCard = ({ label, currentUrl, type, token, onUploaded, isSecondary }) => {
@@ -182,7 +182,7 @@ const Settings = () => {
         cashierOfferDiscount: 0,
         cashierQrUploadEnabled: true,
         kotPrintEnabled: true,
-        soundConfig: { kitchenEnabled: true, kitchenVolume: 0.8, waiterEnabled: true, waiterVolume: 0.6 },
+        soundConfig: { kitchenEnabled: true, kitchenVolume: 0.8, kitchenSound: 'temple', waiterEnabled: true, waiterVolume: 0.6, waiterSound: 'ting' },
     });
     const [passwordData, setPasswordData] = useState({ role: 'admin', newPassword: '', confirmPassword: '' });
     const [qrUrls, setQrUrls] = useState({ standardQrUrl: null, secondaryQrUrl: null });
@@ -224,7 +224,15 @@ const Settings = () => {
                 cashierOfferDiscount: settings.cashierOfferDiscount || 0,
                 cashierQrUploadEnabled: settings.cashierQrUploadEnabled !== false,
                 kotPrintEnabled: settings.kotPrintEnabled !== false,
-                soundConfig: settings.soundConfig || { kitchenEnabled: true, kitchenVolume: 0.8, waiterEnabled: true, waiterVolume: 0.6 },
+                soundConfig: {
+                    kitchenEnabled: true,
+                    kitchenVolume: 0.8,
+                    kitchenSound: 'temple',
+                    waiterEnabled: true,
+                    waiterVolume: 0.6,
+                    waiterSound: 'ting',
+                    ...(settings.soundConfig || {}),
+                },
             });
         }
     }, [settings]);
@@ -617,9 +625,18 @@ const Settings = () => {
                                         {Math.round(generalConfig.soundConfig.kitchenVolume * 100)}%
                                     </span>
                                 </div>
+                                <select
+                                    value={generalConfig.soundConfig.kitchenSound || 'temple'}
+                                    onChange={e => setGeneralConfig(p => ({ ...p, soundConfig: { ...p.soundConfig, kitchenSound: e.target.value } }))}
+                                    className={inputCls}
+                                >
+                                    {KITCHEN_SOUNDS.map(s => (
+                                        <option key={s.value ?? s.id} value={s.value ?? s.id}>{s.label}</option>
+                                    ))}
+                                </select>
                                 <button
                                     type="button"
-                                    onClick={() => playTempleBellSound(1, generalConfig.soundConfig.kitchenVolume)}
+                                    onClick={() => playKitchenSound(generalConfig.soundConfig.kitchenSound || 'temple', generalConfig.soundConfig.kitchenVolume)}
                                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-500 text-xs font-semibold transition-all active:scale-95"
                                 >
                                     <Play size={12} />
@@ -661,9 +678,18 @@ const Settings = () => {
                                         {Math.round(generalConfig.soundConfig.waiterVolume * 100)}%
                                     </span>
                                 </div>
+                                <select
+                                    value={generalConfig.soundConfig.waiterSound || 'ting'}
+                                    onChange={e => setGeneralConfig(p => ({ ...p, soundConfig: { ...p.soundConfig, waiterSound: e.target.value } }))}
+                                    className={inputCls}
+                                >
+                                    {WAITER_SOUNDS.map(s => (
+                                        <option key={s.value ?? s.id} value={s.value ?? s.id}>{s.label}</option>
+                                    ))}
+                                </select>
                                 <button
                                     type="button"
-                                    onClick={() => playTingSound(generalConfig.soundConfig.waiterVolume)}
+                                    onClick={() => playWaiterSound(generalConfig.soundConfig.waiterSound || 'ting', generalConfig.soundConfig.waiterVolume)}
                                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-500 text-xs font-semibold transition-all active:scale-95"
                                 >
                                     <Play size={12} />

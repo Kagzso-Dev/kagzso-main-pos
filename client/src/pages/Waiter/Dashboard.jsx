@@ -7,7 +7,7 @@ import { queueAction } from '../../utils/syncEngine';
 import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, LayoutGrid } from 'lucide-react';
 import TableGrid from '../../components/TableGrid';
 import { printBill } from '../../components/BillPrint';
-import { playTingSound } from '../../utils/bellSound';
+import { playWaiterSound } from '../../utils/bellSound';
 import CancelOrderModal from '../../components/CancelOrderModal';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
 import StatusBadge from '../../components/StatusBadge';
@@ -392,7 +392,7 @@ const WaiterDashboard = () => {
             const msg = new SpeechSynthesisUtterance(`Ready order, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
             msg.onend = () => {
                 if (settings?.soundConfig?.waiterEnabled !== false)
-                    playTingSound(settings?.soundConfig?.waiterVolume ?? 0.6);
+                    playWaiterSound(settings?.soundConfig?.waiterSound, settings?.soundConfig?.waiterVolume ?? 0.6);
             };
             window.speechSynthesis.speak(msg);
         });
@@ -411,7 +411,7 @@ const WaiterDashboard = () => {
             const msg = new SpeechSynthesisUtterance(`Payment ready, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
             msg.onend = () => {
                 if (settings?.soundConfig?.waiterEnabled !== false)
-                    playTingSound(settings?.soundConfig?.waiterVolume ?? 0.6);
+                    playWaiterSound(settings?.soundConfig?.waiterSound, settings?.soundConfig?.waiterVolume ?? 0.6);
             };
             window.speechSynthesis.speak(msg);
         });

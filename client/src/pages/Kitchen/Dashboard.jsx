@@ -9,7 +9,7 @@ import CancelOrderModal from '../../components/CancelOrderModal';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
 import StatusBadge from '../../components/StatusBadge';
 import { tokenColors } from '../../utils/tokenColors';
-import { playTempleBellSound } from '../../utils/bellSound';
+import { playKitchenSound } from '../../utils/bellSound';
 
 
 /* ── Time since order ────────────────────────────────────────────────────── */
@@ -478,7 +478,7 @@ const KitchenDashboard = ({ readOnly = false }) => {
 
     const playBell = useCallback(() => {
         if (settingsRef.current?.soundConfig?.kitchenEnabled === false) return () => {};
-        playTempleBellSound(2, settingsRef.current?.soundConfig?.kitchenVolume ?? 0.8);
+        playKitchenSound(settingsRef.current?.soundConfig?.kitchenSound, settingsRef.current?.soundConfig?.kitchenVolume ?? 0.8);
         return () => {};
     }, []);
 
@@ -556,7 +556,7 @@ const KitchenDashboard = ({ readOnly = false }) => {
                     !(o.orderType === 'takeaway' && s?.takeawayEnabled === false)
                 );
                 if (hasNew && s?.soundConfig?.kitchenEnabled !== false && !readOnly)
-                    playTempleBellSound(2, s?.soundConfig?.kitchenVolume ?? 0.8);
+                    playKitchenSound(s?.soundConfig?.kitchenSound, s?.soundConfig?.kitchenVolume ?? 0.8);
                 knownOrderIds.current = new Set(incoming.map(o => o._id));
             }
             setOrders(incoming);
