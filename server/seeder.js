@@ -187,6 +187,7 @@ const createTables = async () => {
             standard_qr_file_id VARCHAR(255),
             secondary_qr_url TEXT,
             secondary_qr_file_id VARCHAR(255),
+            backup_schedule_config JSON,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (tenant_id) REFERENCES restaurants(id) ON DELETE CASCADE
         )`,

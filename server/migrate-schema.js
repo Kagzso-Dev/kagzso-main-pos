@@ -130,6 +130,7 @@ async function migrate() {
             { name: 'order_statuses_config', type: 'JSON' },
             { name: 'kot_print_enabled', type: 'BOOLEAN DEFAULT 1' },
             { name: 'sound_config', type: 'JSON' },
+            { name: 'backup_schedule_config', type: 'JSON' },
         ];
 
         for (const col of settingsColsToAdd) {
