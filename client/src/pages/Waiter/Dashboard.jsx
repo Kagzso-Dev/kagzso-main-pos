@@ -369,6 +369,8 @@ const WaiterDashboard = () => {
     // ── Voice Announcements ──
     const announcedReady = useRef(new Set());
     const announcedPayment = useRef(new Set());
+    const settingsRef = useRef(settings);
+    useEffect(() => { settingsRef.current = settings; }, [settings]);
     useEffect(() => {
         if (!orders.length) return;
 
@@ -390,10 +392,13 @@ const WaiterDashboard = () => {
                 ? `table number ${o.tableId?.number || o.tableId || '?'}`
                 : `token number ${o.tokenNumber || '?'}`;
             const msg = new SpeechSynthesisUtterance(`Ready order, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
-            msg.onend = () => {
-                if (settings?.soundConfig?.waiterEnabled !== false)
-                    playWaiterSound(settings?.soundConfig?.waiterSound, settings?.soundConfig?.waiterVolume ?? 0.6);
+            const playAlert = () => {
+                const sc = settingsRef.current?.soundConfig;
+                if (sc?.waiterEnabled !== false)
+                    playWaiterSound(sc?.waiterSound, sc?.waiterVolume ?? 0.6);
             };
+            msg.onend = playAlert;
+            msg.onerror = playAlert;
             window.speechSynthesis.speak(msg);
         });
 
@@ -409,10 +414,13 @@ const WaiterDashboard = () => {
                 ? `table number ${o.tableId?.number || o.tableId || '?'}`
                 : `token number ${o.tokenNumber || '?'}`;
             const msg = new SpeechSynthesisUtterance(`Payment ready, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
-            msg.onend = () => {
-                if (settings?.soundConfig?.waiterEnabled !== false)
-                    playWaiterSound(settings?.soundConfig?.waiterSound, settings?.soundConfig?.waiterVolume ?? 0.6);
+            const playAlert = () => {
+                const sc = settingsRef.current?.soundConfig;
+                if (sc?.waiterEnabled !== false)
+                    playWaiterSound(sc?.waiterSound, sc?.waiterVolume ?? 0.6);
             };
+            msg.onend = playAlert;
+            msg.onerror = playAlert;
             window.speechSynthesis.speak(msg);
         });
     }, [orders, settings?.dineInEnabled, settings?.takeawayEnabled]);

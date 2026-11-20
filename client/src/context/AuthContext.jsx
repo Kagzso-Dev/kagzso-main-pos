@@ -143,8 +143,16 @@ export const AuthProvider = ({ children }) => {
     // ── Fetch settings ────────────────────────────────────────────────────────
     const fetchSettings = useCallback(async () => {
         const attempt = async () => {
-            const res = await api.get('/settings');
+            const res = await api.get('/settings', {
+                params: { refresh: 'true', _t: Date.now() },
+                headers: { 'x-refresh': 'true' },
+            });
             setSettings(res.data);
+            try {
+                if (res.data?.soundConfig) {
+                    localStorage.setItem('pos_sound_config', JSON.stringify(res.data.soundConfig));
+                }
+            } catch { }
             setServerStatus('online');
         };
         try {
@@ -174,7 +182,25 @@ export const AuthProvider = ({ children }) => {
         }
         fetchSettings();
 
+        const onRefresh = () => fetchSettings();
+        const onStorage = (e) => {
+            if (e.key === 'pos_sound_config' && e.newValue) {
+                try {
+                    const parsed = JSON.parse(e.newValue);
+                    setSettings(prev => ({ ...prev, soundConfig: { ...(prev?.soundConfig || {}), ...parsed } }));
+                } catch { }
+            }
+        };
+        window.addEventListener('pos-refresh', onRefresh);
+        window.addEventListener('focus', onRefresh);
+        window.addEventListener('storage', onStorage);
+        const interval = setInterval(fetchSettings, 5000);
+
         return () => {
+            window.removeEventListener('pos-refresh', onRefresh);
+            window.removeEventListener('focus', onRefresh);
+            window.removeEventListener('storage', onStorage);
+            clearInterval(interval);
             if (socketRef.current) {
                 const s = socketRef.current;
                 socketRef.current = null;
@@ -188,6 +214,11 @@ export const AuthProvider = ({ children }) => {
         if (!socket) return;
         const onSettingsUpdated = (updatedSettings) => {
             setSettings(updatedSettings);
+            try {
+                if (updatedSettings?.soundConfig) {
+                    localStorage.setItem('pos_sound_config', JSON.stringify(updatedSettings.soundConfig));
+                }
+            } catch { }
         };
         socket.on('settings-updated', onSettingsUpdated);
         return () => socket.off('settings-updated', onSettingsUpdated);

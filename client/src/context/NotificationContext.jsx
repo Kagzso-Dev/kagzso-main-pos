@@ -1,10 +1,13 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { AuthContext } from './AuthContext';
+import { playKitchenSound, playWaiterSound } from '../utils/bellSound';
 
 export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
-    const { socket, user } = useContext(AuthContext);
+    const { socket, user, settings } = useContext(AuthContext);
+    const settingsRef = useRef(settings);
+    useEffect(() => { settingsRef.current = settings; }, [settings]);
 
     const tenantId    = user?.tenantId ?? null;
     const storageKey  = tenantId ? `notifications_${tenantId}` : 'notifications';
@@ -26,22 +29,32 @@ export const NotificationProvider = ({ children }) => {
         }
     }, [storageKey]);
 
-    // ─── Sound alert (Synthetic Oscillator) ──────────────────────────────────
-    const playSound = useCallback(() => {
+    // ─── Sound alert (follows Admin Sound & Alert Settings) ──────────────────
+    const playSound = useCallback((notification) => {
         try {
-            const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-            const osc  = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.frequency.setValueAtTime(880, ctx.currentTime);
-            osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.2, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.4);
+            const sc = settingsRef.current?.soundConfig;
+            const role = user?.role;
+            if (role === 'kitchen' || notification?.roleTarget === 'kitchen') {
+                // Kitchen/Dashboard.jsx already plays playKitchenSound on new-order / order-updated
+                if (window.location.pathname.startsWith('/kitchen')) return;
+                if (sc?.kitchenEnabled !== false) {
+                    playKitchenSound(sc?.kitchenSound, sc?.kitchenVolume ?? 0.8);
+                }
+                return;
+            }
+            if (role === 'waiter' || notification?.roleTarget === 'waiter') {
+                // Waiter/Dashboard.jsx plays playWaiterSound after voice announcement on /waiter
+                if (window.location.pathname.startsWith('/waiter')) return;
+                if (sc?.waiterEnabled !== false) {
+                    playWaiterSound(sc?.waiterSound, sc?.waiterVolume ?? 0.6);
+                }
+                return;
+            }
+            if (sc?.waiterEnabled !== false) {
+                playWaiterSound(sc?.waiterSound, sc?.waiterVolume ?? 0.6);
+            }
         } catch (e) { /* ignore */ }
-    }, []);
+    }, [user?.role]);
 
     // ─── Persist to localStorage whenever history changes ───────────────────
     useEffect(() => {
@@ -79,7 +92,7 @@ export const NotificationProvider = ({ children }) => {
             setToasts(prev => [...prev, notification].slice(-3));
 
             const soundOn = localStorage.getItem(soundKey) !== 'off';
-            if (soundOn) playSound();
+            if (soundOn) playSound(notification);
 
             setTimeout(() => removeToast(notification._id), 5000);
         };

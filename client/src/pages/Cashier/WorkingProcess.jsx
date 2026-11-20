@@ -4,6 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import api from '../../api';
 const logoImg = '/logo.png';
 import { Printer, ChefHat, List, Grid, RefreshCw, Clock, CheckCircle, Play, Timer, X } from 'lucide-react';
+import { playKitchenSound } from '../../utils/bellSound';
 
 const WorkingProcess = () => {
     const [orders, setOrders] = useState([]);
@@ -76,10 +77,12 @@ const WorkingProcess = () => {
     useEffect(() => {
         if (user?.role !== 'kitchen') return;
         if (orders.length > prevOrdersCount.current) {
-            bellRef.current.play().catch(e => console.log('Audio play failed:', e));
+            if (settings?.soundConfig?.kitchenEnabled !== false) {
+                playKitchenSound(settings?.soundConfig?.kitchenSound, settings?.soundConfig?.kitchenVolume ?? 0.8);
+            }
         }
         prevOrdersCount.current = orders.length;
-    }, [orders, user?.role]);
+    }, [orders, user?.role, settings?.soundConfig]);
 
     const enabledOrders = orders
         .filter(o => settings?.takeawayEnabled !== false || o.orderType !== 'takeaway')

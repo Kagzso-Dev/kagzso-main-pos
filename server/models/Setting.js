@@ -33,9 +33,17 @@ const fmt = (row) => row ? {
     cashierOfferDiscount: parseFloat(row.cashier_offer_discount || 0),
     cashierQrUploadEnabled: row.cashier_qr_upload_enabled !== 0,
     kotPrintEnabled:       row.kot_print_enabled !== 0,
-    soundConfig: row.sound_config
-        ? (typeof row.sound_config === 'string' ? JSON.parse(row.sound_config) : row.sound_config)
-        : { kitchenEnabled: true, kitchenVolume: 0.8, waiterEnabled: true, waiterVolume: 0.6 },
+    soundConfig: {
+        kitchenEnabled: true,
+        kitchenVolume: 0.8,
+        kitchenSound: 'temple',
+        waiterEnabled: true,
+        waiterVolume: 0.6,
+        waiterSound: 'ting',
+        ...(row.sound_config
+            ? (typeof row.sound_config === 'string' ? JSON.parse(row.sound_config) : row.sound_config)
+            : {}),
+    },
     orderStatusesConfig: row.order_statuses_config || {
         pending: true, accepted: true, preparing: true,
         ready: true, payment: true, completed: true, cancelled: true,
@@ -79,8 +87,21 @@ const fieldMap = {
     secondaryQrFileId:    'secondary_qr_file_id',
 };
 
+let _soundColChecked = false;
+const ensureSoundConfigCol = async () => {
+    if (_soundColChecked) return;
+    try {
+        const [cols] = await mysql.query('SHOW COLUMNS FROM settings LIKE "sound_config"');
+        if (cols.length === 0) {
+            await mysql.query('ALTER TABLE settings ADD COLUMN sound_config JSON');
+        }
+        _soundColChecked = true;
+    } catch (e) {}
+};
+
 const Setting = {
     async get(tenantId) {
+        await ensureSoundConfigCol();
         const [rows] = tenantId
             ? await mysql.query('SELECT * FROM settings WHERE tenant_id = ? LIMIT 1', [tenantId])
             : await mysql.query('SELECT * FROM settings LIMIT 1');

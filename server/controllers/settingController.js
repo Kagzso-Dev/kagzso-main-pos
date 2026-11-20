@@ -22,7 +22,10 @@ const updateSettings = async (req, res) => {
 
         const io = req.app.get('io');
         if (io) {
-            io.to(`${req.tenantId}:restaurant_main`).emit('settings-updated', settings);
+            if (req.tenantId) {
+                io.to(`${req.tenantId}:restaurant_main`).emit('settings-updated', settings);
+            }
+            io.to('restaurant_main').emit('settings-updated', settings);
         }
 
         res.json(settings);

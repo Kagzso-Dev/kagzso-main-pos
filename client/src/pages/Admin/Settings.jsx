@@ -190,6 +190,7 @@ const Settings = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [msgs, setMsgs] = useState({});
+    const [initialized, setInitialized] = useState(false);
 
     const setMsg = (key, type, text) => {
         setMsgs(p => ({ ...p, [key]: { type, text } }));
@@ -197,7 +198,7 @@ const Settings = () => {
     };
 
     useEffect(() => {
-        if (settings) {
+        if (settings && !initialized) {
             setGeneralConfig({
                 restaurantName: settings.restaurantName || '',
                 address: settings.address || '',
@@ -234,8 +235,9 @@ const Settings = () => {
                     ...(settings.soundConfig || {}),
                 },
             });
+            if (settings._id) setInitialized(true);
         }
-    }, [settings]);
+    }, [settings, initialized]);
 
     // Sync QR URLs from context settings (updates via socket when cashier uploads)
     useEffect(() => {
@@ -260,6 +262,21 @@ const Settings = () => {
         });
     };
 
+    const updateSoundField = async (patch) => {
+        const nextSoundConfig = { ...generalConfig.soundConfig, ...patch };
+        const nextConfig = { ...generalConfig, soundConfig: nextSoundConfig };
+        setGeneralConfig(nextConfig);
+        try {
+            localStorage.setItem('pos_sound_config', JSON.stringify(nextSoundConfig));
+        } catch {}
+        if (navigator.onLine && user?.token) {
+            try {
+                await api.put('/api/settings', { soundConfig: nextSoundConfig }, { headers: { Authorization: `Bearer ${user.token}` } });
+                if (fetchSettings) await fetchSettings();
+            } catch {}
+        }
+    };
+
     const saveConfig = async (e, key = 'general') => {
         if (e) e.preventDefault();
         setLoading(true);
@@ -274,6 +291,9 @@ const Settings = () => {
             }
             await api.put('/api/settings', generalConfig, { headers: { Authorization: `Bearer ${user.token}` } });
             await saveSetting('generalConfig', generalConfig);
+            try {
+                localStorage.setItem('pos_sound_config', JSON.stringify(generalConfig.soundConfig));
+            } catch {}
             if (fetchSettings) await fetchSettings();
             setMsg(key, 'success', 'Saved');
         } catch (err) {
@@ -627,7 +647,7 @@ const Settings = () => {
                                 </div>
                                 <select
                                     value={generalConfig.soundConfig.kitchenSound || 'temple'}
-                                    onChange={e => setGeneralConfig(p => ({ ...p, soundConfig: { ...p.soundConfig, kitchenSound: e.target.value } }))}
+                                    onChange={e => updateSoundField({ kitchenSound: e.target.value })}
                                     className={inputCls}
                                 >
                                     {KITCHEN_SOUNDS.map(s => (
@@ -680,7 +700,7 @@ const Settings = () => {
                                 </div>
                                 <select
                                     value={generalConfig.soundConfig.waiterSound || 'ting'}
-                                    onChange={e => setGeneralConfig(p => ({ ...p, soundConfig: { ...p.soundConfig, waiterSound: e.target.value } }))}
+                                    onChange={e => updateSoundField({ waiterSound: e.target.value })}
                                     className={inputCls}
                                 >
                                     {WAITER_SOUNDS.map(s => (
