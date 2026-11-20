@@ -266,7 +266,6 @@ const CashierDashboard = () => {
     });
     const { user, socket, formatPrice, formatOrderNumber, settings } = useContext(AuthContext);
     const announcedOrders = useRef(new Set());
-    const bellRef = useRef(new Audio('/bell.mp3'));
     const location = useLocation();
     const navigate = useNavigate();
     const isHistoryMode = location.pathname.includes('/history');

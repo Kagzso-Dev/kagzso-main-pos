@@ -471,6 +471,7 @@ const KitchenDashboard = ({ readOnly = false }) => {
     const isFirstLoad = useRef(true);
     const ordersRef = useRef([]);
     const knownOrderIds = useRef(null); // null = not yet seeded (first fetch)
+    const lastBellAtRef = useRef(0);
 
     useEffect(() => {
         ordersRef.current = orders;
@@ -478,8 +479,12 @@ const KitchenDashboard = ({ readOnly = false }) => {
 
     const playBell = useCallback(() => {
         if (readOnly) return () => {};
-        if (settingsRef.current?.soundConfig?.kitchenEnabled === false) return () => {};
-        playKitchenSound(settingsRef.current?.soundConfig?.kitchenSound, settingsRef.current?.soundConfig?.kitchenVolume ?? 0.8);
+        const sc = settingsRef.current?.soundConfig;
+        if (!sc || sc.kitchenEnabled === false) return () => {};
+        const now = Date.now();
+        if (now - lastBellAtRef.current < 1500) return () => {};
+        lastBellAtRef.current = now;
+        playKitchenSound(sc.kitchenSound, sc.kitchenVolume ?? 0.8);
         return () => {};
     }, [readOnly]);
 
@@ -556,9 +561,14 @@ const KitchenDashboard = ({ readOnly = false }) => {
                     !(o.orderType === 'dine-in'  && s?.dineInEnabled  === false) &&
                     !(o.orderType === 'takeaway' && s?.takeawayEnabled === false)
                 );
-                if (hasNew && s?.soundConfig?.kitchenEnabled !== false && !readOnly)
-                    playKitchenSound(s?.soundConfig?.kitchenSound, s?.soundConfig?.kitchenVolume ?? 0.8);
-                knownOrderIds.current = new Set(incoming.map(o => o._id));
+                if (hasNew && s?.soundConfig && s.soundConfig.kitchenEnabled !== false && !readOnly) {
+                    const now = Date.now();
+                    if (now - lastBellAtRef.current >= 1500) {
+                        lastBellAtRef.current = now;
+                        playKitchenSound(s.soundConfig.kitchenSound, s.soundConfig.kitchenVolume ?? 0.8);
+                    }
+                }
+                incoming.forEach(o => knownOrderIds.current.add(o._id));
             }
             setOrders(incoming);
             setLastRefresh(new Date());

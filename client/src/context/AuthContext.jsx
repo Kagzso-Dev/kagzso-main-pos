@@ -41,17 +41,10 @@ export const AuthProvider = ({ children }) => {
     const [socketConnected, setSocketConnected] = useState(false);
     const [serverStatus, setServerStatus] = useState('online');
     const [settings, setSettings] = useState(() => {
-        let cachedSoundConfig = {
-            kitchenEnabled: true,
-            kitchenVolume: 0.8,
-            kitchenSound: 'classic',
-            waiterEnabled: true,
-            waiterVolume: 0.6,
-            waiterSound: 'ting',
-        };
+        let cachedSoundConfig = undefined;
         try {
             const raw = localStorage.getItem('pos_sound_config');
-            if (raw) cachedSoundConfig = { ...cachedSoundConfig, ...JSON.parse(raw) };
+            if (raw) cachedSoundConfig = JSON.parse(raw);
         } catch {}
         return {
             restaurantName: 'admin',
@@ -73,7 +66,7 @@ export const AuthProvider = ({ children }) => {
             cashierOfferDiscount: 0,
             cashierOfferLabel: '',
             cashierQrUploadEnabled: true,
-            soundConfig: cachedSoundConfig,
+            ...(cachedSoundConfig ? { soundConfig: cachedSoundConfig } : {}),
         };
     });
 
