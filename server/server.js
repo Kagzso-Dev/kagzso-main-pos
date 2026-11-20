@@ -113,7 +113,7 @@ const loginLimiter = rateLimit({
 if (process.env.NODE_ENV !== 'development') {
     app.use('/api', apiLimiter);
 }
-app.use('/api/auth/login', loginLimiter);
+//app.use('/api/auth/login', loginLimiter);
 
 // ─── Socket.IO Server ─────────────────────────────────────────────────────────
 const io = new Server(server, {
