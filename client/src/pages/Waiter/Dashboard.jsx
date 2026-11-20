@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api';
 import { queueAction } from '../../utils/syncEngine';
-import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer } from 'lucide-react';
+import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, Grid2x2 } from 'lucide-react';
 import TableGrid from '../../components/TableGrid';
 import { printBill } from '../../components/BillPrint';
 import { playTingSound } from '../../utils/bellSound';
@@ -78,19 +78,21 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings }) =
             ${bgColor} ${borderAccent} ${isReady ? 'animate-pulse' : ''}
         `}>
             {/* ── Header ── */}
-            <div className="px-2 pt-2.5 pb-2 border-b border-black/[0.04]">
-                <div className="flex items-center justify-between gap-1 mb-1">
-                    <h3 className="text-[13px] font-black text-[var(--theme-text-main)] tracking-tight leading-none truncate pr-1">
+            <div className="px-2 sm:px-2.5 pt-2.5 pb-2 border-b border-black/[0.04]">
+                <div className="flex items-center justify-between gap-1 mb-1 min-w-0">
+                    <h3 className="min-w-0 text-[13px] sm:text-sm font-black text-[var(--theme-text-main)] tracking-tight leading-none truncate pr-1">
                         {order.orderType === 'dine-in' ? 'DI' : 'TK'}-{String(order.orderNumber).startsWith('ORD-') ? String(order.orderNumber).replace('ORD-', '') : order.orderNumber}
                     </h3>
                     <div className="flex items-center gap-1 shrink-0">
                         {kotPrintEnabled && (
                             <button
                                 onClick={handlePrint}
-                                className="flex items-center gap-0.5 px-2 h-[22px] bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[9px] font-black rounded-lg transition-all shadow-sm shadow-blue-600/30 uppercase tracking-wide"
+                                title="Print"
+                                aria-label="Print"
+                                className="flex items-center justify-center gap-1 w-10 h-10 lg:w-auto lg:h-7 lg:px-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-black rounded-lg transition-all shadow-sm shadow-blue-600/30 uppercase tracking-wide"
                             >
-                                <Printer size={9} strokeWidth={2.5} />
-                                PRINT
+                                <Printer size={14} strokeWidth={2.5} className="lg:w-3 lg:h-3" />
+                                <span className="hidden lg:inline">PRINT</span>
                             </button>
                         )}
                         <StatusBadge status={order.orderStatus} items={order.items || []} size="xs" />
@@ -98,15 +100,17 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings }) =
                 </div>
 
                 <div className="flex flex-col gap-1 mt-1.5">
-                    <div className="flex items-center justify-between gap-1">
-                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-white/60 border border-black/5 rounded-md text-[9px] font-black text-gray-700 shadow-sm truncate max-w-[50%]">
-                            <Utensils size={8} className="text-orange-500 shrink-0" />
-                            {order.orderType === 'dine-in'
-                                ? `T ${order.tableId?.number || order.tableId || '?'}`
-                                : `TK ${order.tokenNumber || '?'}`}
+                    <div className="flex items-center justify-between gap-1 min-w-0">
+                        <span className="inline-flex items-center gap-0.5 min-w-0 px-1.5 py-0.5 bg-white/60 border border-black/5 rounded-md text-[10px] font-black text-gray-700 shadow-sm max-w-[55%]">
+                            <Utensils size={10} className="text-orange-500 shrink-0" />
+                            <span className="truncate">
+                                {order.orderType === 'dine-in'
+                                    ? `T ${order.tableId?.number || order.tableId || '?'}`
+                                    : `TK ${order.tokenNumber || '?'}`}
+                            </span>
                         </span>
-                        <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold shrink-0 ${urgency ? 'text-red-600 bg-red-100 px-1 py-0.5 rounded-md' : 'text-gray-400'}`}>
-                            <Clock size={8} />{elapsed}
+                        <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold shrink-0 tabular-nums ${urgency ? 'text-red-600 bg-red-100 px-1 py-0.5 rounded-md' : 'text-gray-400'}`}>
+                            <Clock size={10} />{elapsed}
                         </span>
                     </div>
                 </div>
@@ -119,15 +123,15 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings }) =
                     return (
                         <div key={i} className="flex flex-col gap-0.5">
                             <div className="flex items-start gap-1.5">
-                                <div className={`w-4 h-4 rounded flex-shrink-0 flex items-center justify-center text-[9px] font-black ${isCancelled ? 'bg-red-50 text-red-400 border border-red-100' : 'bg-white/5 text-[var(--theme-text-muted)]'}`}>
+                                <div className={`min-w-[1rem] h-4 px-0.5 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-black ${isCancelled ? 'bg-red-50 text-red-400 border border-red-100' : 'bg-white/5 text-[var(--theme-text-muted)]'}`}>
                                     {item.quantity}
                                 </div>
-                                <span className={`flex-1 text-[11px] font-bold leading-tight line-clamp-2 ${isCancelled ? 'text-red-500 line-through' : 'text-[var(--theme-text-main)]'}`}>
+                                <span className={`flex-1 min-w-0 break-words text-[11px] sm:text-xs font-bold leading-tight line-clamp-2 ${isCancelled ? 'text-red-500 line-through' : 'text-[var(--theme-text-main)]'}`}>
                                     {item.name}{item.variant ? ` (${item.variant.name})` : ''}
                                 </span>
                             </div>
                             {isCancelled && item.cancelReason && (
-                                <p className="text-[8px] text-red-400/80 italic pl-5 leading-none">"{item.cancelReason}"</p>
+                                <p className="text-[10px] text-red-400/80 italic pl-5 leading-tight truncate">"{item.cancelReason}"</p>
                             )}
                         </div>
                     );
@@ -137,10 +141,10 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings }) =
             {/* ── Footer ── */}
             <div className="px-2 py-2 border-t border-white/5 bg-white/[0.02] mt-auto">
                 <div className="flex items-center justify-between gap-1">
-                    <span className="text-[8px] font-black text-[var(--theme-text-muted)] uppercase tracking-tighter shrink-0">
+                    <span className="text-[10px] font-black text-[var(--theme-text-muted)] uppercase tracking-tighter shrink-0">
                         {order.orderType === 'dine-in' ? 'DINE' : 'TAKE'}
                     </span>
-                    <span className="text-[11px] font-black text-[var(--theme-text-main)] tabular-nums">
+                    <span className="min-w-0 truncate text-[11px] sm:text-xs font-black text-[var(--theme-text-main)] tabular-nums">
                         {formatPrice(order.finalAmount)}
                     </span>
                 </div>
@@ -236,7 +240,7 @@ const TokenSquare = memo(({ order, onClick, isSelected }) => {
             onClick={onClick}
             style={{ transition: 'transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms ease, ring 200ms ease' }}
             className={`
-                w-full rounded-xl border flex flex-col overflow-hidden group
+                w-full min-w-0 rounded-xl border flex flex-col overflow-hidden group
                 hover:-translate-y-1 hover:shadow-xl active:translate-y-0 active:scale-[0.98]
                 ${isPartiallyReady ? 'bg-amber-50 border-emerald-300 shadow-emerald-100' : `${s.card} ${s.glow}`}
                 ${isReady && !isPartiallyReady ? 'shadow-md shadow-emerald-200' : 'shadow-sm'}
@@ -249,20 +253,20 @@ const TokenSquare = memo(({ order, onClick, isSelected }) => {
             {/* Metric Top Section (Value on Top, Label Below) */}
             <div className="flex flex-col items-center pt-2.5 pb-2">
                 {/* 1. Status Row */}
-                <div className="flex items-center gap-1 mb-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${isPartiallyReady ? 'bg-emerald-500' : s.bar}`} />
-                    <span className={`text-[7px] font-black uppercase tracking-widest ${isPartiallyReady ? 'text-emerald-700' : s.num}`}>
+                <div className="flex items-center gap-1 mb-2 max-w-full px-1">
+                    <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${isPartiallyReady ? 'bg-emerald-500' : s.bar}`} />
+                    <span className={`text-[10px] font-black uppercase tracking-wider truncate ${isPartiallyReady ? 'text-emerald-700' : s.num}`}>
                         {isPartiallyReady ? 'Partial Ready' : order.orderStatus}
                     </span>
                 </div>
 
 
                 {/* 2. Primary Identifier (Table/Token) - FORCED BLACK */}
-                <div className="flex flex-col items-center justify-center">
-                    <span className={`text-2xl font-black leading-none tracking-tighter text-black group-hover:scale-110 transition-transform duration-200`}>
+                <div className="flex flex-col items-center justify-center max-w-full px-1">
+                    <span className={`text-2xl sm:text-3xl font-black leading-none tracking-tighter text-black group-hover:scale-110 transition-transform duration-200 truncate max-w-full`}>
                         {identifier}
                     </span>
-                    <span className="text-[7px] font-black uppercase tracking-[0.2rem] text-black mt-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.15rem] text-black mt-1">
                         {isDine ? 'TABLE' : 'TOKEN'}
                     </span>
                 </div>
@@ -270,40 +274,40 @@ const TokenSquare = memo(({ order, onClick, isSelected }) => {
 
             {/* Middle Section: Financial & Order Info - FORCED BLACK */}
             <div className="grid grid-cols-2 border-t border-black/[0.04] bg-black/[0.01]">
-                <div className="flex flex-col items-center py-1.5 border-r border-black/[0.04]">
-                    <span className="text-[10px] font-black text-black tracking-tight leading-none">
+                <div className="flex flex-col items-center min-w-0 px-1 py-1.5 border-r border-black/[0.04]">
+                    <span className="text-[11px] font-black text-black tracking-tight leading-none truncate max-w-full">
                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(order.finalAmount)}
                     </span>
-                    <span className="text-[6px] font-black text-black uppercase tracking-widest mt-0.5">AMOUNT</span>
+                    <span className="text-[10px] font-black text-black uppercase tracking-tight mt-0.5">AMOUNT</span>
                 </div>
-                <div className="flex flex-col items-center py-1.5">
-                    <span className="text-[10px] font-black text-black tracking-tight leading-none">
+                <div className="flex flex-col items-center min-w-0 px-1 py-1.5">
+                    <span className="text-[11px] font-black text-black tracking-tight leading-none truncate max-w-full">
                         {order.orderType === 'dine-in' ? 'DI' : 'TK'}-{String(order.orderNumber).startsWith('ORD-') ? String(order.orderNumber).replace('ORD-', '') : order.orderNumber}
                     </span>
-                    <span className="text-[6px] font-black text-black uppercase tracking-widest mt-0.5">{order.orderType === 'dine-in' ? 'DINE IN' : 'TAKEAWAY'}</span>
+                    <span className="text-[10px] font-black text-black uppercase tracking-tight mt-0.5 truncate max-w-full">{order.orderType === 'dine-in' ? 'DINE IN' : 'TAKEAWAY'}</span>
                 </div>
             </div>
 
             {/* Item list */}
             {(order.items || []).length > 0 && (
-                <div className="px-2 pb-1.5 space-y-0.5 border-t border-black/[0.04] pt-1.5">
+                <div className="px-2 pb-1.5 space-y-0.5 border-t border-black/[0.04] pt-1.5 text-left">
                     {(order.items || []).slice(0, 2).map((item, i) => {
                         const isCancelled = item.status?.toUpperCase() === 'CANCELLED';
                         return (
-                            <div key={i} className="flex flex-col">
-                                <div className={`flex items-center gap-1 text-[9px] font-bold leading-tight ${isCancelled ? 'text-red-500 line-through' : 'text-gray-950'}`}>
-                                    <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[7px] font-black shrink-0 ${isCancelled ? 'bg-red-50 text-red-600 border border-red-200' : `${s.badge} border`}`}>
+                            <div key={i} className="flex flex-col min-w-0">
+                                <div className={`flex items-center gap-1 min-w-0 text-[10px] sm:text-[11px] font-bold leading-tight ${isCancelled ? 'text-red-500 line-through' : 'text-gray-950'}`}>
+                                    <span className={`min-w-[1rem] h-4 px-0.5 rounded flex items-center justify-center text-[10px] font-black shrink-0 ${isCancelled ? 'bg-red-50 text-red-600 border border-red-200' : `${s.badge} border`}`}>
                                         {item.quantity}
                                     </span>
                                     <span className="truncate">{item.name}{item.variant ? ` · ${item.variant.name}` : ''}</span>
                                 </div>
-                                {isCancelled && item.cancelReason && <p className="text-[7px] text-red-400 italic pl-5 truncate">"{item.cancelReason}"</p>}
+                                {isCancelled && item.cancelReason && <p className="text-[10px] text-red-400 italic pl-5 truncate">"{item.cancelReason}"</p>}
                             </div>
                         );
                     })}
                     {(order.items || []).length > 2 && (
                         <div className="pl-[1.25rem] w-full text-left">
-                            <span className={`text-[7px] font-black ${s.num} opacity-70 uppercase tracking-tight`}>
+                            <span className={`text-[10px] font-black ${s.num} opacity-70 uppercase tracking-tight`}>
                                 +{(order.items || []).length - 2} more
                             </span>
                         </div>
@@ -312,13 +316,13 @@ const TokenSquare = memo(({ order, onClick, isSelected }) => {
             )}
 
             {/* Footer bar */}
-            <div className="flex items-center justify-between px-2 py-1.5 border-t border-black/[0.04] bg-black/[0.025] shrink-0">
-                <span className="flex items-center gap-1 text-[8px] font-black text-gray-400">
-                    <ShoppingBag size={8} />
+            <div className="flex items-center justify-between gap-1 px-2 py-1.5 border-t border-black/[0.04] bg-black/[0.025] shrink-0">
+                <span className="flex items-center gap-1 text-[10px] font-black text-gray-400">
+                    <ShoppingBag size={10} />
                     {itemCount}
                 </span>
-                <span className={`flex items-center gap-1 text-[8px] font-black ${(Date.now() - new Date(order.createdAt)) > 600000 ? 'text-red-500' : 'text-gray-400'}`}>
-                    <Clock size={8} />
+                <span className={`flex items-center gap-1 text-[10px] font-black tabular-nums truncate ${(Date.now() - new Date(order.createdAt)) > 600000 ? 'text-red-500' : 'text-gray-400'}`}>
+                    <Clock size={10} className="shrink-0" />
                     {elapsed}
                 </span>
             </div>
@@ -590,15 +594,15 @@ const WaiterDashboard = () => {
                             <p className="text-[10px] text-red-500 font-medium">Cannot reach the POS server.</p>
                         </div>
                     </div>
-                    <button onClick={() => fetchOrders()} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95">Try Again</button>
+                    <button onClick={() => fetchOrders()} className="w-full sm:w-auto min-h-[40px] px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95">Try Again</button>
                 </div>
             )}
 
             {/* ── Desktop/Tablet: Action Bar ── */}
             {document.getElementById('topbar-portal') && createPortal(
-                <div className="flex items-center justify-between w-full animate-fade-in px-1 gap-2">
-                    {/* Left side: Filters (Relocated from Row 2) */}
-                    <div className="hidden sm:flex items-center flex-1 max-w-full overflow-hidden">
+                <div className="flex items-center justify-between w-full min-w-0 animate-fade-in px-1 gap-2">
+                    {/* Left side: Filters (tablet + desktop) */}
+                    <div className="hidden sm:flex items-center flex-1 min-w-0 max-w-full overflow-hidden">
                         <div
                             className="flex items-center gap-1 p-1 bg-black/5 dark:bg-white/5 rounded-2xl border border-[var(--theme-border)] shadow-inner overflow-x-auto no-scrollbar scroll-smooth w-fit max-w-full"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -613,7 +617,7 @@ const WaiterDashboard = () => {
                                             setFilterType(t);
                                             e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                                         }}
-                                        className={`flex-shrink-0 px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] transition-all duration-300 whitespace-nowrap active:scale-95 ${filterType === t
+                                        className={`flex-shrink-0 min-h-[40px] lg:min-h-[36px] px-3 md:px-4 lg:px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] transition-all duration-300 whitespace-nowrap active:scale-95 ${filterType === t
                                                 ? 'bg-orange-600 text-white shadow-[0_4px_12px_rgba(234,88,12,0.3)] scale-[1.02]'
                                                 : 'text-[var(--theme-text-muted)] hover:text-orange-500 hover:bg-orange-500/5'
                                             }`}
@@ -625,17 +629,17 @@ const WaiterDashboard = () => {
                     </div>
 
                     {/* Right side: Actions + Utilities */}
-                    <div className="flex items-center gap-2 ml-auto">
-                        {/* Primary Order Actions (Relocated to Right) */}
-                        <div className="hidden md:flex items-center gap-2 mr-2 border-r border-[var(--theme-border)] pr-2">
+                    <div className="flex items-center gap-2 ml-auto shrink-0">
+                        {/* Primary Order Actions (tablet md+ / desktop) */}
+                        <div className="hidden md:flex items-center gap-2 mr-1 lg:mr-2 border-r border-[var(--theme-border)] pr-2">
                             {user?.role !== 'cashier' && settings?.dineInEnabled !== false && settings?.dineInEnabled !== 0 && (
-                                <button onClick={() => navigate('/dine-in')} className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-600/20 whitespace-nowrap min-h-[40px] active:scale-95">
-                                    <Utensils size={14} strokeWidth={3} /> Dine In
+                                <button onClick={() => navigate('/dine-in')} title="Dine In" className="flex items-center justify-center gap-2 px-3 xl:px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl transition-all font-black text-[11px] uppercase tracking-widest shadow-lg shadow-orange-600/20 whitespace-nowrap min-h-[40px] active:scale-95">
+                                    <Utensils size={14} strokeWidth={3} /> <span className="hidden lg:inline">Dine In</span>
                                 </button>
                             )}
                             {user?.role !== 'cashier' && settings?.takeawayEnabled !== false && settings?.takeawayEnabled !== 0 && (
-                                <button onClick={() => navigate('/take-away')} className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-600/20 whitespace-nowrap min-h-[40px] active:scale-95">
-                                    <Package size={14} strokeWidth={3} /> Takeaway
+                                <button onClick={() => navigate('/take-away')} title="Takeaway" className="flex items-center justify-center gap-2 px-3 xl:px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all font-black text-[11px] uppercase tracking-widest shadow-lg shadow-blue-600/20 whitespace-nowrap min-h-[40px] active:scale-95">
+                                    <Package size={14} strokeWidth={3} /> <span className="hidden lg:inline">Takeaway</span>
                                 </button>
                             )}
                         </div>
@@ -643,7 +647,7 @@ const WaiterDashboard = () => {
                         {/* Utility controls & Refresh */}
                         <div className="flex items-center gap-1.5 ml-auto">
                             <button onClick={() => setShowCounters(prev => !prev)} title={showCounters ? 'Collapse Stats' : 'Expand Stats'}
-                                className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 border-2 ${showCounters
+                                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 border-2 ${showCounters
                                         ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/30'
                                         : 'bg-[var(--theme-bg-dark)] border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-orange-500'
                                     }`}>
@@ -651,13 +655,13 @@ const WaiterDashboard = () => {
                             </button>
 
                             <button onClick={() => setIsProductionMode(!isProductionMode)} title={isProductionMode ? 'Detailed Grid view' : 'Token view'}
-                                className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${isProductionMode ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-[var(--theme-bg-dark)] border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)]'}`}>
-                                {isProductionMode ? <Grid2X2 size={16} strokeWidth={2.5} /> : <Grid size={16} strokeWidth={2.5} />}
+                                className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${isProductionMode ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-[var(--theme-bg-dark)] border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)]'}`}>
+                                {isProductionMode ? <Grid2x2 size={16} strokeWidth={2.5} /> : <Grid size={16} strokeWidth={2.5} />}
                             </button>
 
                             {settings?.tableMapEnabled !== false && (
                                 <button onClick={() => setShowTables(t => !t)} title="Tables"
-                                    className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${showTables ? 'bg-green-500/15 border-green-500/40 text-green-500 shadow-sm shadow-green-500/20' : 'bg-green-500/5 border-green-500/20 text-green-500 hover:bg-green-500/15 hover:border-green-500/40'}`}>
+                                    className={`hidden sm:flex w-10 h-10 items-center justify-center rounded-xl border transition-all active:scale-95 ${showTables ? 'bg-green-500/15 border-green-500/40 text-green-500 shadow-sm shadow-green-500/20' : 'bg-green-500/5 border-green-500/20 text-green-500 hover:bg-green-500/15 hover:border-green-500/40'}`}>
                                     <Armchair size={16} strokeWidth={2.5} />
                                 </button>
                             )}
@@ -667,13 +671,13 @@ const WaiterDashboard = () => {
                 document.getElementById('topbar-portal')
             )}
 
-            {/* ── Row 2 (mobile only): Compact Filters & Actions ── */}
+            {/* ── Row 2 (mobile + small tablet): Compact Filters & Actions ── */}
             {document.getElementById('topbar-portal-row2') && createPortal(
-                <div className="flex flex-col w-full gap-1.5 animate-fade-in px-1 pb-1 sm:hidden">
-                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                        {/* Filter Pill (Mobile) - Smaller */}
+                <div className="flex flex-col w-full min-w-0 gap-1.5 animate-fade-in px-1 pb-1 md:hidden">
+                    <div className="flex sm:hidden items-center gap-1.5 min-w-0">
+                        {/* Filter Pill (Mobile) — compact horizontal scroll row */}
                         <div
-                            className="flex items-center gap-1 p-0.5 bg-black/5 dark:bg-white/5 rounded-xl border border-[var(--theme-border)] shadow-inner overflow-x-auto no-scrollbar scroll-smooth w-fit max-w-[60%]"
+                            className="flex items-center gap-1 p-0.5 bg-black/5 dark:bg-white/5 rounded-xl border border-[var(--theme-border)] shadow-inner overflow-x-auto no-scrollbar scroll-smooth min-w-0 flex-1"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {['all', 'dine-in', 'takeaway']
@@ -686,7 +690,7 @@ const WaiterDashboard = () => {
                                             setFilterType(t);
                                             e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                                         }}
-                                        className={`flex-shrink-0 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all duration-300 whitespace-nowrap active:scale-95 ${filterType === t
+                                        className={`flex-1 flex-shrink-0 min-h-[40px] px-3 rounded-lg text-[11px] font-black uppercase tracking-tight transition-all duration-300 whitespace-nowrap active:scale-95 ${filterType === t
                                                 ? 'bg-orange-600 text-white shadow-sm'
                                                 : 'text-[var(--theme-text-muted)] hover:text-orange-500'
                                             }`}
@@ -696,10 +700,10 @@ const WaiterDashboard = () => {
                                 ))}
                         </div>
 
-                        <div className="flex items-center gap-1 ml-auto shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                             {settings?.tableMapEnabled !== false && (
-                                <button onClick={() => setShowTables(t => !t)} className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all active:scale-95 ${showTables ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-500' : 'bg-[var(--theme-bg-dark)] border-[var(--theme-border)] text-[var(--theme-text-muted)]'}`}>
-                                    <Armchair size={15} strokeWidth={2.5} />
+                                <button onClick={() => setShowTables(t => !t)} title="Tables" aria-label="Tables" className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${showTables ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-500' : 'bg-[var(--theme-bg-dark)] border-[var(--theme-border)] text-[var(--theme-text-muted)]'}`}>
+                                    <Armchair size={16} strokeWidth={2.5} />
                                 </button>
                             )}
                         </div>
@@ -708,13 +712,13 @@ const WaiterDashboard = () => {
                     {/* Compact Creation Buttons */}
                     <div className="flex items-center gap-2 py-1">
                         {user?.role !== 'cashier' && settings?.dineInEnabled !== false && settings?.dineInEnabled !== 0 && (
-                            <button onClick={() => navigate('/dine-in')} className="flex-1 flex items-center justify-center gap-2 h-10 bg-orange-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider active:scale-95 shadow-md shadow-orange-600/10 transition-all">
-                                <Utensils size={14} strokeWidth={3} /> Dine In
+                            <button onClick={() => navigate('/dine-in')} className="flex-1 min-w-0 flex items-center justify-center gap-2 h-11 bg-orange-600 text-white rounded-xl font-black text-[11px] uppercase tracking-wider active:scale-95 shadow-md shadow-orange-600/10 transition-all">
+                                <Utensils size={14} strokeWidth={3} className="shrink-0" /> <span className="truncate">Dine In</span>
                             </button>
                         )}
                         {user?.role !== 'cashier' && settings?.takeawayEnabled !== false && settings?.takeawayEnabled !== 0 && (
-                            <button onClick={() => navigate('/take-away')} className="flex-1 flex items-center justify-center gap-2 h-10 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider active:scale-95 shadow-md shadow-blue-600/10 transition-all">
-                                <Package size={14} strokeWidth={3} /> Takeaway
+                            <button onClick={() => navigate('/take-away')} className="flex-1 min-w-0 flex items-center justify-center gap-2 h-11 bg-blue-600 text-white rounded-xl font-black text-[11px] uppercase tracking-wider active:scale-95 shadow-md shadow-blue-600/10 transition-all">
+                                <Package size={14} strokeWidth={3} className="shrink-0" /> <span className="truncate">Takeaway</span>
                             </button>
                         )}
                     </div>
@@ -725,8 +729,8 @@ const WaiterDashboard = () => {
             {/* ── Stats (Mobile: Modal Popup | Desktop: Inline) ── */}
             {activeTab === 'active' && (
                 <div className={`hidden sm:block overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${showCounters ? 'max-h-[400px] opacity-100 mb-3' : 'max-h-0 opacity-0 mb-0'}`}>
-                    <div className="bg-[var(--theme-bg-card)] border-b border-[var(--theme-border)] shadow-sm p-3">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-[var(--theme-bg-card)] border-b border-[var(--theme-border)] shadow-sm p-2 md:p-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                             {[
                                 { key: 'pending', count: counts.pending, color: 'orange', label: 'NEW KOT' },
                                 { key: 'ready', count: counts.ready, color: 'emerald', label: 'READY' },
@@ -759,7 +763,7 @@ const WaiterDashboard = () => {
                                                 <ChevronRight size={10} strokeWidth={4} className="animate-chevron-r1" />
                                                 <ChevronRight size={10} strokeWidth={4} className="-ml-1.5 opacity-60 font-black animate-chevron-r2" />
                                             </div>
-                                            <span className={`text-[9px] font-black uppercase tracking-[0.15em] ${isActive ? 'text-orange-500' : 'text-[var(--theme-text-muted)] group-hover:text-[var(--theme-text-main)]'}`}>
+                                            <span className={`text-[10px] font-black uppercase tracking-[0.1em] truncate ${isActive ? 'text-orange-500' : 'text-[var(--theme-text-muted)] group-hover:text-[var(--theme-text-main)]'}`}>
                                                 {label}
                                             </span>
                                         </div>
@@ -775,14 +779,14 @@ const WaiterDashboard = () => {
             {activeTab === 'active' && showCounters && (
                 <div className="sm:hidden fixed inset-0 z-[1001] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCounters(false)} />
-                    <div className="relative w-full max-w-[320px] bg-[var(--theme-bg-card)] rounded-[2rem] border border-[var(--theme-border)] shadow-2xl p-6 animate-scale-in">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-sm font-black uppercase tracking-widest text-[var(--theme-text-muted)]">Order Statistics</h3>
-                            <button onClick={() => setShowCounters(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-[var(--theme-bg-dark)]/50 text-[var(--theme-text-muted)]">
+                    <div className="relative w-full max-w-[320px] max-h-[90vh] overflow-y-auto bg-[var(--theme-bg-card)] rounded-[2rem] border border-[var(--theme-border)] shadow-2xl p-5 xs:p-6 animate-scale-in">
+                        <div className="flex items-center justify-between gap-2 mb-5">
+                            <h3 className="text-sm font-black uppercase tracking-widest text-[var(--theme-text-muted)] truncate">Order Statistics</h3>
+                            <button onClick={() => setShowCounters(false)} aria-label="Close" className="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-[var(--theme-bg-dark)]/50 text-[var(--theme-text-muted)]">
                                 <X size={18} />
                             </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                             {[
                                 { key: 'pending', count: counts.pending, color: 'orange', label: 'NEW KOT' },
                                 { key: 'ready', count: counts.ready, color: 'emerald', label: 'READY' },
@@ -812,7 +816,7 @@ const WaiterDashboard = () => {
                                         <span className={`text-xl font-black tabular-nums transition-colors ${isActive ? 'text-orange-500' : 'text-[var(--theme-text-main)]'}`}>
                                             {count}
                                         </span>
-                                        <span className={`text-[8px] font-black uppercase tracking-widest mt-1 ${isActive ? 'text-orange-500' : 'text-[var(--theme-text-muted)]'}`}>
+                                        <span className={`text-[10px] font-black uppercase tracking-wider mt-1 px-1 text-center ${isActive ? 'text-orange-500' : 'text-[var(--theme-text-muted)]'}`}>
                                             {label}
                                         </span>
                                     </button>
@@ -824,24 +828,24 @@ const WaiterDashboard = () => {
             )}
 
             {showTables && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowTables(false); }}>
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-                    <div className="relative bg-[var(--theme-bg-card)] rounded-3xl border-2 border-[var(--theme-border)] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-                        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--theme-border)] shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowTables(false); }}>
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowTables(false)} />
+                    <div className="relative bg-[var(--theme-bg-card)] rounded-none sm:rounded-3xl border-0 sm:border-2 border-[var(--theme-border)] shadow-2xl w-full h-full sm:h-auto max-w-full sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl sm:max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="flex items-center justify-between gap-3 p-3 sm:p-5 border-b border-[var(--theme-border)] shrink-0 pt-safe">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 shrink-0 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
                                     <Grid size={20} className="text-emerald-500" />
                                 </div>
-                                <div>
-                                    <h2 className="text-lg font-black text-[var(--theme-text-main)] tracking-tight">Table Map</h2>
-                                    <p className="text-[10px] text-[var(--theme-text-muted)] uppercase font-bold tracking-widest opacity-60">Floor Overview</p>
+                                <div className="min-w-0">
+                                    <h2 className="text-base sm:text-lg font-black text-[var(--theme-text-main)] tracking-tight truncate">Table Map</h2>
+                                    <p className="text-[10px] text-[var(--theme-text-muted)] uppercase font-bold tracking-widest opacity-60 truncate">Floor Overview</p>
                                 </div>
                             </div>
-                            <button onClick={() => setShowTables(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 hover:text-red-500 transition-colors text-[var(--theme-text-muted)]">
-                                <X size={18} />
+                            <button onClick={() => setShowTables(false)} aria-label="Close" className="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-colors text-[var(--theme-text-muted)]">
+                                <X size={20} />
                             </button>
                         </div>
-                        <div className="overflow-y-auto p-4 sm:p-5 flex-1">
+                        <div className="overflow-y-auto overflow-x-hidden p-3 sm:p-5 flex-1 min-h-0">
                             <TableGrid
                                 allowedStatuses={['available', 'occupied', 'cleaning']}
                                 filterByAllowedStatuses={false}
@@ -855,19 +859,19 @@ const WaiterDashboard = () => {
                 document.body
             )}
 
-            {/* ── Flex split: cards left + panel right ────────────────────────── */}
-            <div className="flex gap-0 relative flex-1 min-h-0 overflow-hidden">
+            {/* ── Flex split: cards left + panel right (desktop) ─────────────── */}
+            <div className="flex gap-0 relative flex-1 min-h-0 min-w-0 overflow-hidden">
 
                 {/* ── Left panel (Order Grid) ────────────────────────────────── */}
                 <div
-                    className={`flex-1 kot-scroll transition-all duration-300 ${selectedOrder ? 'opacity-100' : 'opacity-100'}`}
+                    className="flex-1 min-w-0 kot-scroll transition-all duration-300"
                 >
                     {loading ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
-                            {Array(8).fill(0).map((_, i) => <div key={i} className="skeleton rounded-2xl h-48" />)}
+                        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-2">
+                            {Array(8).fill(0).map((_, i) => <div key={i} className="skeleton rounded-2xl h-40 sm:h-48" />)}
                         </div>
                     ) : displayOrders.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-6 text-[var(--theme-text-subtle)]">
+                        <div className="flex flex-col items-center justify-center text-center px-4 py-6 text-[var(--theme-text-subtle)]">
                             {activeTab === 'active' ? (
                                 <>
                                     <ShoppingBag size={44} className="mb-2 opacity-20" />
@@ -883,13 +887,13 @@ const WaiterDashboard = () => {
                             )}
                         </div>
                     ) : (
-                        <div className={`grid p-2 w-full mx-auto gap-3 transition-all duration-300 ${isProductionMode
+                        <div className={`grid p-1.5 sm:p-2 w-full mx-auto gap-2 sm:gap-3 transition-all duration-300 ${isProductionMode
                                 ? selectedOrder
-                                    ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
-                                    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'
+                                    ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'
+                                    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
                                 : selectedOrder
-                                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-                                    : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                                    ? 'grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3'
+                                    : 'grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
                             }`}>
                             {displayOrders.map(order => (
                                 isProductionMode
@@ -898,7 +902,7 @@ const WaiterDashboard = () => {
                                         <div
                                             key={order._id}
                                             onClick={() => setSelectedOrder(order)}
-                                            className={`transition-all duration-200 rounded-xl ring-2 ${selectedOrder?._id === order._id ? 'ring-orange-500 shadow-lg shadow-orange-500/20' : 'ring-transparent'}`}
+                                            className={`min-w-0 transition-all duration-200 rounded-xl ring-2 ${selectedOrder?._id === order._id ? 'ring-orange-500 shadow-lg shadow-orange-500/20' : 'ring-transparent'}`}
                                         >
                                             <WaiterBoxCard order={order} formatPrice={formatPrice} kotPrintEnabled={settings?.kotPrintEnabled !== false} settings={settings} />
                                         </div>
@@ -909,10 +913,10 @@ const WaiterDashboard = () => {
                     <div className="pb-10" />
                 </div>
 
-                {/* ── Right Panel (Details Panel) ── desktop only ────────────────── */}
+                {/* ── Right Panel (Details Panel) ── desktop (lg+) only ─────────── */}
                 {selectedOrder && (
                     <div
-                        className="hidden md:flex flex-col flex-shrink-0 w-[400px] lg:w-[440px] xl:w-[480px] border-l border-[var(--theme-border)] bg-[var(--theme-bg-card)] animate-in slide-in-from-right duration-300 ease-out"
+                        className="hidden lg:flex flex-col flex-shrink-0 min-h-0 overflow-y-auto lg:w-[380px] xl:w-[420px] 2xl:w-[460px] border-l border-[var(--theme-border)] bg-[var(--theme-bg-card)] animate-in slide-in-from-right duration-300 ease-out"
                     >
                         <OrderDetailsModal
                             variant="panel"
@@ -931,9 +935,9 @@ const WaiterDashboard = () => {
                 )}
             </div>
 
-            {/* ── Mobile focused Modal (Pop-up type) ── mobile only ───────────── */}
+            {/* ── Mobile (full-screen) / Tablet (centered modal) details ── below lg ── */}
             {selectedOrder && createPortal(
-                <div className="md:hidden">
+                <div className="lg:hidden">
                     <OrderDetailsModal
                         variant="overlay"
                         isOpen={true}
