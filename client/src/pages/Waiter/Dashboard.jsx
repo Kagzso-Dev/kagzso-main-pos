@@ -392,13 +392,11 @@ const WaiterDashboard = () => {
                 ? `table number ${o.tableId?.number || o.tableId || '?'}`
                 : `token number ${o.tokenNumber || '?'}`;
             const msg = new SpeechSynthesisUtterance(`Ready order, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
-            const playAlert = () => {
+            msg.onend = () => {
                 const sc = settingsRef.current?.soundConfig;
-                if (sc?.waiterEnabled !== false)
-                    playWaiterSound(sc?.waiterSound, sc?.waiterVolume ?? 0.6);
+                if (sc && sc.waiterEnabled !== false)
+                    playWaiterSound(sc.waiterSound, sc.waiterVolume ?? 0.6);
             };
-            msg.onend = playAlert;
-            msg.onerror = playAlert;
             window.speechSynthesis.speak(msg);
         });
 
@@ -414,13 +412,11 @@ const WaiterDashboard = () => {
                 ? `table number ${o.tableId?.number || o.tableId || '?'}`
                 : `token number ${o.tokenNumber || '?'}`;
             const msg = new SpeechSynthesisUtterance(`Payment ready, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
-            const playAlert = () => {
+            msg.onend = () => {
                 const sc = settingsRef.current?.soundConfig;
-                if (sc?.waiterEnabled !== false)
-                    playWaiterSound(sc?.waiterSound, sc?.waiterVolume ?? 0.6);
+                if (sc && sc.waiterEnabled !== false)
+                    playWaiterSound(sc.waiterSound, sc.waiterVolume ?? 0.6);
             };
-            msg.onend = playAlert;
-            msg.onerror = playAlert;
             window.speechSynthesis.speak(msg);
         });
     }, [orders, settings?.dineInEnabled, settings?.takeawayEnabled]);

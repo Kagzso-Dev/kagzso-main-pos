@@ -11,7 +11,6 @@ const WorkingProcess = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [loading, setLoading] = useState(false);
     const { user, socket, formatPrice, settings } = useContext(AuthContext);
-    const bellRef = useRef(new Audio('/bell.mp3'));
     const prevOrdersCount = useRef(0);
 
     const [filterType, setFilterType] = useState('all');
