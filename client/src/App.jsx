@@ -132,7 +132,7 @@ function App() {
               <Route element={<CashierRoute />}>
                 <Route path="/cashier" element={<LiveGuard><CashierDashboard /></LiveGuard>} />
                 <Route path="/cashier/orders" element={<LiveGuard><CashierOrderView /></LiveGuard>} />
-                <Route path="/cashier/kitchen" element={<LiveGuard><KitchenDashboard /></LiveGuard>} />
+                <Route path="/cashier/kitchen" element={<LiveGuard><KitchenDashboard readOnly={true} /></LiveGuard>} />
                 <Route path="/cashier/working-process" element={<LiveGuard><WorkingProcess /></LiveGuard>} />
                 <Route path="/cashier/history" element={<LiveGuard><CashierOrderView /></LiveGuard>} />
               </Route>

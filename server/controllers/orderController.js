@@ -41,11 +41,12 @@ const getOrders = async (req, res) => {
         }
 
         // ROLE-BASED VISIBILITY OVERRIDES
-        if (req.role === 'kitchen' && !status) {
-            // Kitchen ONLY sees up to 'ready'
+        const view = req.query.view || (req.role === 'kitchen' ? 'kitchen' : null);
+        if (view === 'kitchen' && !status) {
+            // Kitchen view (used by kitchen and cashier kitchen view) sees up to 'ready'
             filter.orderStatus = { $in: ['pending', 'accepted', 'preparing', 'ready'] };
         } else if (req.role === 'cashier' && !status) {
-            // Cashier ONLY sees 'payment' (per requirements)
+            // Cashier Point ONLY sees 'payment' (per requirements)
             filter.orderStatus = 'payment';
         }
 

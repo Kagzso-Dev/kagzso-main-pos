@@ -47,7 +47,7 @@ const KitchenTimer = ({ createdAt, urgency }) => {
 };
 
 /* ── KOT Ticket Card ─────────────────────────────────────────────────────── */
-const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCancelItem, userRole, viewType = 'normal' }) => {
+const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCancelItem, userRole, viewType = 'normal', readOnly = false }) => {
     const [isMarkingAll, setIsMarkingAll] = useState(false);
     const [loadingItems, setLoadingItems] = useState({});
     const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
@@ -165,7 +165,7 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                     <Clock size={11} />{elapsed}
                 </div>
                 <div className="shrink-0"><StatusBadge status={order.orderStatus} items={order.items || []} size="sm" /></div>
-                {(userRole === 'kitchen' || userRole === 'admin') && (
+                {!readOnly && (userRole === 'kitchen' || userRole === 'admin') && (
                     <div className="shrink-0 flex items-center gap-1">
                         {kotPrintEnabled && (
                             <button
@@ -196,7 +196,7 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                             </button>
                         )}
                         {order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' &&
-                         order.orderStatus !== 'ready' && (userRole === 'kitchen' || userRole === 'admin') && (
+                         order.orderStatus !== 'ready' && !readOnly && (userRole === 'kitchen' || userRole === 'admin') && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onCancel(order); }}
                                 className="w-9 h-9 flex items-center justify-center hover:bg-red-500/15 rounded-xl text-red-500/50 hover:text-red-500 transition-all border border-transparent hover:border-red-500/20"
@@ -278,7 +278,7 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                                     <p className="text-[9px] text-red-400/80 italic mt-0.5">"{item.cancelReason}"</p>
                                 )}
                             </div>
-                            {!isCancelled && (userRole === 'kitchen' || userRole === 'admin') && (
+                            {!isCancelled && !readOnly && (userRole === 'kitchen' || userRole === 'admin') && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onCancelItem(order, item); }}
                                     className="w-5 h-5 flex items-center justify-center rounded bg-red-500/5 hover:bg-red-500/15 text-red-500/40 hover:text-red-500 transition-all border border-red-500/10"
@@ -313,7 +313,7 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                 </span>
 
                 <div className="flex items-center gap-1.5 min-w-0">
-                    {(userRole === 'kitchen' || userRole === 'admin') &&
+                    {!readOnly && (userRole === 'kitchen' || userRole === 'admin') &&
                         ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) &&
                         getNextEnabledStatus(order.orderStatus) ? (
                         <button
@@ -338,7 +338,7 @@ const KotTicket = ({ order, onUpdateStatus, onUpdateItemStatus, onCancel, onCanc
                     {order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' &&
                      order.orderStatus !== 'ready' && 
                      order.items?.every(i => i.status?.toUpperCase() !== 'READY') && 
-                     (userRole === 'kitchen' || userRole === 'admin') && (
+                     !readOnly && (userRole === 'kitchen' || userRole === 'admin') && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onCancel(order); }}
                             className="w-7 h-7 flex items-center justify-center hover:bg-red-500/15 rounded-lg text-red-500/50 hover:text-red-500 transition-all border border-transparent hover:border-red-500/20 shrink-0"
@@ -446,9 +446,10 @@ const KitchenTokenCard = ({ order, onClick }) => {
 };
 
 /* ── Main Screen ─────────────────────────────────────────────────────────── */
-const KitchenDashboard = () => {
+const KitchenDashboard = ({ readOnly = false }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState(false);
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const activeTab = searchParams.get('tab') || 'active'; // 'active', 'cancelled', 'completed'
@@ -527,6 +528,7 @@ const KitchenDashboard = () => {
 
     const fetchOrders = useCallback(async () => {
         setLoading(true);
+        setFetchError(false);
         if (!navigator.onLine) {
             const [cached, pending] = await Promise.all([
                 getCachedOrders(),
@@ -540,6 +542,7 @@ const KitchenDashboard = () => {
         }
         try {
             const res = await api.get('/api/orders', {
+                params: { view: 'kitchen', limit: 100 },
                 headers: { Authorization: `Bearer ${user.token}` }
             });
             const incoming = res.data.orders || [];
@@ -552,7 +555,7 @@ const KitchenDashboard = () => {
                     !(o.orderType === 'dine-in'  && s?.dineInEnabled  === false) &&
                     !(o.orderType === 'takeaway' && s?.takeawayEnabled === false)
                 );
-                if (hasNew && s?.soundConfig?.kitchenEnabled !== false)
+                if (hasNew && s?.soundConfig?.kitchenEnabled !== false && !readOnly)
                     playTempleBellSound(2, s?.soundConfig?.kitchenVolume ?? 0.8);
                 knownOrderIds.current = new Set(incoming.map(o => o._id));
             }
@@ -560,12 +563,13 @@ const KitchenDashboard = () => {
             setLastRefresh(new Date());
         } catch (err) {
             console.error('Kitchen fetch error', err);
+            setFetchError(true);
             const cached = await getCachedOrders();
             setOrders(cached || []);
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, readOnly]);
 
     useEffect(() => {
         if (!user) return;
@@ -668,7 +672,7 @@ const KitchenDashboard = () => {
     }, [user, fetchOrders]);
 
     const updateStatus = async (orderId, newStatus) => {
-        if (user.role !== 'kitchen' && user.role !== 'admin') return;
+        if (readOnly || (user.role !== 'kitchen' && user.role !== 'admin')) return;
 
         // Optimistic update — kitchen card flips instantly on click, no waiting for server
         setOrders(prev => prev.map(o => o._id === orderId ? { ...o, orderStatus: newStatus } : o));
@@ -686,7 +690,7 @@ const KitchenDashboard = () => {
     };
 
     const updateItemStatus = async (orderId, itemId, newStatus) => {
-        if (user.role !== 'kitchen' && user.role !== 'admin') return;
+        if (readOnly || (user.role !== 'kitchen' && user.role !== 'admin')) return;
 
         // Optimistic update for item status
         setOrders(prev => prev.map(o => o._id === orderId ? {
@@ -864,6 +868,23 @@ const KitchenDashboard = () => {
                 </div>
             </div>
 
+            {/* ── Error Banner ── */}
+            {fetchError && (
+                <div className="bg-red-500/10 border border-red-500/30 p-3 sm:p-4 rounded-2xl flex items-center justify-between gap-3 text-red-500 text-xs">
+                    <div className="flex items-center gap-2">
+                        <XCircle size={18} className="shrink-0" />
+                        <span className="font-semibold">Failed to fetch kitchen orders.</span>
+                    </div>
+                    <button
+                        onClick={fetchOrders}
+                        className="px-3 py-1.5 bg-red-500 text-white font-bold rounded-xl active:scale-95 transition-all text-xs shrink-0 flex items-center gap-1.5"
+                    >
+                        <RefreshCw size={12} />
+                        Retry
+                    </button>
+                </div>
+            )}
+
             {/* ── KOT Grid — Isolated Scroll Container ──────────────── */}
             <div className="flex-1 min-h-0 kot-scroll rounded-2xl">
                 {loading ? (
@@ -913,6 +934,7 @@ const KitchenDashboard = () => {
                                             onCancel={(o) => setCancelModal({ isOpen: true, order: o, item: null })}
                                             onCancelItem={(o, i) => setCancelModal({ isOpen: true, order: o, item: i })}
                                             userRole={user.role}
+                                            readOnly={readOnly}
                                             viewType="normal"
                                         />
                                     </div>
