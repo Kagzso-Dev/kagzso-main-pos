@@ -481,8 +481,11 @@ const WaiterDashboard = () => {
                 const msg = new SpeechSynthesisUtterance(`Ready order, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
                 msg.onend = () => {
                     const sc = settingsRef.current?.soundConfig;
-                    if (sc && sc.waiterEnabled !== false)
-                        playWaiterSound(sc.waiterSound, sc.waiterVolume ?? 0.6);
+                    if (sc && sc.waiterEnabled !== false) {
+                        // Use a sound distinct from the cashier's payment alert (which plays sc.waiterSound)
+                        const readySound = (sc.waiterSound || 'ting') === 'chime' ? 'double-ting' : 'chime';
+                        playWaiterSound(readySound, sc.waiterVolume ?? 0.6);
+                    }
                 };
                 window.speechSynthesis.speak(msg);
             });
