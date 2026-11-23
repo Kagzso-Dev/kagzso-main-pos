@@ -27,6 +27,7 @@ const fmt = (row) => row ? {
     tableMapEnabled:      row.table_map_enabled !== 0,
     takeawayEnabled:      row.takeaway_enabled !== 0,
     waiterServiceEnabled: row.waiter_service_enabled !== 0,
+    kitchenEnabled:       row.kitchen_enabled !== 0,
     enforceMenuView:      row.enforce_menu_view === 1,
     cashierOfferEnabled:  row.cashier_offer_enabled === 1,
     cashierOfferLabel:    row.cashier_offer_label || '',
@@ -73,6 +74,7 @@ const fieldMap = {
     tableMapEnabled:      'table_map_enabled',
     takeawayEnabled:      'takeaway_enabled',
     waiterServiceEnabled: 'waiter_service_enabled',
+    kitchenEnabled:       'kitchen_enabled',
     enforceMenuView:      'enforce_menu_view',
     cashierOfferEnabled:  'cashier_offer_enabled',
     cashierOfferLabel:    'cashier_offer_label',
@@ -99,9 +101,23 @@ const ensureSoundConfigCol = async () => {
     } catch (e) {}
 };
 
+let _kitchenColChecked = false;
+const ensureKitchenEnabledCol = async () => {
+    if (_kitchenColChecked) return;
+    try {
+        const [cols] = await mysql.query('SHOW COLUMNS FROM settings LIKE "kitchen_enabled"');
+        if (cols.length === 0) {
+            await mysql.query('ALTER TABLE settings ADD COLUMN kitchen_enabled BOOLEAN DEFAULT 1');
+            console.log('[migration] Added kitchen_enabled column to settings');
+        }
+        _kitchenColChecked = true;
+    } catch (e) {}
+};
+
 const Setting = {
     async get(tenantId) {
         await ensureSoundConfigCol();
+        await ensureKitchenEnabledCol();
         const [rows] = tenantId
             ? await mysql.query('SELECT * FROM settings WHERE tenant_id = ? LIMIT 1', [tenantId])
             : await mysql.query('SELECT * FROM settings LIMIT 1');

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
-import { AdminRoute, KitchenRoute, CashierRoute, WaiterRoute, SuperAdminRoute } from './PrivateRoutes';
+import { AdminRoute, KitchenRoute, CashierKitchenRoute, CashierRoute, WaiterRoute, SuperAdminRoute } from './PrivateRoutes';
 import Layout from './components/Layout';
 import DynamicTheme from './components/DynamicTheme';
 import NotificationToast from './components/NotificationToast'; // Added
@@ -132,7 +132,9 @@ function App() {
               <Route element={<CashierRoute />}>
                 <Route path="/cashier" element={<LiveGuard><CashierDashboard /></LiveGuard>} />
                 <Route path="/cashier/orders" element={<LiveGuard><CashierOrderView /></LiveGuard>} />
-                <Route path="/cashier/kitchen" element={<LiveGuard><KitchenDashboard readOnly={true} /></LiveGuard>} />
+                <Route element={<CashierKitchenRoute />}>
+                  <Route path="/cashier/kitchen" element={<LiveGuard><KitchenDashboard readOnly={true} /></LiveGuard>} />
+                </Route>
                 <Route path="/cashier/working-process" element={<LiveGuard><WorkingProcess /></LiveGuard>} />
                 <Route path="/cashier/history" element={<LiveGuard><CashierOrderView /></LiveGuard>} />
               </Route>

@@ -172,16 +172,18 @@ const createOrder = async (req, res) => {
 
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('new-order', createdOrder);
 
-        createAndEmitNotification(req.app.get('io'), {
-            title: `New Order #${createdOrder.orderNumber}`,
-            message: `${createdOrder.items.length} item(s) — ${createdOrder.orderType === 'dine-in' ? 'Dine-In' : 'Takeaway'}`,
-            type: 'NEW_ORDER',
-            roleTarget: 'kitchen',
-            tenantId: req.tenantId,
-            referenceId: createdOrder._id,
-            referenceType: 'order',
-            createdBy: req.userId,
-        });
+        if (settings?.kitchenEnabled !== false) {
+            createAndEmitNotification(req.app.get('io'), {
+                title: `New Order #${createdOrder.orderNumber}`,
+                message: `${createdOrder.items.length} item(s) — ${createdOrder.orderType === 'dine-in' ? 'Dine-In' : 'Takeaway'}`,
+                type: 'NEW_ORDER',
+                roleTarget: 'kitchen',
+                tenantId: req.tenantId,
+                referenceId: createdOrder._id,
+                referenceType: 'order',
+                createdBy: req.userId,
+            });
+        }
 
         invalidateCache('dashboard', req.tenantId);
         invalidateCache('analytics', req.tenantId);
@@ -216,16 +218,29 @@ const updateOrderStatus = async (req, res) => {
         }
         
         if (req.role === 'waiter') {
-            if (status === 'payment') {
-                if (!['ready', 'readyToServe'].includes(order.orderStatus)) {
+            const settings = await Setting.get(req.tenantId);
+            const kitchenDisabled = settings?.kitchenEnabled === false;
+
+            if (kitchenDisabled) {
+                // When kitchen is disabled, waiter performs accepted, preparing, ready, readyToServe and payment transitions
+                if (!['accepted', 'preparing', 'ready', 'readyToServe', 'payment'].includes(status)) {
+                    return res.status(403).json({ message: `Forbidden: role 'waiter' not permitted for status: ${status}` });
+                }
+                if (status === 'payment' && !['ready', 'readyToServe'].includes(order.orderStatus)) {
                     return res.status(403).json({ message: "Waiter can only request 'Payment' when order is 'Ready' or 'Ready to Serve'" });
                 }
-            } else if (status === 'readyToServe') {
-                if (order.orderStatus !== 'ready') {
-                    return res.status(403).json({ message: "Waiter can only mark as 'Ready to Serve' when order is 'ready'" });
-                }
             } else {
-                return res.status(403).json({ message: `Forbidden: role 'waiter' not permitted for status: ${status}. Restricted to Ready -> Served (Payment) flow.` });
+                if (status === 'payment') {
+                    if (!['ready', 'readyToServe'].includes(order.orderStatus)) {
+                        return res.status(403).json({ message: "Waiter can only request 'Payment' when order is 'Ready' or 'Ready to Serve'" });
+                    }
+                } else if (status === 'readyToServe') {
+                    if (order.orderStatus !== 'ready') {
+                        return res.status(403).json({ message: "Waiter can only mark as 'Ready to Serve' when order is 'ready'" });
+                    }
+                } else {
+                    return res.status(403).json({ message: `Forbidden: role 'waiter' not permitted for status: ${status}. Restricted to Ready -> Served (Payment) flow.` });
+                }
             }
         }
 
@@ -318,6 +333,12 @@ const updateItemStatus = async (req, res) => {
     const { status } = req.body;
     const { id, itemId } = req.params;
     try {
+        if (req.role === 'waiter') {
+            const settings = await Setting.get(req.tenantId);
+            if (settings?.kitchenEnabled !== false) {
+                return res.status(403).json({ message: 'Waiters can only update item status when kitchen is disabled' });
+            }
+        }
         const order = await Order.findById(id, req.tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
@@ -731,16 +752,19 @@ const addOrderItems = async (req, res) => {
 
         req.app.get('io').to(`${req.tenantId}:restaurant_main`).emit('order-updated', updatedOrder);
 
-        createAndEmitNotification(req.app.get('io'), {
-            title: `New items on Order #${updatedOrder.orderNumber}`,
-            message: `${items.length} new item(s) added`,
-            type: 'ORDER_UPDATED',
-            roleTarget: 'kitchen',
-            tenantId: req.tenantId,
-            referenceId: updatedOrder._id,
-            referenceType: 'order',
-            createdBy: req.userId,
-        });
+        const settings = await Setting.get(req.tenantId);
+        if (settings?.kitchenEnabled !== false) {
+            createAndEmitNotification(req.app.get('io'), {
+                title: `New items on Order #${updatedOrder.orderNumber}`,
+                message: `${items.length} new item(s) added`,
+                type: 'ORDER_UPDATED',
+                roleTarget: 'kitchen',
+                tenantId: req.tenantId,
+                referenceId: updatedOrder._id,
+                referenceType: 'order',
+                createdBy: req.userId,
+            });
+        }
 
         invalidateCache('dashboard', req.tenantId);
         invalidateCache('analytics', req.tenantId);

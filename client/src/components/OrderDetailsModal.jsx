@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { printBill } from './BillPrint';
+import { printKOT } from '../utils/kotPrint';
 import StatusBadge from './StatusBadge';
 import { AuthContext } from '../context/AuthContext';
 
@@ -106,9 +107,16 @@ const OrderDetailsModal = ({
 
                     <div className="flex items-center gap-2.5">
                         <button
-                            onClick={(e) => { e.stopPropagation(); printBill(order, formatPrice, effectiveSettings); }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (effectiveSettings?.kitchenEnabled === false && userRole === 'waiter') {
+                                    printKOT(order, effectiveSettings);
+                                } else {
+                                    printBill(order, formatPrice, effectiveSettings);
+                                }
+                            }}
                             className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[var(--theme-bg-dark)]/50 text-[var(--theme-text-muted)] hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-300 active:scale-95 border border-[var(--theme-border)] group shadow-sm"
-                            title="Print Full Bill"
+                            title={effectiveSettings?.kitchenEnabled === false && userRole === 'waiter' ? "Print KOT" : "Print Full Bill"}
                         >
                             <Printer size={18} strokeWidth={3} />
                         </button>
@@ -205,7 +213,36 @@ const OrderDetailsModal = ({
                              let enabled = false;
 
                              if (userRole === 'waiter') {
-                                 if (order.orderStatus === 'ready' || order.orderStatus === 'readyToServe') {
+                                 const kitchenDisabled = effectiveSettings?.kitchenEnabled === false;
+                                 if (kitchenDisabled && ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase())) {
+                                     const cfg = effectiveSettings?.orderStatusesConfig;
+                                     const chain = ['pending', 'accepted', 'preparing', 'ready'];
+                                     const curIdx = chain.indexOf(order.orderStatus?.toLowerCase());
+                                     let next = null;
+                                     for (let i = curIdx + 1; i < chain.length; i++) {
+                                         if (!cfg || cfg[chain[i]] !== false) {
+                                             next = chain[i];
+                                             break;
+                                         }
+                                     }
+                                     if (next) {
+                                         nextStatus = next;
+                                         enabled = true;
+                                         if (next === 'accepted') {
+                                             label = "Accept";
+                                             icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
+                                             colorClass = "bg-[var(--status-pending,#f59e0b)] border-amber-500 text-white shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:scale-105 active:scale-95";
+                                         } else if (next === 'preparing') {
+                                             label = "Prepare";
+                                             icon = <Utensils size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
+                                             colorClass = "bg-[var(--status-accepted,#8b5cf6)] border-violet-500 text-white shadow-[0_10px_25px_rgba(139,92,246,0.3)] hover:scale-105 active:scale-95";
+                                         } else if (next === 'ready') {
+                                             label = "Ready";
+                                             icon = <CheckCircle size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
+                                             colorClass = "bg-[var(--status-ready,#10b981)] border-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95";
+                                         }
+                                     }
+                                 } else if (order.orderStatus === 'ready' || order.orderStatus === 'readyToServe') {
                                      label = "Served";
                                      nextStatus = "payment";
                                      icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;

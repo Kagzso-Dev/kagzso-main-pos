@@ -4,9 +4,10 @@ import { AuthContext } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api';
 import { queueAction } from '../../utils/syncEngine';
-import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, LayoutGrid } from 'lucide-react';
+import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, LayoutGrid, Loader2 } from 'lucide-react';
 import TableGrid from '../../components/TableGrid';
 import { printBill } from '../../components/BillPrint';
+import { printKOT } from '../../utils/kotPrint';
 import { playWaiterSound } from '../../utils/bellSound';
 import CancelOrderModal from '../../components/CancelOrderModal';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
@@ -38,14 +39,31 @@ const useElapsed = (createdAt) => {
 };
 
 /* ── KOT-style Box Card (Waiter) ─────────────────────────────────────────── */
-const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings }) => {
+const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onUpdateStatus }) => {
     const elapsed = useElapsed(order.createdAt);
     const urgency = (Date.now() - new Date(order.createdAt)) > 600000;
     const isReady = order.orderStatus?.toLowerCase() === 'ready';
+    const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+
+    const _statusChain = ['pending', 'accepted', 'preparing', 'ready'];
+    const _statusLabelsShort = { accepted: 'ACCEPT', preparing: 'PREPARE', ready: 'READY' };
+    const getNextEnabledStatus = (cur) => {
+        const cfg = settings?.orderStatusesConfig;
+        const idx = _statusChain.indexOf(cur?.toLowerCase());
+        if (idx === -1) return null;
+        for (let i = idx + 1; i < _statusChain.length; i++) {
+            if (!cfg || cfg[_statusChain[i]] !== false) return _statusChain[i];
+        }
+        return null;
+    };
 
     const handlePrint = (e) => {
         e.stopPropagation();
-        printBill(order, formatPrice, settings || {});
+        if (settings?.kitchenEnabled === false) {
+            printKOT(order, settings || {});
+        } else {
+            printBill(order, formatPrice, settings || {});
+        }
     };
     const isPaid = order.paymentStatus === 'paid';
 
@@ -87,12 +105,12 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings }) =
                         {kotPrintEnabled && (
                             <button
                                 onClick={handlePrint}
-                                title="Print"
+                                title={settings?.kitchenEnabled === false ? "Print KOT" : "Print"}
                                 aria-label="Print"
                                 className="flex items-center justify-center gap-1 w-10 h-10 lg:w-auto lg:h-7 lg:px-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-black rounded-lg transition-all shadow-sm shadow-blue-600/30 uppercase tracking-wide"
                             >
                                 <Printer size={14} strokeWidth={2.5} className="lg:w-3 lg:h-3" />
-                                <span className="hidden lg:inline">PRINT</span>
+                                <span className="hidden lg:inline">{settings?.kitchenEnabled === false ? 'KOT' : 'PRINT'}</span>
                             </button>
                         )}
                         <StatusBadge status={order.orderStatus} items={order.items || []} size="xs" />
@@ -144,9 +162,32 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings }) =
                     <span className="text-[10px] font-black text-[var(--theme-text-muted)] uppercase tracking-tighter shrink-0">
                         {order.orderType === 'dine-in' ? 'DINE' : 'TAKE'}
                     </span>
-                    <span className="min-w-0 truncate text-[11px] sm:text-xs font-black text-[var(--theme-text-main)] tabular-nums">
-                        {formatPrice(order.finalAmount)}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        {settings?.kitchenEnabled === false &&
+                            ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) &&
+                            getNextEnabledStatus(order.orderStatus) && onUpdateStatus ? (
+                            <button
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (isUpdatingOrder) return;
+                                    setIsUpdatingOrder(true);
+                                    const nextStatus = getNextEnabledStatus(order.orderStatus);
+                                    try { await onUpdateStatus(order._id, nextStatus); } finally { setIsUpdatingOrder(false); }
+                                }}
+                                disabled={isUpdatingOrder}
+                                className={`px-2.5 py-1 flex items-center justify-center min-w-[55px] h-6 text-white text-[9px] font-black rounded-lg shadow-sm transition-all active:scale-95 uppercase tracking-wider
+                                    ${order.orderStatus?.toLowerCase() === 'pending' ? 'bg-[var(--status-pending,#f59e0b)] hover:brightness-110' :
+                                        order.orderStatus?.toLowerCase() === 'accepted' ? 'bg-[var(--status-accepted,#8b5cf6)] hover:brightness-110' :
+                                            'bg-[var(--status-ready,#10b981)] hover:brightness-110'}
+                                    ${isUpdatingOrder ? 'opacity-30' : ''}`}
+                            >
+                                {isUpdatingOrder ? <Loader2 size={11} className="animate-spin" /> : (_statusLabelsShort[getNextEnabledStatus(order.orderStatus)] || 'NEXT')}
+                            </button>
+                        ) : null}
+                        <span className="min-w-0 truncate text-[11px] sm:text-xs font-black text-[var(--theme-text-main)] tabular-nums">
+                            {formatPrice(order.finalAmount)}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -220,7 +261,7 @@ const STATUS_META = {
     cancelled: { bar: 'bg-rose-500', card: 'bg-rose-50    border-rose-200', num: 'text-rose-600', badge: 'bg-rose-100    text-rose-700    border-rose-300', glow: 'shadow-rose-200' },
 };
 
-const TokenSquare = memo(({ order, onClick, isSelected }) => {
+const TokenSquare = memo(({ order, onClick, isSelected, settings, onUpdateStatus, kotPrintEnabled }) => {
     const elapsed = useElapsed(order.createdAt);
     const isReady = order.orderStatus?.toLowerCase() === 'ready';
     const s = STATUS_META[order.orderStatus?.toLowerCase()] || STATUS_META.pending;
@@ -230,6 +271,19 @@ const TokenSquare = memo(({ order, onClick, isSelected }) => {
         : (order.tokenNumber || '?');
     const activeItems = order.items?.filter(i => i.status?.toUpperCase() !== 'CANCELLED') || [];
     const itemCount = activeItems.length;
+    const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+
+    const _statusChain = ['pending', 'accepted', 'preparing', 'ready'];
+    const _statusLabelsShort = { accepted: 'ACCEPT', preparing: 'PREPARE', ready: 'READY' };
+    const getNextEnabledStatus = (cur) => {
+        const cfg = settings?.orderStatusesConfig;
+        const idx = _statusChain.indexOf(cur?.toLowerCase());
+        if (idx === -1) return null;
+        for (let i = idx + 1; i < _statusChain.length; i++) {
+            if (!cfg || cfg[_statusChain[i]] !== false) return _statusChain[i];
+        }
+        return null;
+    };
 
     // Use the DB flag as the canonical source — set by server when new items are added to a ready order,
     // cleared by server when all items are READY again.
@@ -326,6 +380,43 @@ const TokenSquare = memo(({ order, onClick, isSelected }) => {
                     {elapsed}
                 </span>
             </div>
+
+            {settings?.kitchenEnabled === false && (
+                <div className="flex items-center justify-between gap-1 px-2 py-1.5 border-t border-black/[0.04] bg-black/[0.03] shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {kotPrintEnabled && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                printKOT(order, settings || {});
+                            }}
+                            className="flex items-center gap-1 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[9px] font-black rounded shrink-0 shadow-sm uppercase tracking-wide"
+                            title="Print KOT"
+                        >
+                            <Printer size={10} strokeWidth={2.5} />
+                            <span>KOT</span>
+                        </button>
+                    )}
+                    {['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && getNextEnabledStatus(order.orderStatus) && onUpdateStatus && (
+                        <button
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                if (isUpdatingOrder) return;
+                                setIsUpdatingOrder(true);
+                                const nextStatus = getNextEnabledStatus(order.orderStatus);
+                                try { await onUpdateStatus(order._id, nextStatus); } finally { setIsUpdatingOrder(false); }
+                            }}
+                            disabled={isUpdatingOrder}
+                            className={`ml-auto px-2 py-0.5 flex items-center justify-center min-w-[50px] h-6 text-white text-[9px] font-black rounded shadow-sm transition-all active:scale-95 uppercase tracking-wider
+                                ${order.orderStatus?.toLowerCase() === 'pending' ? 'bg-[var(--status-pending,#f59e0b)] hover:brightness-110' :
+                                    order.orderStatus?.toLowerCase() === 'accepted' ? 'bg-[var(--status-accepted,#8b5cf6)] hover:brightness-110' :
+                                        'bg-[var(--status-ready,#10b981)] hover:brightness-110'}
+                                ${isUpdatingOrder ? 'opacity-30' : ''}`}
+                        >
+                            {isUpdatingOrder ? <Loader2 size={10} className="animate-spin" /> : (_statusLabelsShort[getNextEnabledStatus(order.orderStatus)] || 'NEXT')}
+                        </button>
+                    )}
+                </div>
+            )}
         </button>
     );
 });
@@ -901,14 +992,14 @@ const WaiterDashboard = () => {
                             }`}>
                             {displayOrders.map(order => (
                                 isProductionMode
-                                    ? <TokenSquare key={order._id} order={order} onClick={() => setSelectedOrder(order)} isSelected={selectedOrder?._id === order._id} />
+                                    ? <TokenSquare key={order._id} order={order} onClick={() => setSelectedOrder(order)} isSelected={selectedOrder?._id === order._id} settings={settings} onUpdateStatus={handleUpdateStatus} kotPrintEnabled={settings?.kotPrintEnabled !== false} />
                                     : (
                                         <div
                                             key={order._id}
                                             onClick={() => setSelectedOrder(order)}
                                             className={`min-w-0 transition-all duration-200 rounded-xl ring-2 ${selectedOrder?._id === order._id ? 'ring-orange-500 shadow-lg shadow-orange-500/20' : 'ring-transparent'}`}
                                         >
-                                            <WaiterBoxCard order={order} formatPrice={formatPrice} kotPrintEnabled={settings?.kotPrintEnabled !== false} settings={settings} />
+                                            <WaiterBoxCard order={order} formatPrice={formatPrice} kotPrintEnabled={settings?.kotPrintEnabled !== false} settings={settings} onUpdateStatus={handleUpdateStatus} />
                                         </div>
                                     )
                             ))}

@@ -433,7 +433,7 @@ const DEFAULT_STATUSES = { pending: true, accepted: true, preparing: true, ready
 const fmtINR = (n) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0)}`;
 
 /* ── Right Detail Panel ──────────────────────────────────────────────────── */
-const DEFAULT_FEATURES = { dineInEnabled: true, takeawayEnabled: true, tableMapEnabled: true, kotPrintEnabled: true };
+const DEFAULT_FEATURES = { dineInEnabled: true, takeawayEnabled: true, tableMapEnabled: true, kotPrintEnabled: true, kitchenEnabled: true };
 
 const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLoading, navigate }) => {
     const [staff, setStaff] = useState([]);
@@ -480,6 +480,7 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                     takeawayEnabled: data.takeawayEnabled !== false,
                     tableMapEnabled: data.tableMapEnabled !== false,
                     kotPrintEnabled: data.kotPrintEnabled !== false,
+                    kitchenEnabled: data.kitchenEnabled !== false,
                 });
             })
             .catch(() => {
@@ -635,7 +636,7 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
             setFeatureSaving(key);
             try {
                 const { data } = await api.patch(`/superadmin/restaurants/${restaurant._id}/feature-settings`, { key, enabled });
-                setFeatureSettings({ dineInEnabled: data.dineInEnabled, takeawayEnabled: data.takeawayEnabled, tableMapEnabled: data.tableMapEnabled, kotPrintEnabled: data.kotPrintEnabled !== false });
+                setFeatureSettings({ dineInEnabled: data.dineInEnabled, takeawayEnabled: data.takeawayEnabled, tableMapEnabled: data.tableMapEnabled, kotPrintEnabled: data.kotPrintEnabled !== false, kitchenEnabled: data.kitchenEnabled !== false });
             } catch {
                 setFeatureSettings(prev => ({ ...prev, [key]: !enabled }));
             } finally {
@@ -726,6 +727,7 @@ const DetailPanel = ({ restaurant, onClose, onToggle, onDelete, onEdit, actionLo
                             <p className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wide mb-3">Order Types</p>
                             <div className="space-y-1.5">
                                 {[
+                                    { key: 'kitchenEnabled', label: 'Kitchen Enabled', cls: 'text-amber-400' },
                                     { key: 'dineInEnabled', label: 'Dine-In', cls: 'text-blue-400' },
                                     { key: 'takeawayEnabled', label: 'Takeaway', cls: 'text-orange-400' },
                                     { key: 'tableMapEnabled', label: 'Table Map', cls: 'text-purple-400' },

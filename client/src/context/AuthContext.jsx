@@ -58,6 +58,7 @@ export const AuthProvider = ({ children }) => {
             menuView: 'grid',
             mobileMenuView: 'grid',
             dineInEnabled: true,
+            kitchenEnabled: true,
             takeawayEnabled: true,
             tableMapEnabled: true,
             waiterServiceEnabled: true,

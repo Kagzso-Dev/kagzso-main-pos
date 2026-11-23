@@ -76,7 +76,7 @@ const WorkingProcess = () => {
     useEffect(() => {
         if (user?.role !== 'kitchen') return;
         if (orders.length > prevOrdersCount.current) {
-            if (settings?.soundConfig?.kitchenEnabled !== false) {
+            if (settings?.kitchenEnabled !== false && settings?.soundConfig?.kitchenEnabled !== false) {
                 playKitchenSound(settings?.soundConfig?.kitchenSound, settings?.soundConfig?.kitchenVolume ?? 0.8);
             }
         }

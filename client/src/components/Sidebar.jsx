@@ -211,7 +211,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose, tenantTheme, se
                     <>
                         <SectionLabel>Operations</SectionLabel>
 
-                        {user.role === 'kitchen' && (
+                        {user.role === 'kitchen' && settings?.kitchenEnabled !== false && (
                             <>
                                 <NavItem to="/kitchen" icon={ChefHat} label="Kitchen Dashboard" color="text-orange-400" />
                             </>
@@ -221,14 +221,18 @@ const Sidebar = ({ collapsed = false, onToggleCollapse, onClose, tenantTheme, se
                             <>
                                 <NavItem to="/cashier" icon={Monitor} label="Cashier Point" color="text-green-400" />
                                 <NavItem to="/cashier/orders" icon={Armchair} label="Order View" color="text-yellow-400" />
-                                <NavItem to="/cashier/kitchen" icon={ChefHat} label="Kitchen View" color="text-orange-400" />
+                                {settings?.kitchenEnabled !== false && (
+                                    <NavItem to="/cashier/kitchen" icon={ChefHat} label="Kitchen View" color="text-orange-400" />
+                                )}
                             </>
                         )}
 
                         {user.role === 'waiter' && (
                             <>
                                 <NavItem to="/waiter" icon={LayoutDashboard} label="Waiter Dashboard" color="text-pink-400" />
-                                <NavItem to="/kitchen" icon={ChefHat} label="Kitchen View" color="text-emerald-400" />
+                                {settings?.kitchenEnabled !== false && (
+                                    <NavItem to="/kitchen" icon={ChefHat} label="Kitchen View" color="text-emerald-400" />
+                                )}
                                 <NavItem to="/waiter/history" icon={History} label="Order History" color="text-purple-400" />
                             </>
                         )}

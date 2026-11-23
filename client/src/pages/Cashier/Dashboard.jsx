@@ -531,13 +531,15 @@ const CashierDashboard = () => {
                             {(orders || []).filter(o => filterType === 'all' || o.orderType === filterType).length}
                         </div>
 
-                         <button
-                            onClick={() => navigate('/kitchen')}
-                            title="Kitchen View"
-                            className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center rounded-lg xs:rounded-xl border border-orange-500/30 bg-orange-500/5 text-orange-500 hover:bg-orange-500/15 transition-all active:scale-95"
-                        >
-                            <ChefHat size={16} strokeWidth={2.5} />
-                        </button>
+                        {settings?.kitchenEnabled !== false && (
+                            <button
+                                onClick={() => navigate('/kitchen')}
+                                title="Kitchen View"
+                                className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center rounded-lg xs:rounded-xl border border-orange-500/30 bg-orange-500/5 text-orange-500 hover:bg-orange-500/15 transition-all active:scale-95"
+                            >
+                                <ChefHat size={16} strokeWidth={2.5} />
+                            </button>
+                        )}
 
                          <button
                             onClick={() => { const next = !isCardView; setIsCardView(next); localStorage.setItem('cashierCardView', next); }}

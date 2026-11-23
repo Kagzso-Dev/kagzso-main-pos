@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
+import { ChefHat } from 'lucide-react';
 
 // ── Loading spinner while auth state is being restored ───────────────────────
 const AuthLoading = () => (
@@ -51,9 +52,55 @@ const AdminRoute = () => (
     <RoleRoute allowedRoles={['admin']} />
 );
 
-const KitchenRoute = () => (
-    <RoleRoute allowedRoles={['kitchen', 'admin', 'waiter', 'cashier']} />
-);
+const KitchenDisabledNotice = () => {
+    const { logout } = useContext(AuthContext);
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--theme-bg-main,#0F172A)] text-[var(--theme-text-main,#fff)] p-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 mb-4 border border-orange-500/20">
+                <ChefHat size={32} />
+            </div>
+            <h1 className="text-2xl font-black mb-2">Kitchen is disabled</h1>
+            <p className="text-sm text-[var(--theme-text-muted,#94a3b8)] max-w-md mb-6">
+                The kitchen module has been disabled for this restaurant by the administrator. Orders are handled directly by service staff.
+            </p>
+            <button
+                onClick={logout}
+                className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs uppercase tracking-wider transition-all"
+            >
+                Sign Out
+            </button>
+        </div>
+    );
+};
+
+const KitchenRoute = () => {
+    const { user, settings, loading } = useContext(AuthContext);
+    if (loading) return <AuthLoading />;
+    if (!user) return <Navigate to="/login" replace />;
+
+    const kitchenEnabled = settings?.kitchenEnabled !== false;
+    if (!kitchenEnabled) {
+        if (user.role === 'kitchen') {
+            return <KitchenDisabledNotice />;
+        }
+        return <Navigate to={getDashboardPath(user.role)} replace />;
+    }
+
+    return <RoleRoute allowedRoles={['kitchen', 'admin', 'waiter', 'cashier']} />;
+};
+
+const CashierKitchenRoute = () => {
+    const { user, settings, loading } = useContext(AuthContext);
+    if (loading) return <AuthLoading />;
+    if (!user) return <Navigate to="/login" replace />;
+
+    const kitchenEnabled = settings?.kitchenEnabled !== false;
+    if (!kitchenEnabled) {
+        return <Navigate to="/cashier" replace />;
+    }
+
+    return <RoleRoute allowedRoles={['cashier', 'admin']} />;
+};
 
 const CashierRoute = () => (
     <RoleRoute allowedRoles={['cashier', 'admin']} />
@@ -67,4 +114,4 @@ const SuperAdminRoute = () => (
     <RoleRoute allowedRoles={['superadmin']} />
 );
 
-export { AdminRoute, KitchenRoute, CashierRoute, WaiterRoute, SuperAdminRoute };
+export { AdminRoute, KitchenRoute, CashierKitchenRoute, CashierRoute, WaiterRoute, SuperAdminRoute };

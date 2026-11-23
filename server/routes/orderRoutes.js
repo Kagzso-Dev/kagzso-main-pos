@@ -31,7 +31,7 @@ router.put('/orders/:id/status', authorize('kitchen', 'admin', 'waiter'), update
 router.put('/orders/:id/cancel', authorize('waiter', 'kitchen', 'admin'), cancelOrder);
 router.put('/orders/:id/payment', authorize('cashier'), processPayment);
 
-router.put('/orders/:id/items/:itemId/status', authorize('kitchen', 'admin'), updateItemStatus);
+router.put('/orders/:id/items/:itemId/status', authorize('kitchen', 'admin', 'waiter'), updateItemStatus);
 router.put('/orders/:id/items/:itemId/cancel', authorize('waiter', 'kitchen', 'admin'), cancelOrderItem);
 
 // ── Generic /orders/:id route ──────────────────────────────────────────

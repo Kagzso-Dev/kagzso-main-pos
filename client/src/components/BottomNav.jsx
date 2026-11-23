@@ -12,7 +12,7 @@ import {
  * Collapsible logic: hidden by default, toggled via a small chevron handle.
  */
 const BottomNav = memo(() => {
-    const { user } = useContext(AuthContext);
+    const { user, settings } = useContext(AuthContext);
     const navigate = useNavigate();
     const location = useLocation();
     
@@ -31,21 +31,28 @@ const BottomNav = memo(() => {
             { to: '/admin/menu', icon: Utensils, label: 'Menu' },
             { to: '/admin/settings', icon: Settings, label: 'Settings' },
         ];
-        if (user.role === 'kitchen') return [
-            { to: '/kitchen', icon: ChefHat, label: 'Kitchen' },
-        ];
-        if (user.role === 'cashier') return [
-            { to: '/cashier', icon: Monitor, label: 'POS' },
-            { to: '/cashier/orders', icon: ClipboardList, label: 'Orders' },
-            { to: '/cashier/kitchen', icon: ChefHat, label: 'Kitchen' },
-        ];
+        if (user.role === 'kitchen') {
+            return settings?.kitchenEnabled !== false ? [
+                { to: '/kitchen', icon: ChefHat, label: 'Kitchen' },
+            ] : [];
+        }
+        if (user.role === 'cashier') {
+            const items = [
+                { to: '/cashier', icon: Monitor, label: 'POS' },
+                { to: '/cashier/orders', icon: ClipboardList, label: 'Orders' },
+            ];
+            if (settings?.kitchenEnabled !== false) {
+                items.push({ to: '/cashier/kitchen', icon: ChefHat, label: 'Kitchen' });
+            }
+            return items;
+        }
         if (user.role === 'waiter') return [
             { to: '/waiter', icon: LayoutDashboard, label: 'Dashboard' },
             { to: '/dine-in', icon: Utensils, label: 'Dine In' },
             { to: '/take-away', icon: Package, label: 'Take Away' },
         ];
         return [];
-    }, [user.role]);
+    }, [user.role, settings?.kitchenEnabled]);
 
     return (
         <div className="md:hidden">

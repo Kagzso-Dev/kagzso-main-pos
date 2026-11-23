@@ -38,7 +38,7 @@ export const NotificationProvider = ({ children }) => {
             }
             const sc = settingsRef.current?.soundConfig;
             if (user?.role === 'kitchen') {
-                if (sc?.kitchenEnabled !== false) {
+                if (settingsRef.current?.kitchenEnabled !== false && sc?.kitchenEnabled !== false) {
                     playKitchenSound(sc?.kitchenSound, sc?.kitchenVolume ?? 0.8);
                 }
                 return;

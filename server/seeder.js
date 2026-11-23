@@ -172,6 +172,7 @@ const createTables = async () => {
             menu_view VARCHAR(50) DEFAULT 'grid',
             mobile_menu_view VARCHAR(50) DEFAULT 'grid',
             dine_in_enabled BOOLEAN DEFAULT 1,
+            kitchen_enabled BOOLEAN DEFAULT 1,
             table_map_enabled BOOLEAN DEFAULT 1,
             takeaway_enabled BOOLEAN DEFAULT 1,
             waiter_service_enabled BOOLEAN DEFAULT 1,
