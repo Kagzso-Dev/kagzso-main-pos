@@ -111,89 +111,75 @@ const WorkingProcess = () => {
 
     const printKOT = () => {
         if (!selectedOrder) return;
-        const statusColors = {
-            pending: '#f59e0b',
-            accepted: '#3b82f6',
-            preparing: '#8b5cf6',
-            ready: '#10b981',
-            cancelled: '#ef4444',
-        };
+        const nonCancelled = (selectedOrder.items || []).filter(item => item.status?.toUpperCase() !== 'CANCELLED');
+        if (nonCancelled.length === 0) return;
 
-        const getItemStatusStyle = (status) => {
-            const color = statusColors[status?.toLowerCase()] || '#6b7280';
-            return `border:1px solid ${color};color:${color};font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;text-transform:uppercase;`;
-        };
+        const orderNum = `${selectedOrder.orderType === 'dine-in' ? 'DI' : 'TK'}-${String(selectedOrder.orderNumber).replace('ORD-', '')}`;
+        const tableName = selectedOrder.tableId?.name || (selectedOrder.tableId?.number ? `Table ${selectedOrder.tableId.number}` : (selectedOrder.tableId ? `Table ${selectedOrder.tableId}` : '—'));
+        const dateStr = new Date(selectedOrder.createdAt).toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        });
+        const restaurantName = (settings?.restaurantName || 'RESTAURANT').toUpperCase();
 
-        const orderStatusColor = statusColors[selectedOrder.orderStatus?.toLowerCase()] || '#6b7280';
+        const itemsHTML = nonCancelled.map(item => {
+            const variant = item.variant?.name || (typeof item.variant === 'string' ? item.variant : '');
+            return `
+                <tr>
+                    <td style="padding:4px 0;font-size:11px;vertical-align:top;">
+                        ${item.name}
+                        ${variant ? `<br/><span style="font-size:9px;opacity:0.8;">[${variant}]</span>` : ''}
+                    </td>
+                    <td style="padding:4px 0;font-size:11px;text-align:center;vertical-align:top;">${item.quantity}</td>
+                </tr>`;
+        }).join('');
 
-        const itemsHTML = selectedOrder.items.map((item, idx) => `
-            <tr style="border-bottom:1px dashed #e5e7eb;">
-                <td style="padding:8px 4px;">
-                    <span style="font-weight:700;">${item.name}</span>
-                    ${item.notes ? `<div style="font-size:11px;color:#6b7280;font-style:italic;margin-top:2px;">Note: ${item.notes}</div>` : ''}
-                </td>
-                <td style="padding:8px 4px;text-align:center;font-weight:700;font-size:18px;">${item.quantity}</td>
-                <td style="padding:8px 4px;text-align:right;">
-                    <span style="${getItemStatusStyle(item.status)}">${item.status || ''}</span>
-                </td>
-            </tr>
-        `).join('');
-
-        const tableOrToken = selectedOrder.orderType === 'dine-in'
-            ? `TBL ${selectedOrder.tableId?.number || selectedOrder.tableId || '?'}`
-            : `TOK ${selectedOrder.tokenNumber}`;
-
-        const orderNum = selectedOrder.orderType === 'dine-in' ? 'DI' : 'TK';
-        const ordNum = String(selectedOrder.orderNumber).startsWith('ORD-') ? String(selectedOrder.orderNumber).replace('ORD-', '') : selectedOrder.orderNumber;
-        const displayOrderNumber = `${orderNum}-${ordNum}`;
-
-        const html = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8"/>
-    <title>KOT - ${displayOrderNumber}</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: monospace, sans-serif; background:#fff; color:#000; padding:12px; }
-        @page { size: 80mm auto; margin: 5mm; }
-    </style>
-</head>
-<body>
-    <div style="max-width:320px;margin:0 auto;position:relative;overflow:hidden;">
-        {/* Watermark removed */}
-        <div style="text-align:center;border-bottom:2px dashed #d1d5db;padding-bottom:12px;margin-bottom:12px;">
-            <h1 style="font-size:22px;font-weight:900;letter-spacing:1px;">KITCHEN ORDER</h1>
-            <p style="font-size:11px;font-weight:600;color:#4b5563;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">${selectedOrder.orderType}</p>
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>KOT — ${orderNum}</title><style>
+            @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+            * { margin:0; padding:0; box-sizing:border-box; }
+            body { font-family:'Courier Prime','Courier New',Courier,monospace; font-size:12px; width:72mm; margin:0 auto; padding:10px 5px; color:#000; background:#fff; }
+            .receipt-container { background:white; padding:10px 5px; }
+            .center { text-align:center; }
+            .bold { font-weight:bold; }
+            .dash { border-top:1px dashed #000; margin:8px 0; }
+            .solid { border-top:1px solid #000; margin:8px 0; }
+            .row { display:flex; justify-content:space-between; margin:4px 0; font-size:11px; }
+            table { width:100%; border-collapse:collapse; margin:6px 0; }
+            th { font-size:10px; text-align:left; padding:4px 0; border-bottom:1px dashed #000; font-weight:bold; }
+            @page { margin:0; size:80mm auto; }
+            @media print {
+                body { width:72mm; padding:0; background:white; }
+                .receipt-container { box-shadow:none !important; padding:10px 5px !important; }
+            }
+        </style></head><body>
+        <div class="receipt-container">
+            <div class="center bold" style="font-size:18px;letter-spacing:1px;text-transform:uppercase;">${restaurantName}</div>
+            <div class="solid"></div>
+            <div class="row"><span>KOT</span><span class="bold">${orderNum}</span></div>
+            <div class="row"><span>TOKEN</span><span class="bold">#${selectedOrder.tokenNumber || '—'}</span></div>
+            <div class="row"><span>TIME</span><span>${dateStr}</span></div>
+            <div class="row"><span>TYPE</span><span class="bold">${selectedOrder.orderType?.toUpperCase()}</span></div>
+            ${selectedOrder.orderType === 'dine-in' ? `<div class="row"><span>TABLE</span><span class="bold">${tableName}</span></div>` : ''}
+            <div class="dash"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:75%;text-align:left;">ITEM</th>
+                        <th style="width:25%;text-align:center;">QTY</th>
+                    </tr>
+                </thead>
+                <tbody>${itemsHTML}</tbody>
+            </table>
+            <div class="dash"></div>
+            <div class="center" style="font-size:11px;margin:10px 0 2px;font-weight:bold;">THANK YOU FOR YOUR VISIT!</div>
+            <div class="center" style="font-size:10px;color:#555;">Please visit us again soon &#9829;</div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px;">
-            <div>
-                <p><strong>Order:</strong> ${displayOrderNumber}</p>
-                <p><strong>Time:</strong> ${new Date(selectedOrder.createdAt).toLocaleTimeString()}</p>
-            </div>
-            <div style="text-align:right;">
-                <p style="font-size:18px;font-weight:900;">${tableOrToken}</p>
-            </div>
-        </div>
-        <table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:16px;">
-            <thead>
-                <tr style="border-bottom:2px solid #000;">
-                    <th style="padding:4px;text-align:left;">Item</th>
-                    <th style="padding:4px;text-align:center;">Qty</th>
-                    <th style="padding:4px;text-align:right;">Status</th>
-                </tr>
-            </thead>
-            <tbody>${itemsHTML}</tbody>
-        </table>
-        <div style="border-top:2px solid #000;padding-top:12px;text-align:center;">
-            <p style="font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Order Status</p>
-            <div style="font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:2px;padding:8px;border:2px solid ${orderStatusColor};color:${orderStatusColor};">
-                ${selectedOrder.orderStatus}
-            </div>
-        </div>
-    </div>
-    <script>window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); }; };<\/script>
-</body>
-</html>`;
+        <script>window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); }; };<\/script>
+        </body></html>`;
 
         const win = window.open('', '_blank', 'width=400,height=600');
         win.document.write(html);
