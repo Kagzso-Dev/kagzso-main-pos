@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { ChefHat } from 'lucide-react';
+import CashierPaymentAnnouncer from './components/CashierPaymentAnnouncer';
 
 // ── Loading spinner while auth state is being restored ───────────────────────
 const AuthLoading = () => (
@@ -102,9 +103,15 @@ const CashierKitchenRoute = () => {
     return <RoleRoute allowedRoles={['cashier', 'admin']} />;
 };
 
-const CashierRoute = () => (
-    <RoleRoute allowedRoles={['cashier', 'admin']} />
-);
+const CashierRoute = () => {
+    const { user } = useContext(AuthContext);
+    return (
+        <>
+            {user?.role === 'cashier' && <CashierPaymentAnnouncer />}
+            <RoleRoute allowedRoles={['cashier', 'admin']} />
+        </>
+    );
+};
 
 const WaiterRoute = () => (
     <RoleRoute allowedRoles={['waiter', 'cashier', 'admin']} />

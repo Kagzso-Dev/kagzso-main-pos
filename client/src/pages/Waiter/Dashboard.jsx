@@ -455,7 +455,6 @@ const WaiterDashboard = () => {
 
     // ── Voice Announcements ──
     const announcedReady = useRef(new Set());
-    const announcedPayment = useRef(new Set());
     const settingsRef = useRef(settings);
     useEffect(() => { settingsRef.current = settings; }, [settings]);
     useEffect(() => {
@@ -488,26 +487,6 @@ const WaiterDashboard = () => {
                 window.speechSynthesis.speak(msg);
             });
         }
-
-        // "Payment" announcement
-        const newPayment = orders.filter(o =>
-            o.orderStatus?.toLowerCase() === 'payment' &&
-            !announcedPayment.current.has(o._id) &&
-            typeAllowed(o)
-        );
-        newPayment.forEach(o => {
-            announcedPayment.current.add(o._id);
-            const identifier = o.orderType === 'dine-in'
-                ? `table number ${o.tableId?.number || o.tableId || '?'}`
-                : `token number ${o.tokenNumber || '?'}`;
-            const msg = new SpeechSynthesisUtterance(`Payment ready, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
-            msg.onend = () => {
-                const sc = settingsRef.current?.soundConfig;
-                if (sc && sc.waiterEnabled !== false)
-                    playWaiterSound(sc.waiterSound, sc.waiterVolume ?? 0.6);
-            };
-            window.speechSynthesis.speak(msg);
-        });
     }, [orders, settings?.dineInEnabled, settings?.takeawayEnabled]);
 
     const fetchOrders = useCallback(async () => {

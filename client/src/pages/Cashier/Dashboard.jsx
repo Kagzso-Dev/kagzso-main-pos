@@ -8,7 +8,6 @@ const logoImg = '/logo.png';
 import PaymentModal from '../../components/PaymentModal';
 import CancelOrderModal from '../../components/CancelOrderModal';
 import StatusBadge from '../../components/StatusBadge';
-import { playWaiterSound } from '../../utils/bellSound';
 import { tokenColors } from '../../utils/tokenColors';
 import { printBill } from '../../components/BillPrint';
 import {
@@ -265,7 +264,6 @@ const CashierDashboard = () => {
         return (sidebar && sidebar.offsetWidth > 120) ? 3 : 4;
     });
     const { user, socket, formatPrice, formatOrderNumber, settings } = useContext(AuthContext);
-    const announcedOrders = useRef(new Set());
     const location = useLocation();
     const navigate = useNavigate();
     const isHistoryMode = location.pathname.includes('/history');
@@ -411,30 +409,6 @@ const CashierDashboard = () => {
         window.addEventListener('pos-refresh', fetchOrders);
         return () => window.removeEventListener('pos-refresh', fetchOrders);
     }, [user, socket, fetchOrders]);
-
-    // ── Voice & Audio Notifications ──────────────────────────────────
-    useEffect(() => {
-        if (!orders?.length || isHistoryMode) return;
-        
-        const paymentReadyOrders = orders.filter(o => 
-            o.orderStatus?.toLowerCase() === 'payment' && !announcedOrders.current.has(o._id)
-        );
-
-        paymentReadyOrders.forEach(o => {
-            announcedOrders.current.add(o._id);
-            const identifier = o.orderType === 'dine-in' 
-                ? `Table ${o.tableId?.number || o.tableId || '?'}` 
-                : `Token ${o.tokenNumber || '?'}`;
-            
-            const msg = new SpeechSynthesisUtterance(`Payment ready, ${identifier}`);
-            msg.onend = () => {
-                if (settings?.soundConfig?.waiterEnabled !== false) {
-                    playWaiterSound(settings?.soundConfig?.waiterSound, settings?.soundConfig?.waiterVolume ?? 0.6);
-                }
-            };
-            window.speechSynthesis.speak(msg);
-        });
-    }, [orders, isHistoryMode]);
 
     /* ── Select Order ────────────────────────────────────────────────── */
     const handleSelect = (order) => {
