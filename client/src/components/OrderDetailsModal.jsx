@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { printBill } from './BillPrint';
-import { printKOT } from '../utils/kotPrint';
 import StatusBadge from './StatusBadge';
 import { AuthContext } from '../context/AuthContext';
 
@@ -109,14 +108,10 @@ const OrderDetailsModal = ({
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (effectiveSettings?.kitchenEnabled === false && userRole === 'waiter') {
-                                    printKOT(order, effectiveSettings);
-                                } else {
-                                    printBill(order, formatPrice, effectiveSettings);
-                                }
+                                printBill(order, formatPrice, effectiveSettings);
                             }}
-                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[var(--theme-bg-dark)]/50 text-[var(--theme-text-muted)] hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-300 active:scale-95 border border-[var(--theme-border)] group shadow-sm"
-                            title={effectiveSettings?.kitchenEnabled === false && userRole === 'waiter' ? "Print KOT" : "Print Full Bill"}
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[var(--theme-bg-dark)]/50 text-[var(--theme-text-muted)] hover:text-[var(--theme-text-main)] hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 active:scale-95 border border-[var(--theme-border)] group shadow-sm"
+                            title="Print Bill"
                         >
                             <Printer size={18} strokeWidth={3} />
                         </button>

@@ -6,7 +6,6 @@ import api from '../../api';
 import { queueAction } from '../../utils/syncEngine';
 import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, LayoutGrid, Loader2 } from 'lucide-react';
 import TableGrid from '../../components/TableGrid';
-import { printBill } from '../../components/BillPrint';
 import { printKOT } from '../../utils/kotPrint';
 import { playWaiterSound } from '../../utils/bellSound';
 import CancelOrderModal from '../../components/CancelOrderModal';
@@ -57,13 +56,9 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onU
         return null;
     };
 
-    const handlePrint = (e) => {
+    const handlePrintKOT = (e) => {
         e.stopPropagation();
-        if (settings?.kitchenEnabled === false) {
-            printKOT(order, settings || {});
-        } else {
-            printBill(order, formatPrice, settings || {});
-        }
+        printKOT(order, settings || {});
     };
     const isPaid = order.paymentStatus === 'paid';
 
@@ -104,13 +99,13 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onU
                     <div className="flex items-center gap-1 shrink-0">
                         {kotPrintEnabled && (
                             <button
-                                onClick={handlePrint}
-                                title={settings?.kitchenEnabled === false ? "Print KOT" : "Print"}
-                                aria-label="Print"
+                                onClick={handlePrintKOT}
+                                title="Print KOT"
+                                aria-label="Print KOT"
                                 className="flex items-center justify-center gap-1 w-10 h-10 lg:w-auto lg:h-7 lg:px-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-black rounded-lg transition-all shadow-sm shadow-blue-600/30 uppercase tracking-wide"
                             >
                                 <Printer size={14} strokeWidth={2.5} className="lg:w-3 lg:h-3" />
-                                <span className="hidden lg:inline">{settings?.kitchenEnabled === false ? 'KOT' : 'PRINT'}</span>
+                                <span className="hidden lg:inline">KOT</span>
                             </button>
                         )}
                         <StatusBadge status={order.orderStatus} items={order.items || []} size="xs" />
@@ -381,7 +376,7 @@ const TokenSquare = memo(({ order, onClick, isSelected, settings, onUpdateStatus
                 </span>
             </div>
 
-            {settings?.kitchenEnabled === false && (
+            {(kotPrintEnabled || (settings?.kitchenEnabled === false && userRole !== 'cashier' && ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && getNextEnabledStatus(order.orderStatus) && onUpdateStatus)) && (
                 <div className="flex items-center justify-between gap-1 px-2 py-1.5 border-t border-black/[0.04] bg-black/[0.03] shrink-0" onClick={(e) => e.stopPropagation()}>
                     {kotPrintEnabled && (
                         <button
@@ -396,7 +391,7 @@ const TokenSquare = memo(({ order, onClick, isSelected, settings, onUpdateStatus
                             <span>KOT</span>
                         </button>
                     )}
-                    {userRole !== 'cashier' && ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && getNextEnabledStatus(order.orderStatus) && onUpdateStatus && (
+                    {settings?.kitchenEnabled === false && userRole !== 'cashier' && ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && getNextEnabledStatus(order.orderStatus) && onUpdateStatus && (
                         <button
                             onClick={async (e) => {
                                 e.stopPropagation();
