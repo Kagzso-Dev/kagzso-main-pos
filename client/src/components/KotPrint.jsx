@@ -1,3 +1,5 @@
+const THERMAL_WIDTH_MM = 80;
+
 export const printKOTSlip = (order, settings = {}, filterNew = false) => {
     const restaurantName = settings.restaurantName || 'RESTAURANT';
     
@@ -117,6 +119,20 @@ export const printKOTSlip = (order, settings = {}, filterNew = false) => {
     body { width: 72mm; padding: 0; background: white; } 
     .preview-header { display: none !important; }
     .receipt-container { box-shadow: none !important; padding: 10px 5px !important; }
+  }
+</style>
+<style>
+  @media print {
+    @page { size: ${THERMAL_WIDTH_MM}mm auto; margin: 0; }
+    html, body { width: ${THERMAL_WIDTH_MM}mm; margin: 0; padding: 0; }
+    .receipt-container {
+      width: 72mm;
+      margin: 0 auto;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+      page-break-inside: avoid;
+      height: auto;
+    }
   }
 </style>
 </head>

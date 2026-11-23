@@ -1,6 +1,8 @@
 import { calculateTax } from '../utils/tax';
 import { printKOTSlip } from './KotPrint';
 
+const THERMAL_WIDTH_MM = 80;
+
 export const printBill = (order, formatPrice, settings = {}, isKOT = false, filterNew = false) => {
     if (isKOT) { return printKOTSlip(order, settings, filterNew); }
     const isPaid = order.paymentStatus === 'paid';
@@ -156,6 +158,20 @@ export const printBill = (order, formatPrice, settings = {}, isKOT = false, filt
     body { width: 72mm; padding: 0; background: white; } 
     .preview-header { display: none !important; }
     .receipt-container { box-shadow: none !important; padding: 10px 5px !important; }
+  }
+</style>
+<style>
+  @media print {
+    @page { size: ${THERMAL_WIDTH_MM}mm auto; margin: 0; }
+    html, body { width: ${THERMAL_WIDTH_MM}mm; margin: 0; padding: 0; }
+    .receipt-container {
+      width: 72mm;
+      margin: 0 auto;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+      page-break-inside: avoid;
+      height: auto;
+    }
   }
 </style>
 </head>
