@@ -203,100 +203,114 @@ const OrderDetailsModal = ({
                 <div className="flex flex-col xs:flex-row bg-[var(--theme-bg-dark)]/40 rounded-[1.5rem] xs:rounded-[2rem] border border-[var(--theme-border)] shadow-xl overflow-hidden font-inter relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                     
-                    <div className="w-full xs:w-[90px] sm:w-[120px] border-b xs:border-b-0 xs:border-r border-[var(--theme-border)]/50 flex flex-row xs:flex-col items-center justify-center p-3 xs:p-5 gap-4 xs:gap-0 z-10">
-                         {/* Dynamic Role-Based Action Button */}
-                         {(() => {
-                             let icon = <Check size={28} />;
-                             let label = "Served";
-                             let nextStatus = null;
-                             let colorClass = "bg-gray-100 dark:bg-white/5 border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-40 cursor-not-allowed grayscale";
-                             let enabled = false;
+                    {!(userRole === 'cashier' && order.orderStatus !== 'payment') && (
+                        <div className="w-full xs:w-[90px] sm:w-[120px] border-b xs:border-b-0 xs:border-r border-[var(--theme-border)]/50 flex flex-row xs:flex-col items-center justify-center p-3 xs:p-5 gap-4 xs:gap-0 z-10">
+                             {/* Dynamic Role-Based Action Button */}
+                             {(() => {
+                                 let icon = <Check size={28} />;
+                                 let label = "Served";
+                                 let nextStatus = null;
+                                 let colorClass = "bg-gray-100 dark:bg-white/5 border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-40 cursor-not-allowed grayscale";
+                                 let enabled = false;
 
-                             if (userRole === 'waiter') {
-                                 const kitchenDisabled = effectiveSettings?.kitchenEnabled === false;
-                                 if (kitchenDisabled && ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase())) {
-                                     const cfg = effectiveSettings?.orderStatusesConfig;
-                                     const chain = ['pending', 'accepted', 'preparing', 'ready'];
-                                     const curIdx = chain.indexOf(order.orderStatus?.toLowerCase());
-                                     let next = null;
-                                     for (let i = curIdx + 1; i < chain.length; i++) {
-                                         if (!cfg || cfg[chain[i]] !== false) {
-                                             next = chain[i];
-                                             break;
-                                         }
+                                 if (userRole === 'cashier') {
+                                     if (order.orderStatus === 'payment') {
+                                         label = "Done";
+                                         nextStatus = "completed";
+                                         icon = <CheckCircle size={28} strokeWidth={2.5} className="scale-75 xs:scale-100" />;
+                                         enabled = isPaid; // Only allow completion if paid
+                                         colorClass = enabled 
+                                            ? "bg-emerald-600 border-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95"
+                                            : "bg-gray-100 dark:bg-white/5 border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-40 cursor-not-allowed grayscale";
+                                     } else {
+                                         return null;
                                      }
-                                     if (next) {
-                                         nextStatus = next;
+                                 } else if (userRole === 'waiter') {
+                                     const kitchenDisabled = effectiveSettings?.kitchenEnabled === false;
+                                     if (kitchenDisabled && ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase())) {
+                                         const cfg = effectiveSettings?.orderStatusesConfig;
+                                         const chain = ['pending', 'accepted', 'preparing', 'ready'];
+                                         const curIdx = chain.indexOf(order.orderStatus?.toLowerCase());
+                                         let next = null;
+                                         for (let i = curIdx + 1; i < chain.length; i++) {
+                                             if (!cfg || cfg[chain[i]] !== false) {
+                                                 next = chain[i];
+                                                 break;
+                                             }
+                                         }
+                                         if (next) {
+                                             nextStatus = next;
+                                             enabled = true;
+                                             if (next === 'accepted') {
+                                                 label = "Accept";
+                                                 icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
+                                                 colorClass = "bg-[var(--status-pending,#f59e0b)] border-amber-500 text-white shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:scale-105 active:scale-95";
+                                             } else if (next === 'preparing') {
+                                                 label = "Prepare";
+                                                 icon = <Utensils size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
+                                                 colorClass = "bg-[var(--status-accepted,#8b5cf6)] border-violet-500 text-white shadow-[0_10px_25px_rgba(139,92,246,0.3)] hover:scale-105 active:scale-95";
+                                             } else if (next === 'ready') {
+                                                 label = "Ready";
+                                                 icon = <CheckCircle size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
+                                                 colorClass = "bg-[var(--status-ready,#10b981)] border-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95";
+                                             }
+                                         }
+                                     } else if (order.orderStatus === 'ready' || order.orderStatus === 'readyToServe') {
+                                         label = "Served";
+                                         nextStatus = "payment";
+                                         icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
+                                         colorClass = "bg-orange-600 border-orange-500 text-white shadow-[0_10px_25px_rgba(249,115,22,0.3)] hover:scale-105 active:scale-95";
                                          enabled = true;
-                                         if (next === 'accepted') {
-                                             label = "Accept";
-                                             icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
-                                             colorClass = "bg-[var(--status-pending,#f59e0b)] border-amber-500 text-white shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:scale-105 active:scale-95";
-                                         } else if (next === 'preparing') {
-                                             label = "Prepare";
-                                             icon = <Utensils size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
-                                             colorClass = "bg-[var(--status-accepted,#8b5cf6)] border-violet-500 text-white shadow-[0_10px_25px_rgba(139,92,246,0.3)] hover:scale-105 active:scale-95";
-                                         } else if (next === 'ready') {
-                                             label = "Ready";
-                                             icon = <CheckCircle size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
-                                             colorClass = "bg-[var(--status-ready,#10b981)] border-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95";
-                                         }
+                                     } else if (order.orderStatus === 'payment') {
+                                         label = "Billed";
+                                         icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100 opacity-50" />;
+                                         colorClass = "bg-orange-500/20 border-orange-500/30 text-orange-500/50 cursor-default";
                                      }
-                                 } else if (order.orderStatus === 'ready' || order.orderStatus === 'readyToServe') {
-                                     label = "Served";
-                                     nextStatus = "payment";
-                                     icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100" />;
-                                     colorClass = "bg-orange-600 border-orange-500 text-white shadow-[0_10px_25px_rgba(249,115,22,0.3)] hover:scale-105 active:scale-95";
-                                     enabled = true;
-                                 } else if (order.orderStatus === 'payment') {
-                                     label = "Billed";
-                                     icon = <Check size={28} strokeWidth={3} className="scale-75 xs:scale-100 opacity-50" />;
-                                     colorClass = "bg-orange-500/20 border-orange-500/30 text-orange-500/50 cursor-default";
+                                 } else if (userRole === 'admin') {
+                                     if (order.orderStatus === 'payment') {
+                                         label = !isPaid ? "Billed" : "Done";
+                                         nextStatus = "completed";
+                                         icon = <CheckCircle size={28} strokeWidth={2.5} className="scale-75 xs:scale-100" />;
+                                         enabled = isPaid; // Only allow completion if paid
+                                         colorClass = enabled 
+                                            ? "bg-emerald-600 border-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95"
+                                            : "bg-gray-100 dark:bg-white/5 border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-40 cursor-not-allowed grayscale";
+                                     }
                                  }
-                             } else if (userRole === 'cashier' || userRole === 'admin') {
-                                 if (order.orderStatus === 'payment') {
-                                     label = (userRole === 'admin' && !isPaid) ? "Billed" : "Done";
-                                     nextStatus = "completed";
+
+                                 // Override if already completed
+                                 if (order.orderStatus === 'completed') {
+                                     label = "Done";
                                      icon = <CheckCircle size={28} strokeWidth={2.5} className="scale-75 xs:scale-100" />;
-                                     enabled = isPaid; // Only allow completion if paid
-                                     colorClass = enabled 
-                                        ? "bg-emerald-600 border-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95"
-                                        : "bg-gray-100 dark:bg-white/5 border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-40 cursor-not-allowed grayscale";
+                                     colorClass = "bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/20 opacity-40 cursor-default";
+                                     enabled = false;
+                                     nextStatus = null;
                                  }
-                             }
 
-                             // Override if already completed
-                             if (order.orderStatus === 'completed') {
-                                 label = "Done";
-                                 icon = <CheckCircle size={28} strokeWidth={2.5} className="scale-75 xs:scale-100" />;
-                                 colorClass = "bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/20 opacity-40 cursor-default";
-                                 enabled = false;
-                                 nextStatus = null;
-                             }
-
-                             return (
-                                 <>
-                                    <button 
-                                        disabled={isUpdatingStatus || !enabled}
-                                        onClick={async () => {
-                                            if (!nextStatus) return;
-                                            try {
-                                                setIsUpdatingStatus(true);
-                                                if (onUpdateStatus) {
-                                                    await onUpdateStatus(order._id, nextStatus);
-                                                    if (nextStatus === 'completed') onClose();
-                                                }
-                                            } finally { setIsUpdatingStatus(false); }
-                                        }}
-                                        className={`w-10 h-10 xs:w-14 sm:w-16 xs:h-14 sm:h-16 rounded-[1.2rem] xs:rounded-[1.5rem] flex items-center justify-center transition-all duration-500 border-2 ${colorClass}`}
-                                    >
-                                        {isUpdatingStatus ? <Loader2 size={16} className="animate-spin" /> : icon}
-                                    </button>
-                                     <p className="mt-0 xs:mt-3 text-[8px] xs:text-[10px] font-black uppercase tracking-[0.15em] xs:tracking-[0.2em] text-[var(--theme-text-muted)] opacity-80 whitespace-nowrap">{label}</p>
-                                 </>
-                             );
-                         })()}
-                    </div>
+                                 return (
+                                     <>
+                                        <button 
+                                            disabled={isUpdatingStatus || !enabled}
+                                            onClick={async () => {
+                                                if (!nextStatus) return;
+                                                try {
+                                                    setIsUpdatingStatus(true);
+                                                    if (onUpdateStatus) {
+                                                        await onUpdateStatus(order._id, nextStatus);
+                                                        if (nextStatus === 'completed') onClose();
+                                                    }
+                                                } finally { setIsUpdatingStatus(false); }
+                                            }}
+                                            className={`w-10 h-10 xs:w-14 sm:w-16 xs:h-14 sm:h-16 rounded-[1.2rem] xs:rounded-[1.5rem] flex items-center justify-center transition-all duration-500 border-2 ${colorClass}`}
+                                        >
+                                            {isUpdatingStatus ? <Loader2 size={16} className="animate-spin" /> : icon}
+                                        </button>
+                                         <p className="mt-0 xs:mt-3 text-[8px] xs:text-[10px] font-black uppercase tracking-[0.15em] xs:tracking-[0.2em] text-[var(--theme-text-muted)] opacity-80 whitespace-nowrap">{label}</p>
+                                     </>
+                                 );
+                             })()}
+                        </div>
+                    )}
 
                     <div className="flex-1 p-4 xs:p-7 flex flex-col justify-between min-w-0 z-10 overflow-hidden">
                         <div className="space-y-1.5 xs:space-y-2">

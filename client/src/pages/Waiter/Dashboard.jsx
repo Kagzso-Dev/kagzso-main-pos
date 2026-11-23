@@ -39,7 +39,7 @@ const useElapsed = (createdAt) => {
 };
 
 /* ── KOT-style Box Card (Waiter) ─────────────────────────────────────────── */
-const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onUpdateStatus }) => {
+const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onUpdateStatus, userRole }) => {
     const elapsed = useElapsed(order.createdAt);
     const urgency = (Date.now() - new Date(order.createdAt)) > 600000;
     const isReady = order.orderStatus?.toLowerCase() === 'ready';
@@ -163,7 +163,7 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onU
                         {order.orderType === 'dine-in' ? 'DINE' : 'TAKE'}
                     </span>
                     <div className="flex items-center gap-1.5 min-w-0">
-                        {settings?.kitchenEnabled === false &&
+                        {userRole !== 'cashier' && settings?.kitchenEnabled === false &&
                             ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) &&
                             getNextEnabledStatus(order.orderStatus) && onUpdateStatus ? (
                             <button
@@ -261,7 +261,7 @@ const STATUS_META = {
     cancelled: { bar: 'bg-rose-500', card: 'bg-rose-50    border-rose-200', num: 'text-rose-600', badge: 'bg-rose-100    text-rose-700    border-rose-300', glow: 'shadow-rose-200' },
 };
 
-const TokenSquare = memo(({ order, onClick, isSelected, settings, onUpdateStatus, kotPrintEnabled }) => {
+const TokenSquare = memo(({ order, onClick, isSelected, settings, onUpdateStatus, kotPrintEnabled, userRole }) => {
     const elapsed = useElapsed(order.createdAt);
     const isReady = order.orderStatus?.toLowerCase() === 'ready';
     const s = STATUS_META[order.orderStatus?.toLowerCase()] || STATUS_META.pending;
@@ -396,7 +396,7 @@ const TokenSquare = memo(({ order, onClick, isSelected, settings, onUpdateStatus
                             <span>KOT</span>
                         </button>
                     )}
-                    {['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && getNextEnabledStatus(order.orderStatus) && onUpdateStatus && (
+                    {userRole !== 'cashier' && ['pending', 'accepted', 'preparing'].includes(order.orderStatus?.toLowerCase()) && getNextEnabledStatus(order.orderStatus) && onUpdateStatus && (
                         <button
                             onClick={async (e) => {
                                 e.stopPropagation();
@@ -472,24 +472,26 @@ const WaiterDashboard = () => {
         };
 
         // "Ready" announcement
-        const newReady = orders.filter(o =>
-            o.orderStatus?.toLowerCase() === 'ready' &&
-            !announcedReady.current.has(o._id) &&
-            typeAllowed(o)
-        );
-        newReady.forEach(o => {
-            announcedReady.current.add(o._id);
-            const identifier = o.orderType === 'dine-in'
-                ? `table number ${o.tableId?.number || o.tableId || '?'}`
-                : `token number ${o.tokenNumber || '?'}`;
-            const msg = new SpeechSynthesisUtterance(`Ready order, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
-            msg.onend = () => {
-                const sc = settingsRef.current?.soundConfig;
-                if (sc && sc.waiterEnabled !== false)
-                    playWaiterSound(sc.waiterSound, sc.waiterVolume ?? 0.6);
-            };
-            window.speechSynthesis.speak(msg);
-        });
+        if (user?.role !== 'cashier') {
+            const newReady = orders.filter(o =>
+                o.orderStatus?.toLowerCase() === 'ready' &&
+                !announcedReady.current.has(o._id) &&
+                typeAllowed(o)
+            );
+            newReady.forEach(o => {
+                announcedReady.current.add(o._id);
+                const identifier = o.orderType === 'dine-in'
+                    ? `table number ${o.tableId?.number || o.tableId || '?'}`
+                    : `token number ${o.tokenNumber || '?'}`;
+                const msg = new SpeechSynthesisUtterance(`Ready order, ${o.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'} ${identifier}`);
+                msg.onend = () => {
+                    const sc = settingsRef.current?.soundConfig;
+                    if (sc && sc.waiterEnabled !== false)
+                        playWaiterSound(sc.waiterSound, sc.waiterVolume ?? 0.6);
+                };
+                window.speechSynthesis.speak(msg);
+            });
+        }
 
         // "Payment" announcement
         const newPayment = orders.filter(o =>
@@ -516,7 +518,11 @@ const WaiterDashboard = () => {
         try {
             setLoading(true);
             setFetchError(false);
-            const res = await api.get('/api/orders', { params: { limit: 100 }, headers: { Authorization: `Bearer ${user.token}` } });
+            const params = { limit: 100 };
+            if (user?.role === 'cashier') {
+                params.view = 'all';
+            }
+            const res = await api.get('/api/orders', { params, headers: { Authorization: `Bearer ${user.token}` } });
             setOrders(res.data.orders || []);
         } catch (err) { setFetchError(true); } finally { setLoading(false); }
     }, [user]);
@@ -992,14 +998,14 @@ const WaiterDashboard = () => {
                             }`}>
                             {displayOrders.map(order => (
                                 isProductionMode
-                                    ? <TokenSquare key={order._id} order={order} onClick={() => setSelectedOrder(order)} isSelected={selectedOrder?._id === order._id} settings={settings} onUpdateStatus={handleUpdateStatus} kotPrintEnabled={settings?.kotPrintEnabled !== false} />
+                                    ? <TokenSquare key={order._id} order={order} onClick={() => setSelectedOrder(order)} isSelected={selectedOrder?._id === order._id} settings={settings} onUpdateStatus={user?.role === 'cashier' ? null : handleUpdateStatus} kotPrintEnabled={settings?.kotPrintEnabled !== false} userRole={user?.role} />
                                     : (
                                         <div
                                             key={order._id}
                                             onClick={() => setSelectedOrder(order)}
                                             className={`min-w-0 transition-all duration-200 rounded-xl ring-2 ${selectedOrder?._id === order._id ? 'ring-orange-500 shadow-lg shadow-orange-500/20' : 'ring-transparent'}`}
                                         >
-                                            <WaiterBoxCard order={order} formatPrice={formatPrice} kotPrintEnabled={settings?.kotPrintEnabled !== false} settings={settings} onUpdateStatus={handleUpdateStatus} />
+                                            <WaiterBoxCard order={order} formatPrice={formatPrice} kotPrintEnabled={settings?.kotPrintEnabled !== false} settings={settings} onUpdateStatus={user?.role === 'cashier' ? null : handleUpdateStatus} userRole={user?.role} />
                                         </div>
                                     )
                             ))}
@@ -1019,11 +1025,11 @@ const WaiterDashboard = () => {
                             order={selectedOrder}
                             onClose={() => setSelectedOrder(null)}
                             formatPrice={formatPrice}
-                            userRole={user.role}
-                            onCancelItem={(o, i) => setCancelModal({ isOpen: true, order: o, item: i })}
-                            onCancelOrder={(o) => setCancelModal({ isOpen: true, order: o, item: null })}
+                            userRole={user?.role}
+                            onCancelItem={user?.role === 'cashier' ? null : (o, i) => setCancelModal({ isOpen: true, order: o, item: i })}
+                            onCancelOrder={user?.role === 'cashier' ? null : (o) => setCancelModal({ isOpen: true, order: o, item: null })}
                             onUpdateStatus={handleUpdateStatus}
-                            onAddItem={handleAddItems}
+                            onAddItem={user?.role === 'cashier' ? null : handleAddItems}
                             settings={settings}
                         />
                     </div>
@@ -1039,11 +1045,11 @@ const WaiterDashboard = () => {
                         order={selectedOrder}
                         onClose={() => setSelectedOrder(null)}
                         formatPrice={formatPrice}
-                        userRole={user.role}
-                        onCancelItem={(o, i) => setCancelModal({ isOpen: true, order: o, item: i })}
-                        onCancelOrder={(o) => setCancelModal({ isOpen: true, order: o, item: null })}
+                        userRole={user?.role}
+                        onCancelItem={user?.role === 'cashier' ? null : (o, i) => setCancelModal({ isOpen: true, order: o, item: i })}
+                        onCancelOrder={user?.role === 'cashier' ? null : (o) => setCancelModal({ isOpen: true, order: o, item: null })}
                         onUpdateStatus={handleUpdateStatus}
-                        onAddItem={handleAddItems}
+                        onAddItem={user?.role === 'cashier' ? null : handleAddItems}
                         settings={settings}
                     />
                 </div>,

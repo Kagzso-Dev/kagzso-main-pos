@@ -45,7 +45,7 @@ const getOrders = async (req, res) => {
         if (view === 'kitchen' && !status) {
             // Kitchen view (used by kitchen and cashier kitchen view) sees up to 'ready'
             filter.orderStatus = { $in: ['pending', 'accepted', 'preparing', 'ready'] };
-        } else if (req.role === 'cashier' && !status) {
+        } else if (req.role === 'cashier' && !status && view !== 'all') {
             // Cashier Point ONLY sees 'payment' (per requirements)
             filter.orderStatus = 'payment';
         }
