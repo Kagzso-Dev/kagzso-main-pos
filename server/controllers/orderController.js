@@ -41,7 +41,8 @@ const getOrders = async (req, res) => {
         }
 
         // ROLE-BASED VISIBILITY OVERRIDES
-        const view = req.query.view || (req.role === 'kitchen' ? 'kitchen' : null);
+        const rawView = req.query.view ? String(req.query.view).trim().toLowerCase() : null;
+        const view = rawView || (req.role === 'kitchen' ? 'kitchen' : null);
         if (view === 'kitchen' && !status) {
             // Kitchen view (used by kitchen and cashier kitchen view) sees up to 'ready'
             filter.orderStatus = { $in: ['pending', 'accepted', 'preparing', 'ready'] };

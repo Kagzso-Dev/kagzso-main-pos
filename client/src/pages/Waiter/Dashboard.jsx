@@ -519,10 +519,14 @@ const WaiterDashboard = () => {
             setLoading(true);
             setFetchError(false);
             const params = { limit: 100 };
-            if (user?.role === 'cashier') {
+            const isCashier = user?.role === 'cashier' ||
+                (() => { try { return JSON.parse(sessionStorage.getItem('user') || '{}')?.role === 'cashier'; } catch { return false; } })() ||
+                window.location.pathname.startsWith('/cashier');
+            if (isCashier) {
                 params.view = 'all';
             }
-            const res = await api.get('/api/orders', { params, headers: { Authorization: `Bearer ${user.token}` } });
+            const token = user?.token || (() => { try { return JSON.parse(sessionStorage.getItem('user') || '{}')?.token; } catch { return null; } })();
+            const res = await api.get('/api/orders', { params, headers: token ? { Authorization: `Bearer ${token}` } : {} });
             setOrders(res.data.orders || []);
         } catch (err) { setFetchError(true); } finally { setLoading(false); }
     }, [user]);
