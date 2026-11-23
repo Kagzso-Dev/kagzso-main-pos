@@ -1,6 +1,8 @@
 import { calculateTax } from '../utils/tax';
+import { printKOTSlip } from './KotPrint';
 
 export const printBill = (order, formatPrice, settings = {}, isKOT = false, filterNew = false) => {
+    if (isKOT) { return printKOTSlip(order, settings, filterNew); }
     const isPaid = order.paymentStatus === 'paid';
     const restaurantName = settings.restaurantName || 'admin';
     const address = settings.address || '';
