@@ -6,7 +6,7 @@ import api from '../../api';
 import { queueAction } from '../../utils/syncEngine';
 import { Utensils, Package, Grid, List, ShoppingBag, Clock, History, WifiOff, ChevronRight, ChevronLeft, RefreshCw, X, Armchair, LogOut, Printer, LayoutGrid, Loader2 } from 'lucide-react';
 import TableGrid from '../../components/TableGrid';
-import { printKOT } from '../../utils/kotPrint';
+import { printKOTSlip } from '../../components/KotPrint';
 import { playWaiterSound } from '../../utils/bellSound';
 import CancelOrderModal from '../../components/CancelOrderModal';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
@@ -58,7 +58,7 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onU
 
     const handlePrintKOT = (e) => {
         e.stopPropagation();
-        printKOT(order, settings || {});
+        printKOTSlip(order, settings || {});
     };
     const isPaid = order.paymentStatus === 'paid';
 
@@ -102,7 +102,7 @@ const WaiterBoxCard = memo(({ order, formatPrice, kotPrintEnabled, settings, onU
                                 onClick={handlePrintKOT}
                                 title="Print KOT"
                                 aria-label="Print KOT"
-                                className="flex items-center justify-center gap-1 w-10 h-10 lg:w-auto lg:h-7 lg:px-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-black rounded-lg transition-all shadow-sm shadow-blue-600/30 uppercase tracking-wide"
+                                className="flex items-center justify-center gap-1 min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:w-auto lg:h-7 lg:px-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[10px] font-black rounded-lg transition-all shadow-sm shadow-blue-600/30 uppercase tracking-wide"
                             >
                                 <Printer size={14} strokeWidth={2.5} className="lg:w-3 lg:h-3" />
                                 <span className="hidden lg:inline">KOT</span>
@@ -382,10 +382,11 @@ const TokenSquare = memo(({ order, onClick, isSelected, settings, onUpdateStatus
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                printKOT(order, settings || {});
+                                printKOTSlip(order, settings || {});
                             }}
-                            className="flex items-center gap-1 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[9px] font-black rounded shrink-0 shadow-sm uppercase tracking-wide"
+                            className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] sm:min-w-0 sm:min-h-0 sm:px-2 sm:py-0.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[9px] font-black rounded shrink-0 shadow-sm uppercase tracking-wide"
                             title="Print KOT"
+                            aria-label="Print KOT"
                         >
                             <Printer size={10} strokeWidth={2.5} />
                             <span>KOT</span>
