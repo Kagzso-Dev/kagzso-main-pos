@@ -152,9 +152,9 @@ const Receipt = ({ order, formatPrice, settings }) => (
         {/* Header */}
         <div className="text-center border-b-2 border-dashed border-gray-300 pb-4 mb-4 relative z-10">
             <h1 className="text-2xl font-extrabold tracking-tight">{settings?.restaurantName || 'admin'}</h1>
-            <p className="text-xs font-black text-black uppercase tracking-widest mt-0.5">Tax Invoice</p>
+            <p className="text-xs font-black text-black uppercase tracking-widest mt-0.5">{(settings?.gstEnabled !== false || order.sgst > 0 || order.cgst > 0) ? 'Tax Invoice' : 'Invoice'}</p>
             <p className="text-[10px] text-gray-400 mt-1">{settings?.address || 'Restaurant Address'}</p>
-            {settings?.gstNumber && <p className="text-[10px] text-gray-400">GSTIN: {settings.gstNumber}</p>}
+            {(settings?.gstEnabled !== false || order.sgst > 0 || order.cgst > 0) && settings?.gstNumber && <p className="text-[10px] text-gray-400">GSTIN: {settings.gstNumber}</p>}
         </div>
 
         {/* Meta */}
@@ -203,14 +203,14 @@ const Receipt = ({ order, formatPrice, settings }) => (
                 <span className="font-bold">{formatPrice(order.totalAmount)}</span>
             </div>
             
-            {(order.sgst > 0 || settings?.sgst > 0) && (
+            {(order.sgst > 0 || (settings?.gstEnabled !== false && settings?.sgst > 0)) && (
                 <div className="flex justify-between text-[11px]">
                     <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">SGST ({settings?.sgst || 0}%):</span>
                     <span className="font-bold">{formatPrice(order.sgst || (order.totalAmount * (settings?.sgst || 0) / 100))}</span>
                 </div>
             )}
             
-            {(order.cgst > 0 || settings?.cgst > 0) && (
+            {(order.cgst > 0 || (settings?.gstEnabled !== false && settings?.cgst > 0)) && (
                 <div className="flex justify-between text-[11px]">
                     <span className="font-bold uppercase tracking-widest text-[9px] opacity-60">CGST ({settings?.cgst || 0}%):</span>
                     <span className="font-bold">{formatPrice(order.cgst || (order.totalAmount * (settings?.cgst || 0) / 100))}</span>

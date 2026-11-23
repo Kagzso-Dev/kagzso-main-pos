@@ -135,8 +135,9 @@ const createOrder = async (req, res) => {
         }
 
         // Force recalculation based on admin settings (on discounted subtotal)
-        const sRate = (settings.sgst || 0) / 100;
-        const cRate = (settings.cgst || 0) / 100;
+        const isGstEnabled = settings?.gstEnabled !== false;
+        const sRate = isGstEnabled ? ((settings.sgst || 0) / 100) : 0;
+        const cRate = isGstEnabled ? ((settings.cgst || 0) / 100) : 0;
         const subtotal = items.reduce((sum, i) => sum + (parseFloat(i.price) * parseInt(i.quantity)), 0);
         const discValue = parseFloat(discount) || 0;
         const discountedSubtotal = Math.max(0, subtotal - discValue);
@@ -628,8 +629,9 @@ const cancelOrderItem = async (req, res) => {
 
         // Recalculate order totals from settings (on discounted subtotal)
         const settings = await Setting.get(req.tenantId);
-        const sgstRate = (settings.sgst || 0) / 100;
-        const cgstRate = (settings.cgst || 0) / 100;
+        const isGstEnabled = settings?.gstEnabled !== false;
+        const sgstRate = isGstEnabled ? ((settings.sgst || 0) / 100) : 0;
+        const cgstRate = isGstEnabled ? ((settings.cgst || 0) / 100) : 0;
 
         const subtotalSum = nonCancelledItems.reduce((sum, i) => sum + (parseFloat(i.price) * parseInt(i.quantity)), 0);
         const discValue = parseFloat(order.discount) || 0;

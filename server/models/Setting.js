@@ -28,6 +28,7 @@ const fmt = (row) => row ? {
     takeawayEnabled:      row.takeaway_enabled !== 0,
     waiterServiceEnabled: row.waiter_service_enabled !== 0,
     kitchenEnabled:       row.kitchen_enabled !== 0,
+    gstEnabled:           row.gst_enabled !== 0,
     enforceMenuView:      row.enforce_menu_view === 1,
     cashierOfferEnabled:  row.cashier_offer_enabled === 1,
     cashierOfferLabel:    row.cashier_offer_label || '',
@@ -75,6 +76,7 @@ const fieldMap = {
     takeawayEnabled:      'takeaway_enabled',
     waiterServiceEnabled: 'waiter_service_enabled',
     kitchenEnabled:       'kitchen_enabled',
+    gstEnabled:           'gst_enabled',
     enforceMenuView:      'enforce_menu_view',
     cashierOfferEnabled:  'cashier_offer_enabled',
     cashierOfferLabel:    'cashier_offer_label',
@@ -114,10 +116,24 @@ const ensureKitchenEnabledCol = async () => {
     } catch (e) {}
 };
 
+let _gstColChecked = false;
+const ensureGstEnabledCol = async () => {
+    if (_gstColChecked) return;
+    try {
+        const [cols] = await mysql.query('SHOW COLUMNS FROM settings LIKE "gst_enabled"');
+        if (cols.length === 0) {
+            await mysql.query('ALTER TABLE settings ADD COLUMN gst_enabled BOOLEAN DEFAULT 1');
+            console.log('[migration] Added gst_enabled column to settings');
+        }
+        _gstColChecked = true;
+    } catch (e) {}
+};
+
 const Setting = {
     async get(tenantId) {
         await ensureSoundConfigCol();
         await ensureKitchenEnabledCol();
+        await ensureGstEnabledCol();
         const [rows] = tenantId
             ? await mysql.query('SELECT * FROM settings WHERE tenant_id = ? LIMIT 1', [tenantId])
             : await mysql.query('SELECT * FROM settings LIMIT 1');
@@ -134,6 +150,13 @@ const Setting = {
 
     async update(params, tenantId) {
         const current = await this.get(tenantId);
+        const effectiveGstEnabled = params.gstEnabled !== undefined ? params.gstEnabled : current?.gstEnabled;
+        if (effectiveGstEnabled === false) {
+            delete params.sgst;
+            delete params.cgst;
+            delete params.gstNumber;
+        }
+
         const updateKeys = [];
         const updateValues = [];
 

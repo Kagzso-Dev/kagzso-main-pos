@@ -294,6 +294,10 @@ const AdminDashboard = () => {
             [],
             ['Metric', 'Value'],
             ['Total Revenue (30d)', totalRevenue],
+            ...(settings?.gstEnabled !== false ? [
+                ['Total SGST (30d)', totalSgst],
+                ['Total CGST (30d)', totalCgst],
+            ] : []),
             ['Active Orders', activeCount],
             ['Completed Today', completedCount],
             ['Avg Order Value', avgOrderValue],
@@ -304,13 +308,14 @@ const AdminDashboard = () => {
 
         // Sheet 2: Orders
         const ordersData = [
-            ['Order ID', 'Type', 'Items', 'Status', 'Date', 'Amount'],
+            ['Order ID', 'Type', 'Items', 'Status', 'Date', ...(settings?.gstEnabled !== false ? ['Tax'] : []), 'Amount'],
             ...orders.map(o => [
                 `${o.orderType === 'dine-in' ? 'DI' : 'TK'}-${String(o.orderNumber).startsWith('ORD-') ? String(o.orderNumber).replace('ORD-', '') : o.orderNumber}`,
                 o.orderType,
                 o.items?.length ?? 0,
                 o.orderStatus,
                 new Date(o.createdAt).toLocaleDateString(),
+                ...(settings?.gstEnabled !== false ? [((Number(o.sgst) || 0) + (Number(o.cgst) || 0))] : []),
                 o.finalAmount,
             ]),
         ];
@@ -399,23 +404,27 @@ const AdminDashboard = () => {
                             }
                         />
 
-                        {/* Total SGST — MySQL: SUM(sgst) WHERE payment_status='paid' */}
-                        <StatCard
-                            title="Total SGST (30d)"
-                            value={formatPrice(totalSgst)}
-                            subtitle="Sate GST Collected"
-                            icon={Tag}
-                            color="blue"
-                        />
+                        {settings?.gstEnabled !== false && (
+                            <>
+                                {/* Total SGST — MySQL: SUM(sgst) WHERE payment_status='paid' */}
+                                <StatCard
+                                    title="Total SGST (30d)"
+                                    value={formatPrice(totalSgst)}
+                                    subtitle="Sate GST Collected"
+                                    icon={Tag}
+                                    color="blue"
+                                />
 
-                        {/* Total CGST — MySQL: SUM(cgst) WHERE payment_status='paid' */}
-                        <StatCard
-                            title="Total CGST (30d)"
-                            value={formatPrice(totalCgst)}
-                            subtitle="Central GST Collected"
-                            icon={Tag}
-                            color="emerald"
-                        />
+                                {/* Total CGST — MySQL: SUM(cgst) WHERE payment_status='paid' */}
+                                <StatCard
+                                    title="Total CGST (30d)"
+                                    value={formatPrice(totalCgst)}
+                                    subtitle="Central GST Collected"
+                                    icon={Tag}
+                                    color="emerald"
+                                />
+                            </>
+                        )}
 
                         {/* Active — MySQL: COUNT(*) WHERE order_status IN ('pending','accepted','preparing','ready') */}
                         <StatCard

@@ -314,7 +314,7 @@ const OrderDetailsModal = ({
                                 <span className="text-[12px] xs:text-[14px] font-black tabular-nums text-[var(--theme-text-main)] whitespace-nowrap">{formatPrice(order.totalAmount)}</span>
                             </div>
                             
-                            {(order.sgst > 0 || effectiveSettings.sgst > 0) && (
+                            {(order.sgst > 0 || (effectiveSettings.gstEnabled !== false && effectiveSettings.sgst > 0)) && (
                                 <div className="flex justify-between items-center px-1 xs:px-2 gap-2 opacity-80">
                                     <span className="text-[10px] xs:text-[11px] font-black uppercase tracking-wider xs:tracking-[0.15em] text-[var(--theme-text-muted)] whitespace-nowrap">SGST {order.sgst === 0 && effectiveSettings.sgst ? `(${effectiveSettings.sgst}%)` : ''}</span>
                                     <span className="text-[12px] xs:text-[14px] font-black tabular-nums text-[var(--theme-text-main)] whitespace-nowrap">
@@ -323,7 +323,7 @@ const OrderDetailsModal = ({
                                 </div>
                             )}
 
-                            {(order.cgst > 0 || effectiveSettings.cgst > 0) && (
+                            {(order.cgst > 0 || (effectiveSettings.gstEnabled !== false && effectiveSettings.cgst > 0)) && (
                                 <div className="flex justify-between items-center px-1 xs:px-2 gap-2 opacity-80">
                                     <span className="text-[10px] xs:text-[11px] font-black uppercase tracking-wider xs:tracking-[0.15em] text-[var(--theme-text-muted)] whitespace-nowrap">CGST {order.cgst === 0 && effectiveSettings.cgst ? `(${effectiveSettings.cgst}%)` : ''}</span>
                                     <span className="text-[12px] xs:text-[14px] font-black tabular-nums text-[var(--theme-text-main)] whitespace-nowrap">

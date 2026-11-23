@@ -258,11 +258,12 @@ const Order = {
         
         // Get tax rates from settings for this tenant
         const [settingsRows] = tenantId 
-            ? await mysql.query('SELECT sgst, cgst FROM settings WHERE tenant_id = ? LIMIT 1', [tenantId])
-            : await mysql.query('SELECT sgst, cgst FROM settings LIMIT 1');
+            ? await mysql.query('SELECT sgst, cgst, gst_enabled FROM settings WHERE tenant_id = ? LIMIT 1', [tenantId])
+            : await mysql.query('SELECT sgst, cgst, gst_enabled FROM settings LIMIT 1');
             
-        const sgstRate = parseFloat(settingsRows[0]?.sgst || 0) / 100;
-        const cgstRate = parseFloat(settingsRows[0]?.cgst || 0) / 100;
+        const isGstEnabled = settingsRows[0]?.gst_enabled !== 0;
+        const sgstRate = isGstEnabled ? (parseFloat(settingsRows[0]?.sgst || 0) / 100) : 0;
+        const cgstRate = isGstEnabled ? (parseFloat(settingsRows[0]?.cgst || 0) / 100) : 0;
         
         const discValue = parseFloat(orderInfo.discount) || 0;
         const discountedSubtotal = Math.max(0, subtotalSum - discValue);

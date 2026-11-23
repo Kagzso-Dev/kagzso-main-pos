@@ -118,6 +118,7 @@ async function migrate() {
             { name: 'mobile_menu_view', type: 'VARCHAR(50) DEFAULT "grid"' },
             { name: 'dine_in_enabled', type: 'BOOLEAN DEFAULT 1' },
             { name: 'kitchen_enabled', type: 'BOOLEAN DEFAULT 1' },
+            { name: 'gst_enabled', type: 'BOOLEAN DEFAULT 1' },
             { name: 'table_map_enabled', type: 'BOOLEAN DEFAULT 1' },
             { name: 'takeaway_enabled', type: 'BOOLEAN DEFAULT 1' },
             { name: 'waiter_service_enabled', type: 'BOOLEAN DEFAULT 1' },

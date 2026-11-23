@@ -299,6 +299,7 @@ const getTenantSettings = async (req, res) => {
             tableMapEnabled:     settings.tableMapEnabled,
             kotPrintEnabled:     settings.kotPrintEnabled,
             kitchenEnabled:      settings.kitchenEnabled !== false,
+            gstEnabled:          settings.gstEnabled !== false,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -360,7 +361,7 @@ const updateTenantFeatureSettings = async (req, res) => {
         const tenantId = req.params.id;
         const { key, enabled } = req.body;
 
-        const validKeys = ['dineInEnabled', 'takeawayEnabled', 'tableMapEnabled', 'kotPrintEnabled', 'kitchenEnabled'];
+        const validKeys = ['dineInEnabled', 'takeawayEnabled', 'tableMapEnabled', 'kotPrintEnabled', 'kitchenEnabled', 'gstEnabled'];
         if (!validKeys.includes(key) || typeof enabled !== 'boolean') {
             return res.status(400).json({ message: 'Valid key and enabled (boolean) are required' });
         }
@@ -376,7 +377,7 @@ const updateTenantFeatureSettings = async (req, res) => {
             // Push updated settings to the restaurant's dashboard in real-time
             io.to(`${tenantId}:restaurant_main`).emit('settings-updated', updated);
 
-            const labels = { dineInEnabled: 'Dine-In', takeawayEnabled: 'Takeaway', tableMapEnabled: 'Table Map', kotPrintEnabled: 'KOT Print', kitchenEnabled: 'Kitchen' };
+            const labels = { dineInEnabled: 'Dine-In', takeawayEnabled: 'Takeaway', tableMapEnabled: 'Table Map', kotPrintEnabled: 'KOT Print', kitchenEnabled: 'Kitchen', gstEnabled: 'GST' };
             emitNotification(io, parseInt(tenantId), 'admin', {
                 title: `${labels[key]} ${enabled ? 'Enabled' : 'Disabled'}`,
                 message: `${labels[key]} has been ${enabled ? 'enabled' : 'disabled'} by Super Admin.`,
@@ -390,6 +391,7 @@ const updateTenantFeatureSettings = async (req, res) => {
             tableMapEnabled: updated.tableMapEnabled,
             kotPrintEnabled: updated.kotPrintEnabled,
             kitchenEnabled:  updated.kitchenEnabled !== false,
+            gstEnabled:      updated.gstEnabled !== false,
         });
     } catch (error) {
         console.error('[updateTenantFeatureSettings]', error.message);

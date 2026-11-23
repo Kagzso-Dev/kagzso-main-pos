@@ -34,15 +34,34 @@ export const printBill = (order, formatPrice, settings = {}, isKOT = false, filt
         return;
     }
 
-    // Calculate subtotal for the specific items being printed on this slip
     const printSubtotal = activeItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-    const printResults = calculateTax ? calculateTax(printSubtotal, settings, { discount: 0 }) : {
-        finalAmount: printSubtotal,
-        sgst: printSubtotal * sgstRate / 100,
-        cgst: printSubtotal * cgstRate / 100,
-        sgstRate,
-        cgstRate
-    };
+    const hasStoredTax = (Number(order.sgst) || 0) > 0 || (Number(order.cgst) || 0) > 0;
+    const isGstEnabled = settings?.gstEnabled !== false;
+    const shouldPrintTax = isGstEnabled || hasStoredTax;
+
+    let printResults;
+    if (!isGstEnabled && hasStoredTax) {
+        // Historical order with stored tax being printed while GST is disabled
+        const storedSgst = Number(order.sgst) || 0;
+        const storedCgst = Number(order.cgst) || 0;
+        const sRate = order.totalAmount > 0 ? (Math.round((storedSgst / order.totalAmount) * 1000) / 10) : (settings.sgst || 0);
+        const cRate = order.totalAmount > 0 ? (Math.round((storedCgst / order.totalAmount) * 1000) / 10) : (settings.cgst || 0);
+        printResults = {
+            finalAmount: order.finalAmount || (printSubtotal + storedSgst + storedCgst),
+            sgst: storedSgst,
+            cgst: storedCgst,
+            sgstRate: sRate,
+            cgstRate: cRate
+        };
+    } else {
+        printResults = calculateTax ? calculateTax(printSubtotal, settings, { discount: 0 }) : {
+            finalAmount: printSubtotal,
+            sgst: isGstEnabled ? (printSubtotal * sgstRate / 100) : 0,
+            cgst: isGstEnabled ? (printSubtotal * cgstRate / 100) : 0,
+            sgstRate: isGstEnabled ? sgstRate : 0,
+            cgstRate: isGstEnabled ? cgstRate : 0
+        };
+    }
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -151,7 +170,7 @@ export const printBill = (order, formatPrice, settings = {}, isKOT = false, filt
 <div class="receipt-container">
     <div class="center bold" style="font-size:18px;letter-spacing:1px;text-transform:uppercase;">${restaurantName} ${filterNew ? '(NEW)' : ''}</div>
     ${address ? `<div class="center" style="font-size:10px;margin-top:2px;max-width:200px;margin-left:auto;margin-right:auto;">${address}</div>` : ''}
-    ${gstNumber ? `<div class="center" style="font-size:10px;margin-top:2px;font-weight:bold;">GSTIN: ${gstNumber}</div>` : ''}
+    ${(shouldPrintTax && gstNumber) ? `<div class="center" style="font-size:10px;margin-top:2px;font-weight:bold;">GSTIN: ${gstNumber}</div>` : ''}
     <div class="solid"></div>
 
     <div class="row"><span>${filterNew ? 'UPDATE' : (isKOT ? 'KOT' : 'BILL')}</span><span class="bold">${displayOrderNumber}</span></div>
@@ -189,8 +208,8 @@ export const printBill = (order, formatPrice, settings = {}, isKOT = false, filt
 
     <div class="dash"></div>
     <div class="row"><span>Subtotal</span><span>${formatPrice(printSubtotal)}</span></div>
-    ${printResults.sgstRate > 0 ? `<div class="row"><span>SGST (${printResults.sgstRate}%)</span><span>${formatPrice(printResults.sgst)}</span></div>` : ''}
-    ${printResults.cgstRate > 0 ? `<div class="row"><span>CGST (${printResults.cgstRate}%)</span><span>${formatPrice(printResults.cgst)}</span></div>` : ''}
+    ${(shouldPrintTax && printResults.sgstRate > 0) ? `<div class="row"><span>SGST (${printResults.sgstRate}%)</span><span>${formatPrice(printResults.sgst)}</span></div>` : ''}
+    ${(shouldPrintTax && printResults.cgstRate > 0) ? `<div class="row"><span>CGST (${printResults.cgstRate}%)</span><span>${formatPrice(printResults.cgst)}</span></div>` : ''}
     <div class="solid"></div>
     <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:14px;margin-top:6px;">
       <span>TOTAL</span><span>${formatPrice(printResults.finalAmount)}</span>

@@ -283,15 +283,22 @@ const Settings = () => {
         if (e) e.preventDefault();
         setLoading(true);
         try {
+            const isGstEnabled = settings?.gstEnabled !== false;
+            const payload = { ...generalConfig };
+            if (!isGstEnabled) {
+                delete payload.sgst;
+                delete payload.cgst;
+                delete payload.gstNumber;
+            }
             if (!navigator.onLine) {
-                const action = { type: 'settings', method: 'PUT', endpoint: '/api/settings', data: generalConfig };
+                const action = { type: 'settings', method: 'PUT', endpoint: '/api/settings', data: payload };
                 await queueAction(action);
                 await saveSetting('generalConfig', generalConfig);
                 setMsg(key, 'success', 'Saved offline - will sync when online');
                 setLoading(false);
                 return;
             }
-            await api.put('/api/settings', generalConfig, { headers: { Authorization: `Bearer ${user.token}` } });
+            await api.put('/api/settings', payload, { headers: { Authorization: `Bearer ${user.token}` } });
             await saveSetting('generalConfig', generalConfig);
             try {
                 localStorage.setItem('pos_sound_config', JSON.stringify(generalConfig.soundConfig));
@@ -403,17 +410,21 @@ const Settings = () => {
                         <Field label="Currency Symbol">
                             <input type="text" name="currencySymbol" value={generalConfig.currencySymbol} onChange={handleChange} maxLength={3} className={inputCls} />
                         </Field>
-                        <Field label="GST / VAT No.">
-                            <input type="text" name="gstNumber" value={generalConfig.gstNumber} onChange={handleChange} className={inputCls} />
-                        </Field>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Field label="SGST (%)">
-                                <input type="number" name="sgst" value={generalConfig.sgst} onChange={handleChange} step="0.1" min="0" className={inputCls} />
-                            </Field>
-                            <Field label="CGST (%)">
-                                <input type="number" name="cgst" value={generalConfig.cgst} onChange={handleChange} step="0.1" min="0" className={inputCls} />
-                            </Field>
-                        </div>
+                        {settings?.gstEnabled !== false && (
+                            <>
+                                <Field label="GST / VAT No.">
+                                    <input type="text" name="gstNumber" value={generalConfig.gstNumber} onChange={handleChange} className={inputCls} />
+                                </Field>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Field label="SGST (%)">
+                                        <input type="number" name="sgst" value={generalConfig.sgst} onChange={handleChange} step="0.1" min="0" className={inputCls} />
+                                    </Field>
+                                    <Field label="CGST (%)">
+                                        <input type="number" name="cgst" value={generalConfig.cgst} onChange={handleChange} step="0.1" min="0" className={inputCls} />
+                                    </Field>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Cashier Payment Offer */}

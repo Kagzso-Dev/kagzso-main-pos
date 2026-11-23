@@ -17,7 +17,15 @@ const getSettings = async (req, res) => {
 // PUT /api/settings
 const updateSettings = async (req, res) => {
     try {
-        const settings = await Setting.update(req.body, req.tenantId);
+        const payload = { ...req.body };
+        const currentSettings = await Setting.get(req.tenantId);
+        if (currentSettings?.gstEnabled === false && payload.gstEnabled !== true) {
+            delete payload.sgst;
+            delete payload.cgst;
+            delete payload.gstNumber;
+        }
+
+        const settings = await Setting.update(payload, req.tenantId);
         invalidateCache('settings');
 
         const io = req.app.get('io');
